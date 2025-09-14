@@ -1,0 +1,59 @@
+{% extends "style/base_public.html" %}
+{% block title %}Amigo Fiel — Encontre seu novo melhor amigo{% endblock %}
+
+{% block body %}
+  <div style="width:100%; max-width:980px; margin:0 auto;">
+    <div class="topbar">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="font-size:40px; line-height:1;">🐕‍🦺</div>
+        <strong>AMIGO FIEL</strong>
+      </div>
+      <nav>
+        <a href="{% url 'amigofiel:home' %}">Início</a>
+        <a href="{% url 'amigofiel:listar-animais' %}">Adotar</a>
+        <a href="#">Doar</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'logout' %}">Sair</a>
+        {% else %}
+          <a href="{% url 'login' %}">Entrar</a>
+        {% endif %}
+      </nav>
+    </div>
+
+    <section class="hero">
+      <h1 style="font-size:clamp(24px,4vw,36px);">Encontre seu novo melhor amigo</h1>
+      <p class="muted">Conectamos ONGs, protetores e adotantes com responsabilidade.</p>
+      <div style="display:flex; gap:10px; justify-content:center; margin-top:6px; flex-wrap:wrap">
+        <a class="btn btn-primary" href="{% url 'amigofiel:listar-animais' %}">Quero Adotar</a>
+        <a class="btn btn-secondary" href="#">Quero Doar</a>
+        <a class="btn btn-secondary" href="#">Sou Protetor(a)/ONG</a>
+      </div>
+    </section>
+
+    <section class="grid" aria-label="Destaques">
+      {% for a in destaques %}
+        <article class="mini-card">
+          {% if a.foto %}<img class="thumb" src="{{ a.foto.url }}" alt="{{ a.nome|default:'Animal' }}">{% else %}
+            <img class="thumb" src="https://images.unsplash.com/photo-1517849845537-4d257902454a?q=80&w=800&auto=format&fit=crop" alt="Animal">
+          {% endif %}
+          <h3 style="margin:0 0 4px">{{ a.nome|default:a }}</h3>
+          <p class="muted" style="margin:0 0 8px">
+            {% if a.raca %}{{ a.raca }}{% endif %}
+            {% if a.porte %} • {{ a.porte }}{% endif %}
+            {% if a.idade %} • {{ a.idade }}{% endif %}
+          </p>
+          <a class="btn btn-primary" href="{% url 'amigofiel:listar-animais' %}">Adotar</a>
+        </article>
+      {% empty %}
+        <article class="mini-card">
+          <img class="thumb" src="https://images.unsplash.com/photo-1507149833265-60c372daea22?q=80&w=800&auto=format&fit=crop" alt="">
+          <h3>Ainda sem destaques</h3>
+          <p class="muted">Cadastre o primeiro amigo e ajude a transformar vidas.</p>
+          <a class="btn btn-secondary" href="#">Cadastrar Animal</a>
+        </article>
+      {% endfor %}
+    </section>
+
+    <p class="muted" style="text-align:center; margin:22px 0 6px">© {% now "Y" %} Amigo Fiel</p>
+  </div>
+{% endblock %}
