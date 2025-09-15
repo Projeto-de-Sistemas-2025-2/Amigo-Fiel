@@ -1,0 +1,26 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Amigo Fiel{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- CSS global das páginas -->
+  <link rel="stylesheet" href="{% static 'css/pages.css' %}">
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  {% block shapes %}
+  <div class="shape bl-yellow"></div>
+  <div class="shape bl-teal"></div>
+  <div class="shape bl-slate"></div>
+  <div class="shape bl-grey"></div>
+  {% endblock %}
+
+  <div class="wrap">
+    {% block body %}{% endblock %}
+  </div>
+</body>
+</html>

@@ -1,0 +1,188 @@
+/* =========================
+   Amigo Fiel - Pages.css
+   Global styles + responsive
+   ========================= */
+
+/* ---------- Design tokens ---------- */
+:root{
+  --bg:#ffffff;             /* fundo claro como no mock */
+  --ink:#0f172a;            /* texto/linhas (quase preto) */
+  --muted:#6b7280;          /* cinza texto secundário */
+  --brand:#FFC400;          /* amarelo */
+  --teal:#C7E1E4;           /* ciano claro do botão */
+  --slate:#2D4650;          /* azul petróleo (formas) */
+  --radius:16px;
+  --shadow:0 10px 26px rgba(0,0,0,.10);
+
+  /* grid container widths */
+  --container-sm: 420px;
+  --container-md: 720px;
+  --container-lg: 980px;
+}
+
+*{ box-sizing:border-box }
+html,body{ height:100% }
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Color Emoji", "Apple Color Emoji";
+  color:var(--ink);
+  background:var(--bg);
+}
+
+/* ---------- Layout base ---------- */
+.wrap{
+  min-height:100%;
+  display:grid;
+  place-items:start center;
+  padding:20px;
+}
+
+.container{
+  width:100%;
+  max-width:var(--container-sm);
+  margin:20px auto;
+  position:relative;
+}
+
+.card{
+  background:#fff;
+  border-radius:24px;
+  padding:26px;
+  box-shadow:var(--shadow);
+  border:1px solid #eaeaea;
+}
+
+/* ---------- Formas decorativas ---------- */
+.shape{ position:absolute; z-index:-1; filter:drop-shadow(var(--shadow)) }
+.bl-yellow{ top:-40px; left:-60px; width:180px; height:180px; background:var(--brand); border-radius:999px }
+.bl-teal{ top:20px; right:-30px; width:80px; height:80px; background:var(--teal); border-radius:999px }
+.bl-slate{ bottom:-40px; left:-40px; width:0; height:0; border-left:120px solid transparent; border-top:120px solid var(--slate); transform:rotate(12deg) }
+.bl-grey{ bottom:-70px; right:-70px; width:180px; height:120px; background:#bfbfbf; transform:skew(-16deg) rotate(-6deg) }
+
+/* ---------- Tipografia & links ---------- */
+h1,h2,h3{ margin:0 0 8px }
+p{ margin:0 0 10px }
+a{ color:#0f172a; text-underline-offset:2px }
+a.accent{ color:#d79c00 } /* link “cadastre-se” */
+
+/* ---------- Formulários ---------- */
+label{ font-size:.95rem; margin:8px 0 6px; display:block }
+
+.input, .pill{
+  width:100%;
+  padding:12px 14px;
+  border-radius:999px;
+  border:2px solid #11182714;
+  outline:none;
+  transition:border-color .2s, box-shadow .2s, background .2s;
+}
+
+.pill{ background:var(--brand); color:#111 }
+.pill::placeholder{ color:#ffffffcc }
+
+.input:focus, .pill:focus{
+  border-color:#94a3b8;
+  box-shadow:0 0 0 3px rgba(148,163,184,.25);
+}
+
+.input-wrap{ margin-bottom:12px }
+
+.actions{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin:16px 0;
+}
+
+.line{ height:1px; flex:1; background:#e5e7eb }
+
+.btn{
+  display:inline-block;
+  padding:12px 18px;
+  border-radius:14px;
+  border:none;
+  cursor:pointer;
+  font-weight:700;
+  text-align:center;
+}
+
+.btn-primary{ background:var(--teal); color:#0f172a }
+.btn-secondary{ background:#11182708; color:var(--ink) }
+
+.muted{ color:var(--muted); font-size:.92rem }
+
+/* ---------- Branding ---------- */
+.brand{
+  display:grid;
+  place-items:center;
+  gap:8px;
+  margin:6px 0 10px;
+  text-align:center;
+}
+.brand .logo{ font-size:56px; line-height:1 }
+.brand small{ letter-spacing:.6px }
+
+/* ---------- Topbar / Hero / Grid ---------- */
+.topbar{
+  max-width:var(--container-lg);
+  margin:0 auto 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:6px 10px;
+}
+.topbar a{ margin-left:12px; text-decoration:none; color:var(--ink) }
+
+.hero{ display:grid; gap:10px; text-align:center; margin-bottom:14px }
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:14px;
+}
+
+.mini-card{
+  border:1px solid #eaeaea;
+  border-radius:18px;
+  padding:16px;
+  background:#fff;
+  box-shadow:var(--shadow);
+}
+
+.thumb{
+  aspect-ratio:16/10;
+  width:100%;
+  object-fit:cover;
+  border-radius:14px;
+  margin-bottom:8px;
+  background:#f2f2f2;
+}
+
+/* ---------- Utilidades ---------- */
+.center{ text-align:center }
+.hidden{ display:none !important }
+.only-mobile{ display:block }
+.only-desktop{ display:none }
+
+/* ---------- Responsividade ---------- */
+/* ≥ 480px: melhora o container */
+@media (min-width: 480px){
+  .container{ max-width: calc(var(--container-sm) + 20px) }
+}
+
+/* ≥ 768px: topbar mais espaçada, containers maiores */
+@media (min-width: 768px){
+  .wrap{ padding:32px }
+  .container{ max-width:var(--container-md) }
+  .topbar{ padding:10px 16px }
+  .brand .logo{ font-size:64px }
+  .only-mobile{ display:none }
+  .only-desktop{ display:block }
+}
+
+/* ≥ 1024px: páginas largas (home, listas etc.) */
+@media (min-width: 1024px){
+  .container{ max-width:var(--container-lg) }
+  .hero{ grid-template-columns: 1.2fr 1fr; text-align:left; align-items:center }
+}
