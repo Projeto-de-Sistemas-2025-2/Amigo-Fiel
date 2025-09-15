@@ -1,11 +1,14 @@
 {% extends "style/base_public.html" %}
-{% block title %}Amigo Fiel — Encontre seu novo melhor amigo{% endblock %}
+{% load static %}
+
+{% block title %}Amigo Fiel{% endblock %}
 
 {% block body %}
-  <div style="width:100%; max-width:980px; margin:0 auto;">
+  <div class="container" style="max-width:980px">
+    <!-- Topbar -->
     <div class="topbar">
       <div style="display:flex; align-items:center; gap:10px;">
-        <div style="font-size:40px; line-height:1;">🐕‍🦺</div>
+        <img src="{% static 'img/amigo-fiel-logo.png' %}" alt="Amigo Fiel" width="150" height="150" style="border-radius:10px">
         <strong>AMIGO FIEL</strong>
       </div>
       <nav>
@@ -20,9 +23,12 @@
       </nav>
     </div>
 
+    <!-- Hero -->
     <section class="hero">
-      <h1 style="font-size:clamp(24px,4vw,36px);">Encontre seu novo melhor amigo</h1>
-      <p class="muted">Conectamos ONGs, protetores e adotantes com responsabilidade.</p>
+      <div>
+        <h1 style="font-size:clamp(24px,4vw,36px);">Encontre seu novo melhor amigo</h1>
+        <p class="muted">Conectamos ONGs, protetores e adotantes com responsabilidade.</p>
+      </div>
       <div style="display:flex; gap:10px; justify-content:center; margin-top:6px; flex-wrap:wrap">
         <a class="btn btn-primary" href="{% url 'amigofiel:listar-animais' %}">Quero Adotar</a>
         <a class="btn btn-secondary" href="#">Quero Doar</a>
@@ -30,10 +36,49 @@
       </div>
     </section>
 
+    <!-- Nossa história -->
+    <section class="card" style="margin:18px 0;">
+      <div class="grid" style="align-items:center;">
+        <div>
+          <h2 style="margin-bottom:6px;">Nossa história</h2>
+          <p class="muted">
+            O Amigo Fiel nasceu para aproximar quem quer ajudar de quem precisa de um lar.
+            Começamos como uma iniciativa universitária e viramos uma plataforma que integra
+            ONGs, protetores independentes e adotantes — com processos simples, responsáveis
+            e transparentes.
+          </p>
+          <p class="muted">
+            Hoje oferecemos vitrine de adoção, espaço para doações e, em breve,
+            um marketplace para conectar tutores ao ecossistema pet local.
+          </p>
+        </div>
+        <div>
+          <img class="thumb" src="https://images.unsplash.com/photo-1558944351-c3ad2586c1b2?q=80&w=1200&auto=format&fit=crop"
+               alt="Resgate e adoção responsável">
+        </div>
+      </div>
+    </section>
+
+    <!-- Galeria 3x2 -->
+    <section aria-label="Galeria de pets" style="margin:18px 0;">
+      <h2 style="margin:0 0 10px;">Eles já estão prontos para te conhecer</h2>
+      <div class="grid" style="grid-template-columns:repeat(3,1fr);">
+        <img class="thumb" src="https://images.unsplash.com/photo-1552053831-71594a27632d?q=80&w=800&auto=format&fit=crop" alt="Cachorro 1">
+        <img class="thumb" src="https://images.unsplash.com/photo-1556228453-efd1a04d86a7?q=80&w=800&auto=format&fit=crop" alt="Gato 1">
+        <img class="thumb" src="https://images.unsplash.com/photo-1534361960057-19889db9621e?q=80&w=800&auto=format&fit=crop" alt="Cachorro 2">
+        <img class="thumb" src="https://images.unsplash.com/photo-1543852786-1cf6624b9987?q=80&w=800&auto=format&fit=crop" alt="Gato 2">
+        <img class="thumb" src="https://images.unsplash.com/photo-1551782450-17144c3a09b7?q=80&w=800&auto=format&fit=crop" alt="Cachorro 3">
+        <img class="thumb" src="https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?q=80&w=800&auto=format&fit=crop" alt="Gato 3">
+      </div>
+    </section>
+
+    <!-- Destaques 
     <section class="grid" aria-label="Destaques">
       {% for a in destaques %}
         <article class="mini-card">
-          {% if a.foto %}<img class="thumb" src="{{ a.foto.url }}" alt="{{ a.nome|default:'Animal' }}">{% else %}
+          {% if a.foto %}
+            <</article>img class="thumb" src="{{ a.foto.url }}" alt="{{ a.nome|default:'Animal' }}">
+          {% else %}
             <img class="thumb" src="https://images.unsplash.com/photo-1517849845537-4d257902454a?q=80&w=800&auto=format&fit=crop" alt="Animal">
           {% endif %}
           <h3 style="margin:0 0 4px">{{ a.nome|default:a }}</h3>
@@ -53,7 +98,8 @@
         </article>
       {% endfor %}
     </section>
+    -->
 
-    <p class="muted" style="text-align:center; margin:22px 0 6px">© {% now "Y" %} Amigo Fiel</p>
+    <p class="muted center" style="margin:22px 0 6px">© {% now "Y" %} Amigo Fiel</p>
   </div>
 {% endblock %}

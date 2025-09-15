@@ -50,9 +50,9 @@
   margin-bottom: 0;
 }
 .logo {
-  width: 400px;
-  height: 400px;
-  margin-bottom: -10px;
+  width: 250px;
+  height: 250px;
+  margin-bottom: 10px;
   object-fit: contain;
   display: block;
 }

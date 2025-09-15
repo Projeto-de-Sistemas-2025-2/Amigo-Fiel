@@ -5,15 +5,14 @@ from django.shortcuts import render
 def cadastro(request):
     return render(request, "AmigoFiel/registration/cadastro.html")
 
-
 class HomeView(TemplateView):
     template_name = "AmigoFiel/home.html"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["destaques"] = Animal.objects.all()[:6]
+        ctx["destaques"] = Animal.objects.order_by("-id")[:6]  # exemplo
         return ctx
-
+    
 class ListarAnimais(ListView):
     model = Animal
     context_object_name = "animais"
@@ -21,3 +20,4 @@ class ListarAnimais(ListView):
 
 class CadastroView(TemplateView):
     template_name = "registration/cadastro.html"
+
