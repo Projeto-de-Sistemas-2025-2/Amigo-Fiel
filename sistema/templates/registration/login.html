@@ -1,59 +1,59 @@
-{% extends "style/base_public.html" %}
-{% block title %}Entrar — Amigo Fiel{% endblock %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Amigo Fiel</title>
 
-{% block body %}
+  <!-- Fontes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+  <div class="decor-bg">
+    <div class="yellow-circle"></div>
+    <div class="blue-circle"></div>
+    <div class="left-triangle"></div>
+    <div class="right-triangle"></div>
+  </div>
+
   <div class="container">
-
-    <div class="brand">
-      <div class="logo">🐕‍🦺</div>
-      <small>AMIGO FIEL</small>
+    <div class="logo-wrapper">
+      <img src="{% static 'img/amigo-fiel-logo.png' %}" alt="Amigo Fiel Logo" class="logo">
+      <div class="brand">AMIGO FIEL</div>
     </div>
 
-    <div class="card">
-      <h2 style="text-align:center; margin-bottom:4px;">LOGIN</h2>
+    <h1 class="title">LOGIN</h1>
 
-      {% if form.non_field_errors %}
-        <div class="muted" style="color:#b91c1c; margin:6px 0 10px; text-align:center;">
-          {% for e in form.non_field_errors %}{{ e }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
-        </div>
-      {% endif %}
+    <label class="label" for="email">E-mail</label>
+    <input type="email" id="email" class="input" placeholder="Digite aqui seu e-mail">
 
-      <form method="post" action="{% url 'login' %}">
-        {% csrf_token %}
+    <label class="label" for="senha">Senha</label>
+    <input type="password" id="senha" class="input" placeholder="Digite aqui sua senha">
+    
+    <div id="error" class="error" style="display:none;"></div>
 
-        <div class="input-wrap">
-          <label for="id_username">E-mail</label>
-          <input class="pill" type="text" name="username" id="id_username" placeholder="Digite aqui seu e-mail" required autofocus value="{{ form.username.value|default:'' }}">
-          {% for e in form.username.errors %}<div class="muted" style="color:#b91c1c">{{ e }}</div>{% endfor %}
-        </div>
+    <button class="forgot" type="button" id="forgotBtn">Esqueceu sua senha?</button>
+    <button class="button" type="button" id="loginBtn">Entrar</button>
+    
+    
+    <div class="orContainer">
+      <div class="line"></div>
+      <span class="or">Ou</span>
+      <div class="line"></div>
+    </div>
 
-        <div class="input-wrap">
-          <label for="id_password">Senha</label>
-          <input class="pill" type="password" name="password" id="id_password" placeholder="Digite aqui sua senha" required>
-          {% for e in form.password.errors %}<div class="muted" style="color:#b91c1c">{{ e }}</div>{% endfor %}
-        </div>
-
-        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
-
-        <p class="muted" style="text-align:right; margin-top:6px;">
-          <a href="#" class="muted">Esqueceu sua senha?</a>
-        </p>
-
-        <div style="display:grid; place-items:center; margin:14px 0 4px;">
-          <button class="btn btn-primary" type="submit" style="min-width:180px;">Entrar</button>
-        </div>
-
-        <div class="actions">
-          <div class="line"></div>
-          <span class="muted">Ou</span>
-          <div class="line"></div>
-        </div>
-
-        <p style="text-align:center; margin:0;">
-          <span class="muted">Não tem uma conta?</span>
-          <a href="#" class="accent"><strong>Cadastre-se</strong></a>
-        </p>
-      </form>
+    <div class="signupText">
+      Não tem uma conta? <a href="{% url 'amigofiel:cadastro' %}" class="signupLink"><br>Cadastre-se</a>
     </div>
   </div>
-{% endblock %}
+
+  <!-- JS -->
+  <script src="{% static 'js/login.js' %}"></script>
+</body>
+</html>
