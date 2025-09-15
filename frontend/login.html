@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Amigo Fiel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="login.css">
+</head>
+<body>
+  <div class="decor-bg">
+    <div class="yellow-circle"></div>
+    <div class="blue-circle"></div>
+    <div class="left-triangle"></div>
+    <div class="right-triangle"></div>
+  </div>
+  <div class="container">
+    <div class="logo-wrapper">
+      <img src="assets/amigo-fiel-logo.png" alt="Amigo Fiel Logo" class="logo">
+      <div class="brand">AMIGO FIEL</div>
+    </div>
+    <h1 class="title">LOGIN</h1>
+    <label class="label" for="email">E-mail</label>
+    <input type="email" id="email" class="input" placeholder="Digite aqui seu e-mail">
+    <label class="label" for="senha">Senha</label>
+    <input type="password" id="senha" class="input" placeholder="Digite aqui sua senha">
+    <div id="error" class="error" style="display:none;"></div>
+    <button class="forgot" type="button" id="forgotBtn">Esqueceu sua senha?</button>
+    <button class="button" type="button" id="loginBtn">Entrar</button>
+    <div class="orContainer">
+      <div class="line"></div>
+      <span class="or">Ou</span>
+      <div class="line"></div>
+    </div>
+    <div class="signupText">Não tem uma conta? <a href="#" class="signupLink"><br>Cadastre-se</a></div>
+  </div>
+  <script src="login.js"></script>
+</body>
+</html>
