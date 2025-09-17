@@ -1,26 +1,25 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
-from AmigoFiel import views 
-# Se você optar por view função e quiser rota /cadastro/ aqui também:
-from AmigoFiel.views import cadastro
+from AmigoFiel import views as amigofiel_views
+from django.views.generic import RedirectView
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
-    path("", include(("AmigoFiel.urls", "amigofiel"), namespace="amigofiel")),  # Rota raiz direciona para AmigoFiel
-    path("admin/", admin.site.urls),
+    path('', RedirectView.as_view(url='/amigofiel/', permanent=False)),
 
-    # Autenticação
-    path("login/",  auth_views.LoginView.as_view(template_name="registration/login.html"), name="login"),
-    path("logout/", auth_views.LogoutView.as_view(next_page="login"), name="logout"),
+    path('admin/', admin.site.urls),
 
-    # Cadastro direto no sistema/urls
-    path("cadastro/", views.cadastro, name="cadastro"),
+    # Auth
+    path('login/',  auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 
-    path("amigofiel/", include(("AmigoFiel.urls","amigofiel"), namespace="amigofiel")),
-    
-    # Se realmente quiser expor /cadastro/ também a partir do projeto (opcional, evite duplicidade):
-    path("cadastro/", cadastro, name="cadastro"),
+    # Cadastro
+    path('cadastro/', amigofiel_views.cadastro, name='cadastro'),
+
+    # App principal (uma vez só!)
+    path('amigofiel/', include(('AmigoFiel.urls', 'amigofiel'), namespace='amigofiel')),
 ]
 
-
-
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

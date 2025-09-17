@@ -5,14 +5,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - Amigo Fiel</title>
-
-  <!-- Fontes -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- CSS -->
   <link rel="stylesheet" href="{% static 'css/login.css' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+
 </head>
 <body>
   <div class="decor-bg">
@@ -30,30 +25,46 @@
 
     <h1 class="title">LOGIN</h1>
 
-    <label class="label" for="email">E-mail</label>
-    <input type="email" id="email" class="input" placeholder="Digite aqui seu e-mail">
+    {% if form.errors %}
+      <div class="error">Usuário ou senha inválidos.</div>
+    {% endif %}
 
-    <label class="label" for="senha">Senha</label>
-    <input type="password" id="senha" class="input" placeholder="Digite aqui sua senha">
-    
-    <div id="error" class="error" style="display:none;"></div>
+    <!-- LoginView espera fields: username, password -->
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <label class="label" for="id_username">Usuário</label>
+      <input type="text"
+             id="id_username"
+             name="username"
+             class="input"
+             value="{{ form.username.value|default_if_none:'' }}"
+             required>
+
+      <label class="label" for="id_password">Senha</label>
+      <input type="password"
+             id="id_password"
+             name="password"
+             class="input"
+             required>
+
+        <button class="button" type="submit">Entrar</button>
 
     <button class="forgot" type="button" id="forgotBtn">Esqueceu sua senha?</button>
-    <button class="button" type="button" id="loginBtn">Entrar</button>
+    </form>
+
+
     
     
+
+
     <div class="orContainer">
-      <div class="line"></div>
-      <span class="or">Ou</span>
-      <div class="line"></div>
+      <div class="line"></div><span class="or">Ou</span><div class="line"></div>
     </div>
 
     <div class="signupText">
-      Não tem uma conta? <a href="{% url 'amigofiel:cadastro' %}" class="signupLink"><br>Cadastre-se</a>
+      Não tem uma conta? <a href="{% url 'cadastro' %}" class="signupLink"><br>Cadastre-se</a>
     </div>
   </div>
-
-  <!-- JS -->
-  <script src="{% static 'js/login.js' %}"></script>
 </body>
 </html>
