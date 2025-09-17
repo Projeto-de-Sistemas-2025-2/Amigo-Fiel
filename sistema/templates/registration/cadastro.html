@@ -5,6 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cadastro - Amigo Fiel</title>
+<<<<<<< HEAD
+=======
 
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
@@ -16,7 +18,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- CSS -->
+>>>>>>> main
   <link rel="stylesheet" href="{% static 'css/login.css' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+    <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
 </head>
 <body>
   <div class="decor-bg cadastro-bg">
@@ -34,25 +40,47 @@
 
     <h1 class="title">CADASTRO</h1>
 
-    <form id="cadastroForm">
-      <label class="label" for="nome">Nome</label>
-      <input type="text" id="nome" class="input" placeholder="Digite aqui seu nome" required>
+    <!-- UserCreationForm espera: username, password1, password2 -->
+    <form method="post" novalidate>
+      {% csrf_token %}
 
-      <label class="label" for="email">E-mail</label>
-      <input type="email" id="email" class="input" placeholder="Digite aqui seu e-mail" required>
+      {% if form.non_field_errors %}
+        <div class="error">
+          {% for e in form.non_field_errors %}<div>{{ e }}</div>{% endfor %}
+        </div>
+      {% endif %}
 
-      <label class="label" for="senha">Senha</label>
-      <input type="password" id="senha" class="input" placeholder="Digite aqui sua senha" required>
+      <label class="label" for="id_username">Usuário</label>
+      <input type="text"
+             id="id_username"
+             name="username"
+             class="input"
+             value="{{ form.username.value|default_if_none:'' }}"
+             required>
+      {% for e in form.username.errors %}<div class="error">{{ e }}</div>{% endfor %}
 
-      <label class="label" for="confirmar">Confirmação de Senha</label>
-      <input type="password" id="confirmar" class="input" placeholder="Digite aqui sua senha novamente" required>
+      <label class="label" for="id_password1">Senha</label>
+      <input type="password"
+             id="id_password1"
+             name="password1"
+             class="input"
+             required>
+      {% for e in form.password1.errors %}<div class="error">{{ e }}</div>{% endfor %}
 
-      <div id="error" class="error" style="display:none;"></div>
+      <label class="label" for="id_password2">Confirmação de senha</label>
+      <input type="password"
+             id="id_password2"
+             name="password2"
+             class="input"
+             required>
+      {% for e in form.password2.errors %}<div class="error">{{ e }}</div>{% endfor %}
+
       <button class="button" type="submit">Cadastrar</button>
     </form>
-  </div>
 
-  <!-- JS -->
-  <script src="{% static 'js/cadastro.js' %}"></script>
+    <div class="signupText">
+      Já tem conta? <a href="{% url 'login' %}" class="signupLink">Entrar</a>
+    </div>
+  </div>
 </body>
 </html>

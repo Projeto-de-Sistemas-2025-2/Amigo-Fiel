@@ -74,8 +74,12 @@ WSGI_APPLICATION = 'sistema.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',  # em Django 5 use 'postgresql'
+        'NAME': 'amigofiel',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',   # troque se for diferente
+        'HOST': '127.0.0.1',      # ou 'localhost'
+        'PORT': '5432',
     }
 }
 
@@ -114,16 +118,23 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
+# ✅ STATIC 
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR/'static/'
-STATICFILES_DIRS = [
-    BASE_DIR / 'templates' / 'style',   # aponta para a sua pasta atual de css/js/img
-]
+STATICFILES_DIRS = [ BASE_DIR / 'templates' / 'style' ]
+# Em produção, aí sim defina STATIC_ROOT (ex.: BASE_DIR / 'staticfiles')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-LOGUIN_URL = '/'
+# ✅ LOGIN_URL (havia um typo: LOGUIN_URL)
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/amigofiel/'
+LOGOUT_REDIRECT_URL = '/login/'
 
+STATICFILES_DIRS
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
