@@ -8,13 +8,36 @@
 
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
-  
-  <!-- CSS global das páginas -->
+
+  <!-- CSS global -->
   <link rel="stylesheet" href="{% static 'css/pages.css' %}">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
 
   {% block extra_head %}{% endblock %}
 </head>
 <body>
+
+  <!-- Topbar (usa classes do pages.css) -->
+       <!-- Topbar -->
+    <div class="topbar">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <img src="{% static 'img/amigo-fiel-logo.png' %}" alt="Amigo Fiel" width="150" height="150" style="border-radius:10px">
+        <strong>AMIGO FIEL</strong>
+      </div>
+      <nav>
+        <a href="{% url 'amigofiel:home' %}">Início</a>
+        <a href="{% url 'amigofiel:listar-animais' %}">Adotar</a>
+        <a href="#">Doar</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'logout' %}">Sair</a>
+        {% else %}
+          <a href="{% url 'login' %}">Entrar</a>
+        {% endif %}
+      </nav>
+    </div>
+
+  <!-- Formas decorativas (posicionadas pelo pages.css) -->
   {% block shapes %}
   <div class="shape bl-yellow"></div>
   <div class="shape bl-teal"></div>
@@ -22,8 +45,23 @@
   <div class="shape bl-grey"></div>
   {% endblock %}
 
+  <!-- Área principal -->
   <div class="wrap">
-    {% block body %}{% endblock %}
+    <div class="container">
+      {% block body %}{% endblock %}
+    </div>
   </div>
+
+  <!-- Rodapé simples (usa tipografia do pages.css) -->
+<footer class="topbar" role="contentinfo" style="margin:12px auto 0;">
+  <div class="muted">© {% now "Y" %} Amigo Fiel</div>
+  <nav class="muted" aria-label="Rodapé">
+    <a href="{% url 'amigofiel:sobre' %}" class="muted" style="text-decoration:none;">Sobre</a> ·
+    <a href="{% url 'amigofiel:contato' %}" class="muted" style="text-decoration:none;">Contato</a>
+  </nav>
+</footer>
+
+
+  {% block extra_js %}{% endblock %}
 </body>
 </html>

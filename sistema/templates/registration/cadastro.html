@@ -2,37 +2,28 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cadastro - Amigo Fiel</title>
-<<<<<<< HEAD
-=======
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
-
-
-  <!-- Fontes -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- CSS -->
->>>>>>> main
   <link rel="stylesheet" href="{% static 'css/login.css' %}">
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
-    <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
+  <style>
+    /* utilitários mínimos sem conflitar com login.css */
+    .hidden { display: none; }
+  </style>
 </head>
 <body>
+  <!-- Fundo Decorativo seguindo as classes do login.css -->
   <div class="decor-bg cadastro-bg">
-    <div class="yellow-circle cadastro-yellow"></div>
-    <div class="blue-circle cadastro-blue"></div>
-    <div class="left-triangle cadastro-left"></div>
-    <div class="right-triangle cadastro-right"></div>
+    <div class="cadastro-yellow"></div>
+    <div class="cadastro-blue"></div>
+    <div class="cadastro-left"></div>
+    <div class="cadastro-right"></div>
   </div>
 
   <div class="container">
+    <!-- Marca -->
     <div class="logo-wrapper">
       <img src="{% static 'img/amigo-fiel-logo.png' %}" alt="Amigo Fiel Logo" class="logo">
       <div class="brand">AMIGO FIEL</div>
@@ -40,47 +31,121 @@
 
     <h1 class="title">CADASTRO</h1>
 
-    <!-- UserCreationForm espera: username, password1, password2 -->
+    <!-- Sumário de erros (mantém visual do .error do seu CSS) -->
+    {% if form.errors or form.non_field_errors %}
+      <div class="error" role="alert" aria-live="polite">
+        <strong>Verifique os campos abaixo:</strong>
+        <ul style="margin:8px 0 0 18px; padding:0;">
+          {% for field in form %}
+            {% for error in field.errors %}
+              <li><a href="#{{ field.id_for_label }}" style="color:inherit; text-decoration:underline;">{{ field.label }}:</a> {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+          {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
     <form method="post" novalidate>
       {% csrf_token %}
 
-      {% if form.non_field_errors %}
-        <div class="error">
-          {% for e in form.non_field_errors %}<div>{{ e }}</div>{% endfor %}
-        </div>
-      {% endif %}
-
-      <label class="label" for="id_username">Usuário</label>
-      <input type="text"
-             id="id_username"
-             name="username"
-             class="input"
-             value="{{ form.username.value|default_if_none:'' }}"
-             required>
+      <!-- Acesso -->
+      <label class="label" for="{{ form.username.id_for_label }}">Usuário</label>
+      {{ form.username }}
       {% for e in form.username.errors %}<div class="error">{{ e }}</div>{% endfor %}
 
-      <label class="label" for="id_password1">Senha</label>
-      <input type="password"
-             id="id_password1"
-             name="password1"
-             class="input"
-             required>
+      <label class="label" for="{{ form.password1.id_for_label }}">Senha</label>
+      {{ form.password1 }}
       {% for e in form.password1.errors %}<div class="error">{{ e }}</div>{% endfor %}
 
-      <label class="label" for="id_password2">Confirmação de senha</label>
-      <input type="password"
-             id="id_password2"
-             name="password2"
-             class="input"
-             required>
+      <label class="label" for="{{ form.password2.id_for_label }}">Confirmação de senha</label>
+      {{ form.password2 }}
       {% for e in form.password2.errors %}<div class="error">{{ e }}</div>{% endfor %}
 
-      <button class="button" type="submit">Cadastrar</button>
-    </form>
+      <!-- Tipo -->
+      <label class="label" for="{{ form.user_type.id_for_label }}">Tipo de conta</label>
+      {{ form.user_type }}
+      {% for e in form.user_type.errors %}<div class="error">{{ e }}</div>{% endfor %}
 
-    <div class="signupText">
-      Já tem conta? <a href="{% url 'login' %}" class="signupLink">Entrar</a>
-    </div>
+      <!-- Contato -->
+      <label class="label" for="{{ form.telefone.id_for_label }}">Telefone (opcional)</label>
+      {{ form.telefone }}
+      {% for e in form.telefone.errors %}<div class="error">{{ e }}</div>{% endfor %}
+
+      <label class="label" for="{{ form.cidade.id_for_label }}">Cidade (opcional)</label>
+      {{ form.cidade }}
+      {% for e in form.cidade.errors %}<div class="error">{{ e }}</div>{% endfor %}
+
+      <!-- Empresa -->
+      <div id="grp-empresa" class="hidden">
+        <label class="label" for="{{ form.razao_social.id_for_label }}">Razão social</label>
+        {{ form.razao_social }}
+        {% for e in form.razao_social.errors %}<div class="error">{{ e }}</div>{% endfor %}
+
+        <label class="label" for="{{ form.cnpj_empresa.id_for_label }}">CNPJ</label>
+        {{ form.cnpj_empresa }}
+        {% for e in form.cnpj_empresa.errors %}<div class="error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <!-- ONG -->
+      <div id="grp-ong" class="hidden">
+        <label class="label" for="{{ form.nome_fantasia.id_for_label }}">Nome fantasia</label>
+        {{ form.nome_fantasia }}
+        {% for e in form.nome_fantasia.errors %}<div class="error">{{ e }}</div>{% endfor %}
+
+        <label class="label" for="{{ form.cnpj_ong.id_for_label }}">CNPJ</label>
+        {{ form.cnpj_ong }}
+        {% for e in form.cnpj_ong.errors %}<div class="error">{{ e }}</div>{% endfor %}
+
+        <label class="label" for="{{ form.site.id_for_label }}">Site</label>
+        {{ form.site }}
+        {% for e in form.site.errors %}<div class="error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <button class="button" type="submit">Cadastrar</button>
+
+      <div class="signupText">
+        Já tem conta? <a href="{% url 'login' %}" class="signupLink">Entrar</a>
+      </div>
+    </form>
   </div>
+
+  <script>
+    // Toggle Empresa/ONG com disable para inputs irrelevantes
+    const selectTipo = document.getElementById("id_user_type");
+    const grpEmpresa = document.getElementById("grp-empresa");
+    const grpOng = document.getElementById("grp-ong");
+
+    function setDisabled(container, disabled) {
+      if (!container) return;
+      container.querySelectorAll("input, select, textarea").forEach(el => {
+        el.disabled = disabled;
+        if (disabled) el.setAttribute("aria-disabled", "true");
+        else el.removeAttribute("aria-disabled");
+      });
+    }
+
+    function toggleGroups(){
+      const v = selectTipo?.value;
+      const isEmp = v === "empresa";
+      const isOng = v === "ong";
+
+      if (grpEmpresa) {
+        grpEmpresa.classList.toggle("hidden", !isEmp);
+        setDisabled(grpEmpresa, !isEmp);
+      }
+      if (grpOng) {
+        grpOng.classList.toggle("hidden", !isOng);
+        setDisabled(grpOng, !isOng);
+      }
+    }
+
+    if (selectTipo){
+      toggleGroups();
+      selectTipo.addEventListener("change", toggleGroups);
+    }
+  </script>
 </body>
 </html>

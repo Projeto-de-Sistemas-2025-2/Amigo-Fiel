@@ -24,7 +24,7 @@
 html,body{ height:100% }
 body{
   margin:0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Color Emoji", "Apple Color Emoji";
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Color Emoji", "Apple Color Emoji";
   color:var(--ink);
   background:var(--bg);
 }
@@ -134,6 +134,9 @@ label{ font-size:.95rem; margin:8px 0 6px; display:block }
 }
 .topbar a{ margin-left:12px; text-decoration:none; color:var(--ink) }
 
+.footer { margin:12px auto 0; }
+
+
 .hero{ display:grid; gap:10px; text-align:center; margin-bottom:14px }
 
 .grid{
@@ -185,4 +188,34 @@ label{ font-size:.95rem; margin:8px 0 6px; display:block }
 @media (min-width: 1024px){
   .container{ max-width:var(--container-lg) }
   .hero{ grid-template-columns: 1.2fr 1fr; text-align:left; align-items:center }
+}
+
+/* ---------- Utilitários responsivos extras ---------- */
+.fluid-img{ max-width:100%; height:auto; display:block }
+
+/* Tipografia responsiva: títulos com clamp */
+.h1{ font-size: clamp(1.3rem, 2.5vw, 2rem); margin:0 0 8px }
+.h2{ font-size: clamp(1.1rem, 2vw, 1.5rem); margin:0 0 6px }
+
+/* Grades utilitárias (mobile-first) */
+.grid-1{ display:grid; grid-template-columns:1fr; gap:14px }
+@media (min-width: 768px){
+  .grid-md-2{ grid-template-columns: repeat(2, 1fr) }
+  .grid-md-3{ grid-template-columns: repeat(3, 1fr) }
+}
+@media (min-width: 1024px){
+  .grid-lg-4{ grid-template-columns: repeat(4, 1fr) }
+}
+
+/* Espaçamentos rápidos */
+.mt-0{ margin-top:0 } .mt-8{ margin-top:8px } .mt-16{ margin-top:16px }
+.mb-0{ margin-bottom:0 } .mb-8{ margin-bottom:8px } .mb-16{ margin-bottom:16px }
+
+/* Topbar mobile menu */
+.menu-toggle{ display:inline-flex; gap:6px; align-items:center; border:none; background:#11182708; padding:8px 12px; border-radius:12px; cursor:pointer }
+.menu{ display:none }
+.menu.open{ display:flex; flex-direction:column; gap:8px }
+@media (min-width: 768px){
+  .menu{ display:flex !important; flex-direction:row; gap:12px }
+  .menu-toggle{ display:none }
 }

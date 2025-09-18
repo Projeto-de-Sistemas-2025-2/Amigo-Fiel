@@ -1,0 +1,30 @@
+{% extends "style/base_public.html" %}
+{% load static %}
+
+{% block title %}Contato{% endblock %}
+
+{% block body %}
+  <!-- Hero -->
+  <section class="hero center">
+    <div class="brand">
+      <div class="logo">✉️</div>
+      <h1 class="h1">Fale conosco</h1>
+      <p class="muted">Dúvidas, parcerias, imprensa, sugestões — estamos aqui para ouvir.</p>
+    </div>
+  </section>
+  <!-- Contatos rápidos -->
+  <section class="grid" style="margin-top:14px;">
+    <article class="mini-card center">
+      <h3 class="h2">E-mail</h3>
+      <p><a href="mailto:contato@amigofiel.org">contato@amigofiel.org</a></p>
+    </article>
+    <article class="mini-card center">
+      <h3 class="h2">WhatsApp</h3>
+      <p><a href="https://wa.me/5562982418089" target="_blank" rel="noopener">Abrir conversa</a></p>
+    </article>
+    <article class="mini-card center">
+      <h3 class="h2">Redes</h3>
+      <p><a href="#" target="_blank" rel="noopener">@amigofiel</a></p>
+    </article>
+  </section>
+{% endblock %}

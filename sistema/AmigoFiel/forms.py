@@ -1,0 +1,65 @@
+from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+import re
+
+TIPOS = (
+    ("comum", "Usuário Comum"),
+    ("empresa", "Empresa"),
+    ("ong", "ONG"),
+)
+
+CNPJ_REGEX = re.compile(r"^\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}$|^\d{14}$")
+
+class CadastroForm(UserCreationForm):
+    user_type = forms.ChoiceField(choices=TIPOS, label="Tipo de conta")
+
+    telefone = forms.CharField(max_length=20, required=False, label="Telefone")
+    cidade = forms.CharField(max_length=80, required=False, label="Cidade")
+
+    razao_social = forms.CharField(max_length=120, required=False, label="Razão social")
+    cnpj_empresa = forms.CharField(max_length=18, required=False, label="CNPJ (Empresa)")
+
+    nome_fantasia = forms.CharField(max_length=120, required=False, label="Nome fantasia (ONG)")
+    cnpj_ong = forms.CharField(max_length=18, required=False, label="CNPJ (ONG)")
+    site = forms.URLField(required=False, label="Site")
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = (
+            "username", "password1", "password2", "user_type",
+            "telefone", "cidade",
+            "razao_social", "cnpj_empresa",
+            "nome_fantasia", "cnpj_ong", "site"
+        )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            css = field.widget.attrs.get("class", "")
+            field.widget.attrs["class"] = (css + " input").strip()
+
+        # placeholders básicos
+        self.fields["username"].widget.attrs.setdefault("placeholder", "Usuário")
+        self.fields["password1"].widget.attrs.setdefault("placeholder", "Senha")
+        self.fields["password2"].widget.attrs.setdefault("placeholder", "Confirme a senha")
+
+    def clean(self):
+        data = super().clean()
+        t = data.get("user_type")
+
+        if t == "empresa":
+            if not data.get("razao_social"):
+                self.add_error("razao_social", "Informe a razão social.")
+            cnpj = data.get("cnpj_empresa")
+            if not cnpj or not CNPJ_REGEX.match(cnpj):
+                self.add_error("cnpj_empresa", "Informe um CNPJ válido.")
+
+        if t == "ong":
+            if not data.get("nome_fantasia"):
+                self.add_error("nome_fantasia", "Informe o nome fantasia.")
+            cnpj = data.get("cnpj_ong")
+            if not cnpj or not CNPJ_REGEX.match(cnpj):
+                self.add_error("cnpj_ong", "Informe um CNPJ válido.")
+
+        return data

@@ -5,23 +5,6 @@
 
 {% block body %}
   <div class="container" style="max-width:980px">
-    <!-- Topbar -->
-    <div class="topbar">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <img src="{% static 'img/amigo-fiel-logo.png' %}" alt="Amigo Fiel" width="150" height="150" style="border-radius:10px">
-        <strong>AMIGO FIEL</strong>
-      </div>
-      <nav>
-        <a href="{% url 'amigofiel:home' %}">Início</a>
-        <a href="{% url 'amigofiel:listar-animais' %}">Adotar</a>
-        <a href="#">Doar</a>
-        {% if user.is_authenticated %}
-          <a href="{% url 'logout' %}">Sair</a>
-        {% else %}
-          <a href="{% url 'login' %}">Entrar</a>
-        {% endif %}
-      </nav>
-    </div>
 
     <!-- Hero -->
     <section class="hero">
@@ -102,8 +85,4 @@
 
     <p class="muted center" style="margin:22px 0 6px">© {% now "Y" %} Amigo Fiel</p>
   </div>
-<<<<<<< HEAD
 {% endblock %}
-=======
-{% endblock %}
->>>>>>> main

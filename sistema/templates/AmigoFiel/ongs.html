@@ -1,0 +1,86 @@
+{% extends "style/base_public.html" %}
+{% load static %}
+
+{% block title %}ONGs — Amigo Fiel{% endblock %}
+
+{% block body %}
+  <div class="container">
+    <!-- Cabeçalho / Hero -->
+    <section class="hero center">
+      <div class="container">
+        <h1>ONGs cadastradas</h1>
+        <small class="muted">Encontre e apoie organizações parceiras</small>
+      </div>
+    </section>
+
+    <!-- Filtros / Busca -->
+    <section class="card">
+      <form method="get">
+        <div class="grid">
+          <div class="input-wrap">
+            <label for="q">Buscar por nome ou @username</label>
+            <input id="q" name="q" type="text" class="input" value="{{ q }}" placeholder="Ex.: Patinhas Felizes" />
+          </div>
+          <div class="input-wrap">
+            <label for="cidade">Filtrar por cidade</label>
+            <input id="cidade" name="cidade" type="text" class="input" value="{{ cidade }}" placeholder="Ex.: Palmas" />
+          </div>
+          <div class="input-wrap" style="align-self:end;">
+            <button class="btn btn-primary" type="submit">Buscar</button>
+          </div>
+        </div>
+      </form>
+      <div class="actions">
+        <div class="line"></div>
+        <span class="muted">ou</span>
+        <div class="line"></div>
+      </div>
+      <p class="center muted">Deixe os campos vazios para ver todas as ONGs.</p>
+    </section>
+
+    <!-- Lista -->
+    {% if ongs %}
+      <section class="grid" style="margin-top:14px;">
+        {% for ong in ongs %}
+          <article class="mini-card">
+            <!-- Se futuramente houver imagem/logo da ONG, use <img class="thumb" src="{{ ong.logo.url }}" alt="{{ ong.nome_fantasia }}"> -->
+            <h3>{{ ong.nome_fantasia }}</h3>
+            <p class="muted">{% if ong.cidade %}🏙️ {{ ong.cidade }}{% else %}—{% endif %}</p>
+            <p>🐾 {{ ong.qtd_pets }} pet{{ ong.qtd_pets|pluralize }}</p>
+
+            <div class="actions">
+              {% if ong.site %}
+                <a href="{{ ong.site }}" target="_blank" rel="noopener" class="btn btn-secondary">Visitar site</a>
+              {% endif %}
+              {% if ong.cidade %}
+                <a href="?cidade={{ ong.cidade|urlencode }}" class="btn btn-secondary">ONGs em {{ ong.cidade }}</a>
+              {% endif %}
+            </div>
+          </article>
+        {% endfor %}
+      </section>
+
+      <!-- Paginação -->
+      {% if is_paginated %}
+        <nav class="actions" aria-label="Paginação" style="margin-top:16px;">
+          {% if page_obj.has_previous %}
+            <a class="btn btn-secondary"
+               href="?page={{ page_obj.previous_page_number }}&q={{ q|urlencode }}&cidade={{ cidade|urlencode }}">Anterior</a>
+          {% endif %}
+
+          <span class="muted">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+
+          {% if page_obj.has_next %}
+            <a class="btn btn-secondary"
+               href="?page={{ page_obj.next_page_number }}&q={{ q|urlencode }}&cidade={{ cidade|urlencode }}">Próxima</a>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% else %}
+      <section class="card center">
+        <p class="muted">Nenhuma ONG encontrada para os filtros informados.</p>
+      </section>
+    {% endif %}
+
+  </div>
+{% endblock %}
