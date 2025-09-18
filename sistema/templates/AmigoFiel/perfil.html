@@ -1,0 +1,163 @@
+{% extends "style/base_public.html" %}
+{% load static %}
+
+{% block title %}
+  {% if tipo == 'usuario' %}@{{ perfil.user.username }} — Perfil{% elif tipo == 'empresa' %}
+    {{ perfil.razao_social }} — Perfil
+  {% elif tipo == 'ong' %}
+    {{ perfil.nome_fantasia }} — Perfil
+  {% elif tipo == 'pet' %}
+    {{ pet.nome }} — Pet
+  {% else %}Perfil{% endif %}
+{% endblock %}
+
+{% block body %}
+<div class="container">
+
+  {% if tipo == 'usuario' %}
+    <!-- USUÁRIO COMUM -->
+    <section class="hero">
+      <div>
+        <h1>@{{ perfil.user.username }}</h1>
+        <p class="muted">
+          {% if perfil.cidade %}🏙️ {{ perfil.cidade }}{% endif %}
+          {% if perfil.telefone %} • ☎️ {{ perfil.telefone }}{% endif %}
+        </p>
+      </div>
+      <div class="only-desktop">
+        {% if perfil.foto %}
+          <img class="thumb fluid-img" src="{{ perfil.foto.url }}" alt="Foto de {{ perfil.user.username }}" loading="lazy">
+        {% endif %}
+      </div>
+    </section>
+
+    {% if pets %}
+      <section class="card">
+        <h2>Pets de {{ perfil.user.username }}</h2>
+        <div class="grid" style="margin-top:10px">
+          {% for p in pets %}
+            <article class="mini-card">
+              {% if p.imagem %}<img class="thumb" src="{{ p.imagem.url }}" alt="{{ p.nome }}" loading="lazy">{% endif %}
+              <h3 style="margin:6px 0 4px">{{ p.nome }}</h3>
+              <p class="muted">
+                {{ p.get_especie_display }}{% if p.raca %} • {{ p.raca }}{% endif %}
+                {% if p.idade_anos %} • {{ p.idade_anos }} ano{{ p.idade_anos|pluralize }}{% endif %}
+              </p>
+              <div class="actions">
+                <a class="btn btn-primary" href="{% url 'amigofiel:perfil-pet' handle=p.slug %}">Ver pet</a>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+  {% elif tipo == 'empresa' %}
+    <!-- EMPRESA -->
+    <section class="hero">
+      <div>
+        <h1>{{ perfil.razao_social }}</h1>
+        <p class="muted">
+          @{{ perfil.user.username }}
+          {% if perfil.cidade %} • 🏙️ {{ perfil.cidade }}{% endif %}
+          {% if perfil.cnpj %} • CNPJ: {{ perfil.cnpj }}{% endif %}
+        </p>
+      </div>
+      <div class="only-desktop">
+        {% if perfil.foto %}<img class="thumb fluid-img" src="{{ perfil.foto.url }}" alt="Logo {{ perfil.razao_social }}" loading="lazy">{% endif %}
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Produtos</h2>
+      {% if produtos %}
+        <div class="grid" style="margin-top:10px">
+          {% for pr in produtos %}
+            <article class="mini-card">
+              {% if pr.imagem %}<img class="thumb" src="{{ pr.imagem.url }}" alt="{{ pr.nome }}" loading="lazy">{% endif %}
+              <h3 style="margin:6px 0 4px">{{ pr.nome }}</h3>
+              <p class="muted">{{ pr.descricao|default:"" }}</p>
+              <p><strong>R$ {{ pr.preco }}</strong>{% if pr.estoque %} • {{ pr.estoque }} un.{% endif %}</p>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="muted">Nenhum produto ativo por enquanto.</p>
+      {% endif %}
+    </section>
+
+  {% elif tipo == 'ong' %}
+    <!-- ONG -->
+    <section class="hero">
+      <div>
+        <h1>{{ perfil.nome_fantasia }}</h1>
+        <p class="muted">
+          @{{ perfil.user.username }}
+          {% if perfil.cidade %} • 🏙️ {{ perfil.cidade }}{% endif %}
+          {% if perfil.cnpj %} • CNPJ: {{ perfil.cnpj }}{% endif %}
+          {% if perfil.site %} • 🌐 <a href="{{ perfil.site }}" target="_blank" rel="noopener">Site</a>{% endif %}
+        </p>
+      </div>
+      <div class="only-desktop">
+        {% if perfil.foto %}<img class="thumb fluid-img" src="{{ perfil.foto.url }}" alt="Logo {{ perfil.nome_fantasia }}" loading="lazy">{% endif %}
+      </div>
+    </section>
+
+    {% if pets %}
+      <section class="card">
+        <h2>Pets da ONG</h2>
+        <div class="grid" style="margin-top:10px">
+          {% for p in pets %}
+            <article class="mini-card">
+              {% if p.imagem %}<img class="thumb" src="{{ p.imagem.url }}" alt="{{ p.nome }}" loading="lazy">{% endif %}
+              <h3 style="margin:6px 0 4px">{{ p.nome }}</h3>
+              <p class="muted">
+                {{ p.get_especie_display }}{% if p.raca %} • {{ p.raca }}{% endif %}
+                {% if p.idade_anos %} • {{ p.idade_anos }} ano{{ p.idade_anos|pluralize }}{% endif %}
+              </p>
+              <div class="actions">
+                <a class="btn btn-primary" href="{% url 'amigofiel:perfil-pet' handle=p.slug %}">Ver pet</a>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+  {% elif tipo == 'pet' %}
+    <!-- PET -->
+    <section class="hero">
+      <div>
+        <h1>{{ pet.nome }}</h1>
+        <p class="muted">
+          {{ pet.get_especie_display }}{% if pet.raca %} • {{ pet.raca }}{% endif %}
+          {% if pet.idade_anos %} • {{ pet.idade_anos }} ano{{ pet.idade_anos|pluralize }}{% endif %}
+          {% if pet.adotado %} • ✅ Adotado{% else %} • 💛 Disponível{% endif %}
+        </p>
+      </div>
+      <div class="only-desktop">
+        {% if pet.imagem %}<img class="thumb fluid-img" src="{{ pet.imagem.url }}" alt="{{ pet.nome }}" loading="lazy">{% endif %}
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Sobre</h2>
+      <p class="muted">{{ pet.descricao|default:"Sem descrição." }}</p>
+
+      <div class="actions" style="margin-top:10px">
+        {% if pet.tutor %}
+          <a class="btn btn-secondary" href="{% url 'amigofiel:perfil-usuario' handle=pet.tutor.user.username %}">
+            Tutor: @{{ pet.tutor.user.username }}
+          </a>
+        {% endif %}
+        {% if pet.ong %}
+          <a class="btn btn-secondary" href="{% url 'amigofiel:perfil-ong' handle=pet.ong.user.username %}">
+            ONG: {{ pet.ong.nome_fantasia }}
+          </a>
+        {% endif %}
+      </div>
+    </section>
+  {% endif %}
+
+</div>
+{% endblock %}

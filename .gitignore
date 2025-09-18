@@ -14,7 +14,6 @@ __pycache__/
 # Django (dev)
 db.sqlite3
 *.sqlite3
-media/
 staticfiles/
 
 # Build/egg

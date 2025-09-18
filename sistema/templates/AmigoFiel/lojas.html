@@ -1,0 +1,109 @@
+{% extends "style/base_public.html" %}
+{% load static %}
+
+{% block title %}Lojas — Amigo Fiel{% endblock %}
+
+{% block body %}
+<div class="container">
+
+  <!-- HERO -->
+  <section class="hero center">
+    <div>
+      <h1>Lojas parceiras</h1>
+      <p class="muted">Encontre empresas parceiras e seus produtos para pets.</p>
+    </div>
+  </section>
+
+  <!-- FILTROS -->
+  <section class="card" aria-labelledby="filtros">
+    <h2 id="filtros" class="only-desktop" style="margin-bottom:6px">Filtros</h2>
+    <form method="get" class="grid">
+      <div class="input-wrap">
+        <label for="q">Nome / @username</label>
+        <input id="q" name="q" class="input" type="text" value="{{ q }}" placeholder="Ex.: PetShop Central">
+      </div>
+
+      <div class="input-wrap">
+        <label for="cidade">Cidade</label>
+        <input id="cidade" name="cidade" class="input" type="text" value="{{ cidade }}" placeholder="Ex.: Palmas">
+      </div>
+
+      <div class="input-wrap" style="display:flex;align-items:center;gap:8px">
+        <input id="com_produtos" name="com_produtos" value="1" type="checkbox" {% if com_produtos %}checked{% endif %}>
+        <label for="com_produtos" style="margin:0">Mostrar apenas com produtos ativos</label>
+      </div>
+
+      <div class="actions" style="grid-column:1/-1">
+        <button class="btn btn-primary" type="submit">Buscar</button>
+        <a class="btn btn-secondary" href="{% url 'amigofiel:listar-lojas' %}">Limpar</a>
+      </div>
+    </form>
+  </section>
+
+  <!-- LISTA -->
+  {% if lojas %}
+    <section class="grid" aria-label="Resultados" style="margin-top:14px">
+      {% for loja in lojas %}
+        {% url 'amigofiel:perfil-empresa' handle=loja.user.username as perfil_url %}
+        <article class="mini-card">
+          {% if loja.foto %}
+            <a href="{{ perfil_url }}" aria-label="Perfil da {{ loja.razao_social }}">
+              <img class="thumb fluid-img" src="{{ loja.foto.url }}" alt="Logo da {{ loja.razao_social }}" loading="lazy" decoding="async">
+            </a>
+          {% endif %}
+
+          <h3 style="margin:6px 0 4px">
+            <a href="{{ perfil_url }}" style="text-decoration:none; color:inherit;">
+              {{ loja.razao_social }}
+            </a>
+          </h3>
+
+          <p class="muted" style="margin:0 0 6px">
+            {% if loja.cidade %}🏙️ {{ loja.cidade }}{% else %}—{% endif %}
+          </p>
+
+          <p class="muted">
+            🛍️ {{ loja.qtd_produtos_ativos }} produto{{ loja.qtd_produtos_ativos|pluralize }} ativo{{ loja.qtd_produtos_ativos|pluralize }}
+            {% if loja.qtd_produtos and loja.qtd_produtos_ativos != loja.qtd_produtos %}
+              ({{ loja.qtd_produtos }} no total)
+            {% endif %}
+          </p>
+
+          <div class="actions">
+            <a class="btn btn-primary" href="{{ perfil_url }}">Ver perfil</a>
+            {% if loja.user.email %}
+              <a class="btn btn-secondary"
+                 href="mailto:{{ loja.user.email }}?subject=Contato%20-%20Amigo%20Fiel">Contato</a>
+            {% endif %}
+            {% if loja.cidade %}
+              <a class="btn btn-secondary" href="?cidade={{ loja.cidade|urlencode }}">Lojas em {{ loja.cidade }}</a>
+            {% endif %}
+          </div>
+        </article>
+      {% endfor %}
+    </section>
+
+    <!-- PAGINAÇÃO -->
+    {% if is_paginated %}
+      <nav class="actions" aria-label="Paginação" style="margin-top:16px">
+        {% if page_obj.has_previous %}
+          <a class="btn btn-secondary"
+             href="?page={{ page_obj.previous_page_number }}&q={{ q|urlencode }}&cidade={{ cidade|urlencode }}&com_produtos={{ com_produtos }}">Anterior</a>
+        {% endif %}
+
+        <span class="muted">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+          <a class="btn btn-secondary"
+             href="?page={{ page_obj.next_page_number }}&q={{ q|urlencode }}&cidade={{ cidade|urlencode }}&com_produtos={{ com_produtos }}">Próxima</a>
+        {% endif %}
+      </nav>
+    {% endif %}
+  {% else %}
+    <section class="card center">
+      <p class="muted">Nenhuma loja encontrada com esses filtros.</p>
+    </section>
+  {% endif %}
+
+</div>
+{% endblock %}

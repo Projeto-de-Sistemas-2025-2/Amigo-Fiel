@@ -11,56 +11,66 @@
 
   <!-- CSS global -->
   <link rel="stylesheet" href="{% static 'css/pages.css' %}">
-
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+
+  <!-- Deixa o botão de logout com cara de link -->
+  <style>
+    .btn-link {
+      background: none; border: 0; padding: 0; margin: 0;
+      color: inherit; font: inherit; cursor: pointer; text-decoration: none;
+    }
+    .topbar form { display: inline; }
+  </style>
 
   {% block extra_head %}{% endblock %}
 </head>
 <body>
 
-  <!-- Topbar (usa classes do pages.css) -->
-       <!-- Topbar -->
-    <div class="topbar">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <img src="{% static 'img/amigo-fiel-logo.png' %}" alt="Amigo Fiel" width="150" height="150" style="border-radius:10px">
-        <strong>AMIGO FIEL</strong>
-      </div>
-      <nav>
-        <a href="{% url 'amigofiel:home' %}">Início</a>
-        <a href="{% url 'amigofiel:listar-animais' %}">Adotar</a>
-        <a href="#">Doar</a>
-        {% if user.is_authenticated %}
-          <a href="{% url 'logout' %}">Sair</a>
-        {% else %}
-          <a href="{% url 'login' %}">Entrar</a>
-        {% endif %}
-      </nav>
+  <!-- Topbar -->
+  <header class="topbar" role="banner">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <img src="{% static 'img/amigo-fiel-logo.png' %}" alt="Amigo Fiel" width="48" height="48" style="border-radius:10px">
+      <strong>AMIGO FIEL</strong>
     </div>
 
-  <!-- Formas decorativas (posicionadas pelo pages.css) -->
+    <nav aria-label="Principal">
+      <a href="{% url 'amigofiel:home' %}">Início</a>
+      <a href="{% url 'amigofiel:listar-animais' %}">Adotar</a>
+      <a href="{% url 'amigofiel:listar-ongs' %}">ONGs</a>
+      <a href="{% url 'amigofiel:listar-lojas' %}">Lojas</a>
+      <a href=""></a>
+      {% if user.is_authenticated %}
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button class="btn-link" type="submit" title="Sair">Sair</button>
+        </form>
+      {% else %}
+        <a href="{% url 'login' %}">Entrar</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <!-- Shapes decorativos (opcional sobrescrever no bloco) -->
   {% block shapes %}
-  <div class="shape bl-yellow"></div>
-  <div class="shape bl-teal"></div>
-  <div class="shape bl-slate"></div>
-  <div class="shape bl-grey"></div>
+    <div class="shape bl-yellow"></div>
+    <div class="shape bl-teal"></div>
+    <div class="shape bl-slate"></div>
+    <div class="shape bl-grey"></div>
   {% endblock %}
 
-  <!-- Área principal -->
-  <div class="wrap">
-    <div class="container">
-      {% block body %}{% endblock %}
-    </div>
-  </div>
+  <!-- Área principal (cada página decide usar .container ou não) -->
+  <main class="wrap" role="main">
+    {% block body %}{% endblock %}
+  </main>
 
-  <!-- Rodapé simples (usa tipografia do pages.css) -->
-<footer class="topbar" role="contentinfo" style="margin:12px auto 0;">
-  <div class="muted">© {% now "Y" %} Amigo Fiel</div>
-  <nav class="muted" aria-label="Rodapé">
-    <a href="{% url 'amigofiel:sobre' %}" class="muted" style="text-decoration:none;">Sobre</a> ·
-    <a href="{% url 'amigofiel:contato' %}" class="muted" style="text-decoration:none;">Contato</a>
-  </nav>
-</footer>
-
+  <!-- Rodapé -->
+  <footer class="topbar" role="contentinfo" style="margin:12px auto 0;">
+    <div class="muted">© {% now "Y" %} Amigo Fiel</div>
+    <nav class="muted" aria-label="Rodapé">
+      <a href="{% url 'amigofiel:sobre' %}" class="muted" style="text-decoration:none;">Sobre</a> ·
+      <a href="{% url 'amigofiel:contato' %}" class="muted" style="text-decoration:none;">Contato</a>
+    </nav>
+  </footer>
 
   {% block extra_js %}{% endblock %}
 </body>

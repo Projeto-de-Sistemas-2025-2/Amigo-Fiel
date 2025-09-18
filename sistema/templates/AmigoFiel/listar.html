@@ -1,88 +1,104 @@
 {% extends "style/base_public.html" %}
 {% load static %}
 
-{% block title %}Adotar{% endblock %}
+{% block title %}Pets para adoção — Amigo Fiel{% endblock %}
 
 {% block body %}
-  <div class="container" style="max-width:980px">
+<div class="container">
 
-    <!-- Hero -->
-    <section class="hero">
-      <div>
-        <h1 style="font-size:clamp(24px,4vw,36px);">Encontre seu novo melhor amigo</h1>
-        <p class="muted">Conectamos ONGs, protetores e adotantes com responsabilidade.</p>
-      </div>
-      <div style="display:flex; gap:10px; justify-content:center; margin-top:6px; flex-wrap:wrap">
-        <a class="btn btn-primary" href="{% url 'amigofiel:listar-animais' %}">Quero Adotar</a>
-        <a class="btn btn-secondary" href="#">Quero Doar</a>
-        <a class="btn btn-secondary" href="#">Sou Protetor(a)/ONG</a>
-      </div>
-    </section>
+  <!-- HERO -->
+  <section class="hero center">
+    <div>
+      <h1>Encontre seu novo melhor amigo</h1>
+      <p class="muted">Filtre por espécie, cidade ou nome.</p>
+    </div>
+  </section>
 
-    <!-- Nossa história 
-    <section class="card" style="margin:18px 0;">
-      <div class="grid" style="align-items:center;">
-        <div>
-          <h2 style="margin-bottom:6px;">Nossa história</h2>
-          <p class="muted">
-            O Amigo Fiel nasceu para aproximar quem quer ajudar de quem precisa de um lar.
-            Começamos como uma iniciativa universitária e viramos uma plataforma que integra
-            ONGs, protetores independentes e adotantes — com processos simples, responsáveis
-            e transparentes.
-          </p>
-          <p class="muted">
-            Hoje oferecemos vitrine de adoção, espaço para doações e, em breve,
-            um marketplace para conectar tutores ao ecossistema pet local.
-          </p>
-        </div>
-        <div>
-          <img class="thumb" src="https://images.unsplash.com/photo-1558944351-c3ad2586c1b2?q=80&w=1200&auto=format&fit=crop"
-               alt="Resgate e adoção responsável">
-        </div>
+  <!-- FILTROS -->
+  <section class="card" aria-labelledby="filtros">
+    <h2 id="filtros" class="only-desktop" style="margin-bottom:6px">Filtros</h2>
+    <form method="get" class="grid">
+      <div class="input-wrap">
+        <label for="q">Nome / descrição</label>
+        <input id="q" name="q" type="text" class="input" value="{{ q }}" placeholder="Ex.: Mel, vira-lata, dócil">
       </div>
-    </section>
-    -->
-    <!-- Galeria 3x2 -->
-    <section aria-label="Galeria de pets" style="margin:18px 0;">
-      <h2 style="margin:0 0 10px;">Eles já estão prontos para te conhecer</h2>
-      <div class="grid" style="grid-template-columns:repeat(3,1fr);">
-        <img class="thumb" src="https://images.unsplash.com/photo-1552053831-71594a27632d?q=80&w=800&auto=format&fit=crop" alt="Cachorro 1">
-        <img class="thumb" src="https://enciclopedia.net/imgs/Gato.jpg" alt="Gato 1">
-        <img class="thumb" src="https://images.unsplash.com/photo-1534361960057-19889db9621e?q=80&w=800&auto=format&fit=crop" alt="Cachorro 2">
-        <img class="thumb" src="https://th.bing.com/th/id/R.81100c67a9373d6e508352e3fbf9ce3d?rik=kodjQ0bKLIEHDw&pid=ImgRaw&r=0" alt="Gato 2">
-        <img class="thumb" src="https://tse2.mm.bing.net/th/id/OIP.K0mG9QbQoVeLAh-vU3BMzwHaE7?rs=1&pid=ImgDetMain&o=7&rm=3" alt="Cachorro 3">
-        <img class="thumb" src="https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?q=80&w=800&auto=format&fit=crop" alt="Gato 3">
-      </div>
-    </section>
 
-    <!-- Destaques 
-    <section class="grid" aria-label="Destaques">
-      {% for a in destaques %}
+      <div class="input-wrap">
+        <label for="especie">Espécie</label>
+        <select id="especie" name="especie" class="input">
+          <option value="">Todas</option>
+          {% for v, rot in ESPECIES %}
+            <option value="{{ v }}" {% if especie_sel == v %}selected{% endif %}>{{ rot }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="input-wrap">
+        <label for="cidade">Cidade</label>
+        <input id="cidade" name="cidade" type="text" class="input" value="{{ cidade }}" placeholder="Ex.: Palmas">
+      </div>
+
+      <div class="input-wrap" style="display:flex;align-items:center;gap:8px">
+        <input id="adotados" name="adotados" value="1" type="checkbox" {% if adotados %}checked{% endif %}>
+        <label for="adotados" style="margin:0">Incluir já adotados</label>
+      </div>
+
+      <div class="actions" style="grid-column:1/-1">
+        <button class="btn btn-primary" type="submit">Buscar</button>
+        <a class="btn btn-secondary" href="{% url 'amigofiel:listar-animais' %}">Limpar</a>
+      </div>
+    </form>
+  </section>
+
+  <!-- LISTA -->
+  {% if pets %}
+    <section class="grid" aria-label="Resultados" style="margin-top:14px">
+      {% for p in pets %}
         <article class="mini-card">
-          {% if a.foto %}
-            <</article>img class="thumb" src="{{ a.foto.url }}" alt="{{ a.nome|default:'Animal' }}">
-          {% else %}
-            <img class="thumb" src="https://images.unsplash.com/photo-1517849845537-4d257902454a?q=80&w=800&auto=format&fit=crop" alt="Animal">
+          {% if p.imagem %}
+            <img class="fluid-img" src="{{ p.imagem.url }}" alt="{{ p.nome }}" loading="lazy" decoding="async">
           {% endif %}
-          <h3 style="margin:0 0 4px">{{ a.nome|default:a }}</h3>
+
+          <h3 style="margin:6px 0 4px">{{ p.nome }}</h3>
           <p class="muted" style="margin:0 0 8px">
-            {% if a.raca %}{{ a.raca }}{% endif %}
-            {% if a.porte %} • {{ a.porte }}{% endif %}
-            {% if a.idade %} • {{ a.idade }}{% endif %}
+            {{ p.get_especie_display }}
+            {% if p.raca %} • {{ p.raca }}{% endif %}
+            {% if p.idade_anos %} • {{ p.idade_anos }} ano{% if p.idade_anos|add:-1 %}s{% endif %}{% endif %}
           </p>
-          <a class="btn btn-primary" href="{% url 'amigofiel:listar-animais' %}">Adotar</a>
-        </article>
-      {% empty %}
-        <article class="mini-card">
-          <img class="thumb" src="https://images.unsplash.com/photo-1507149833265-60c372daea22?q=80&w=800&auto=format&fit=crop" alt="">
-          <h3>Ainda sem destaques</h3>
-          <p class="muted">Cadastre o primeiro amigo e ajude a transformar vidas.</p>
-          <a class="btn btn-secondary" href="#">Cadastrar Animal</a>
+
+          <p class="muted">
+            {% if p.tutor and p.tutor.cidade %}🏙️ {{ p.tutor.cidade }}{% elif p.ong and p.ong.cidade %}🏙️ {{ p.ong.cidade }}{% endif %}
+            {% if p.adotado %} • ✅ Adotado{% else %} • 💛 Disponível{% endif %}
+          </p>
+
+          <div class="actions">
+            <a class="btn btn-primary" href="#">Quero Adotar</a>
+          </div>
         </article>
       {% endfor %}
     </section>
-    -->
 
-    <p class="muted center" style="margin:22px 0 6px">© {% now "Y" %} Amigo Fiel</p>
-  </div>
+    <!-- PAGINAÇÃO -->
+    {% if is_paginated %}
+      <nav class="actions" aria-label="Paginação" style="margin-top:16px">
+        {% if page_obj.has_previous %}
+          <a class="btn btn-secondary"
+             href="?page={{ page_obj.previous_page_number }}&q={{ q|urlencode }}&especie={{ especie_sel|urlencode }}&cidade={{ cidade|urlencode }}&adotados={{ adotados }}">Anterior</a>
+        {% endif %}
+
+        <span class="muted">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+          <a class="btn btn-secondary"
+             href="?page={{ page_obj.next_page_number }}&q={{ q|urlencode }}&especie={{ especie_sel|urlencode }}&cidade={{ cidade|urlencode }}&adotados={{ adotados }}">Próxima</a>
+        {% endif %}
+      </nav>
+    {% endif %}
+  {% else %}
+    <section class="card center">
+      <p class="muted">Nenhum pet encontrado com esses filtros.</p>
+    </section>
+  {% endif %}
+
+</div>
 {% endblock %}
