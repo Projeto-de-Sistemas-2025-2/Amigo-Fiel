@@ -88,9 +88,9 @@ class ListarOngs(ListView):
 
 
 class SobreView(TemplateView):
-    template_name = "extra/sobre.html"
+    template_name = "legal/sobre.html"
 
 
 class ContatoView(TemplateView):
-    template_name = "extra/contato.html"
+    template_name = "legal/contato.html"
 
