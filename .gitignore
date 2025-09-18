@@ -1,21 +1,28 @@
+# Virtualenvs
+.venv/
+venv/
+env/
+**/.venv/
+**/venv/
+**/env/
+
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Virtual env
-.venv/
-env/
-venv/
-
-# Logs
-*.log
-
-# Django
+# Django (dev)
 db.sqlite3
+*.sqlite3
 media/
 staticfiles/
-static/
+
+# Build/egg
+build/
+dist/
+.eggs/
+*.egg-info/
+*.egg
 
 # IDE/SO
 .vscode/
@@ -23,6 +30,6 @@ static/
 .DS_Store
 Thumbs.db
 
-# Secrets
+# Env vars
 .env
 .env.*
