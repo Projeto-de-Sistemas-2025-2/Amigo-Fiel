@@ -1,0 +1,46 @@
+{% extends "style/base_perfil.html" %}
+{% load static %}
+
+{% block title %}{{ pet.nome }} — Pet{% endblock %}
+
+{% block avatar %}
+  <img class="avatar"
+       src="{% if pet.imagem %}{{ pet.imagem.url }}{% else %}{% static 'img/defaults/pet.png' %}{% endif %}"
+       alt="{{ pet.nome }}">
+{% endblock %}
+
+{% block perfil_name %}{{ pet.nome }}{% endblock %}
+{% block perfil_handle %}@{{ pet.slug }}{% endblock %}
+{% block perfil_meta %}
+  {{ pet.get_especie_display }}
+  {% if pet.raca %} • {{ pet.raca }}{% endif %}
+  {% if pet.idade_anos %} • {{ pet.idade_anos }} ano{{ pet.idade_anos|pluralize }}{% endif %}
+  {% if pet.adotado %} • ✅ Adotado{% else %} • 🟡 Disponível{% endif %}
+{% endblock %}
+
+{% block perfil_actions %}
+  {% if pet.tutor and pet.tutor.user.email %}
+    <a class="btn btn-primary" href="mailto:{{ pet.tutor.user.email }}?subject=Interesse%20no%20pet%20{{ pet.nome }}">Contatar tutor</a>
+  {% elif pet.ong and pet.ong.user.email %}
+    <a class="btn btn-primary" href="mailto:{{ pet.ong.user.email }}?subject=Interesse%20no%20pet%20{{ pet.nome }}">Contatar ONG</a>
+  {% endif %}
+{% endblock %}
+
+{% block body %}
+  <section class="grid">
+    <article class="mini-card">
+      <h2>Informações</h2>
+      {% if pet.descricao %}<p>{{ pet.descricao }}</p>{% else %}<p class="muted">Sem descrição.</p>{% endif %}
+
+      <div class="muted" style="margin-top:6px">
+        {% if pet.tutor %}
+          Tutor: <a href="{% url 'amigofiel:perfil-usuario' handle=pet.tutor.user.username %}">@{{ pet.tutor.user.username }}</a>
+        {% endif %}
+        {% if pet.ong %}
+          {% if pet.tutor %} • {% endif %}
+          ONG: <a href="{% url 'amigofiel:perfil-ong' handle=pet.ong.user.username %}">{{ pet.ong.nome_fantasia }}</a>
+        {% endif %}
+      </div>
+    </article>
+  </section>
+{% endblock %}

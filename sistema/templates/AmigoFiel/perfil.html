@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-  {% if tipo == 'usuario' %}@{{ perfil.user.username }} — Perfil{% elif tipo == 'empresa' %}
+  {% if tipo == 'usuario' %}@{{ perfil.user.username }}{% elif tipo == 'empresa' %}
     {{ perfil.razao_social }} — Perfil
   {% elif tipo == 'ong' %}
     {{ perfil.nome_fantasia }} — Perfil

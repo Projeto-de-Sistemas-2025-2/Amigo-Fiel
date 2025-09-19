@@ -1,0 +1,62 @@
+{% extends "style/base_perfil.html" %}
+{% load static %}
+
+{% block title %}{{ produto.nome }} — {{ empresa.razao_social }}{% endblock %}
+
+{% block avatar %}
+  <img class="avatar"
+       src="{% if produto.imagem %}{{ produto.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}"
+       alt="{{ produto.nome }}">
+{% endblock %}
+
+{% block perfil_name %}{{ produto.nome }}{% endblock %}
+{% block perfil_handle %}@{{ empresa.user.username }}{% endblock %}
+
+{% block perfil_meta %}
+  <strong>R$ {{ produto.preco }}</strong>
+  · Estoque: {{ produto.estoque }}
+  {% if not produto.ativo %} · <span class="muted">inativo</span>{% endif %}
+{% endblock %}
+
+{% block perfil_actions %}
+  <a class="btn btn-primary"
+     href="{% url 'amigofiel:perfil-empresa' handle=empresa.user.username %}">
+     Ver empresa
+  </a>
+  {% if empresa.cidade %}
+    <span class="pill" style="margin-left:6px">{{ empresa.cidade }}</span>
+  {% endif %}
+{% endblock %}
+
+{% block body %}
+  <section class="grid">
+    <article class="mini-card">
+      <h2>Sobre o produto</h2>
+      {% if produto.descricao %}
+        <p>{{ produto.descricao|linebreaksbr }}</p>
+      {% else %}
+        <p class="muted">Este produto ainda não possui uma descrição detalhada.</p>
+      {% endif %}
+      <ul class="muted" style="margin-top:8px">
+        <li>Cadastrado: {{ produto.criado_em|date:"d/m/Y H:i" }}</li>
+        <li>Atualizado: {{ produto.atualizado_em|date:"d/m/Y H:i" }}</li>
+      </ul>
+    </article>
+
+    <article class="mini-card">
+      <h2>Empresa</h2>
+      <p><strong>{{ empresa.razao_social }}</strong></p>
+      <p class="muted">@{{ empresa.user.username }}</p>
+      {% if empresa.cidade %}<p>🏙️ {{ empresa.cidade }}</p>{% endif %}
+      {% if empresa.telefone %}<p>📞 {{ empresa.telefone }}</p>{% endif %}
+      {% if empresa.user.email %}
+        <p style="margin-top:10px">
+          <a class="btn btn-secondary"
+             href="mailto:{{ empresa.user.email }}?subject={{ produto.nome|urlencode }}%20-%20Amigo%20Fiel">
+             Falar com a empresa
+          </a>
+        </p>
+      {% endif %}
+    </article>
+  </section>
+{% endblock %}

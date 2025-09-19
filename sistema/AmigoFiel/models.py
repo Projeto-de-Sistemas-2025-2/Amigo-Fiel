@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
+from django.urls import reverse
 import uuid
 
 
@@ -139,12 +140,11 @@ class Pet(TimeStampedModel):
         pass
 
 
-# ---- Produtos de empresas ----
+# ---- Produtos de empresas ----  
 class ProdutoEmpresa(TimeStampedModel):
-    empresa = models.ForeignKey(
-        UsuarioEmpresarial, on_delete=models.CASCADE, related_name="produtos"
-    )
+    empresa = models.ForeignKey(UsuarioEmpresarial, on_delete=models.CASCADE, related_name="produtos")
     nome = models.CharField(max_length=120)
+    slug = models.SlugField(max_length=140, blank=True, null=True)  # NEW
     descricao = models.TextField(blank=True)
     preco = models.DecimalField(max_digits=10, decimal_places=2)
     estoque = models.PositiveIntegerField(default=0)
@@ -152,10 +152,38 @@ class ProdutoEmpresa(TimeStampedModel):
 
     imagem = models.ImageField(
         upload_to="produtos/%Y/%m/",
-        blank=True,
-        null=True,
+        blank=True, null=True,
         default="defaults/produto.png",
     )
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["empresa", "slug"], name="uniq_produto_por_empresa")  # garante /empresa/slug único
+        ]
+        indexes = [
+            models.Index(fields=["slug"]),
+        ]
+
     def __str__(self):
         return f"{self.nome} - {self.empresa.razao_social}"
+
+    def save(self, *args, **kwargs):
+        # Gera slug único POR empresa
+        if not self.slug:
+            base = slugify(self.nome)[:120] or "produto"
+            slug = base
+            i = 2
+            while ProdutoEmpresa.objects.filter(empresa=self.empresa, slug=slug).exclude(pk=self.pk).exists():
+                suffix = f"-{i}"
+                slug = (base[:120 - len(suffix)] + suffix)
+                i += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        # /amigofiel/<empresa_handle>/<produto_slug>/
+        return reverse("amigofiel:produto-detalhe", kwargs={
+            "empresa_handle": self.empresa.user.username,
+            "produto_slug": self.slug
+        })
+

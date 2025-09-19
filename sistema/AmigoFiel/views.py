@@ -180,9 +180,8 @@ def perfil_usuario(request, handle: str):
         user__username=handle
     )
     pets = perfil.pets.order_by("-criado_em")[:12]
-    ctx = {"tipo": "usuario", "perfil": perfil, "pets": pets}
-    return render(request, "AmigoFiel/perfil.html", ctx)
-
+    ctx = {"perfil": perfil, "pets": pets}
+    return render(request, "AmigoFiel/perfil/perfil_user.html", ctx)
 
 def perfil_empresa(request, handle: str):
     empresa = get_object_or_404(
@@ -191,12 +190,9 @@ def perfil_empresa(request, handle: str):
         ),
         user__username=handle
     )
-    produtos = (empresa.produtos
-                .filter(ativo=True)
-                .order_by("-criado_em")[:12])
-    ctx = {"tipo": "empresa", "perfil": empresa, "produtos": produtos}
-    return render(request, "AmigoFiel/perfil.html", ctx)
-
+    produtos = (empresa.produtos.filter(ativo=True).order_by("-criado_em")[:12])
+    ctx = {"perfil": empresa, "produtos": produtos}
+    return render(request, "AmigoFiel/perfil/perfil_empresa.html", ctx)
 
 def perfil_ong(request, handle: str):
     ong = get_object_or_404(
@@ -204,14 +200,86 @@ def perfil_ong(request, handle: str):
         user__username=handle
     )
     pets = ong.pets.order_by("-criado_em")[:12]
-    ctx = {"tipo": "ong", "perfil": ong, "pets": pets}
-    return render(request, "AmigoFiel/perfil.html", ctx)
-
+    ctx = {"perfil": ong, "pets": pets}
+    return render(request, "AmigoFiel/perfil/perfil_ong.html", ctx)
 
 def perfil_pet(request, handle: str):
     pet = get_object_or_404(
         Pet.objects.select_related("tutor", "tutor__user", "ong", "ong__user"),
-        slug=handle  # ver dica de slug no bloco 4
+        slug=handle
     )
-    ctx = {"tipo": "pet", "pet": pet}
-    return render(request, "AmigoFiel/perfil.html", ctx)
+    return render(request, "AmigoFiel/perfil/perfil_pet.html", {"pet": pet})
+
+
+# Lista de produtos
+
+class ListarProdutos(ListView):
+    model = ProdutoEmpresa
+    template_name = "AmigoFiel/produtos.html"
+    context_object_name = "produtos"
+    paginate_by = 12
+
+    def get_queryset(self):
+        qs = (ProdutoEmpresa.objects
+              .select_related("empresa", "empresa__user")
+              .filter(ativo=True)  # por padrão só ativos
+              .order_by("nome"))
+
+        q          = (self.request.GET.get("q") or "").strip()
+        cidade     = (self.request.GET.get("cidade") or "").strip()
+        preco_min  = (self.request.GET.get("preco_min") or "").strip()
+        preco_max  = (self.request.GET.get("preco_max") or "").strip()
+        com_estoque = self.request.GET.get("com_estoque") == "1"
+        incluir_inativos = self.request.GET.get("ativos") == "0"  # se quiser ver inativos
+
+        if q:
+            qs = qs.filter(
+                Q(nome__icontains=q) |
+                Q(descricao__icontains=q) |
+                Q(empresa__razao_social__icontains=q) |
+                Q(empresa__user__username__icontains=q)
+            )
+        if cidade:
+            qs = qs.filter(empresa__cidade__icontains=cidade)
+        if preco_min:
+            try:
+                qs = qs.filter(preco__gte=preco_min.replace(",", "."))
+            except Exception:
+                pass
+        if preco_max:
+            try:
+                qs = qs.filter(preco__lte=preco_max.replace(",", "."))
+            except Exception:
+                pass
+        if com_estoque:
+            qs = qs.filter(estoque__gt=0)
+        if incluir_inativos:
+            qs = qs.model.objects.select_related("empresa", "empresa__user").filter(id__in=qs.values("id"))  # mantém filtros
+            qs = qs | ProdutoEmpresa.objects.select_related("empresa", "empresa__user").filter(ativo=False)  # adiciona inativos
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.update({
+            "q": self.request.GET.get("q", ""),
+            "cidade": self.request.GET.get("cidade", ""),
+            "preco_min": self.request.GET.get("preco_min", ""),
+            "preco_max": self.request.GET.get("preco_max", ""),
+            "com_estoque": self.request.GET.get("com_estoque", ""),
+            "ativos": self.request.GET.get("ativos", "1"),
+        })
+        return ctx
+
+def produto_detalhe(request, empresa_handle: str, produto_slug: str):
+    produto = get_object_or_404(
+        ProdutoEmpresa.objects.select_related("empresa", "empresa__user"),
+        empresa__user__username=empresa_handle,
+        slug=produto_slug,
+        ativo=True,
+    )
+    ctx = {
+        "produto": produto,
+        "empresa": produto.empresa,
+    }
+    return render(request, "AmigoFiel/perfil/perfil_produto.html", ctx)

@@ -1,0 +1,80 @@
+{% extends "style/base_perfil.html" %}
+{% load static %}
+
+{% block title %}{{ perfil.razao_social }} — Empresa{% endblock %}
+
+{% block avatar %}
+  <img class="avatar"
+       src="{% if perfil.foto %}{{ perfil.foto.url }}{% else %}{% static 'img/defaults/avatar_empresa.png' %}{% endif %}"
+       alt="Logo {{ perfil.razao_social }}">
+{% endblock %}
+
+{% block perfil_name %}{{ perfil.razao_social }}{% endblock %}
+{% block perfil_handle %}@{{ perfil.user.username }}{% endblock %}
+{% block perfil_meta %}
+  {% if perfil.cidade %}🏙️ {{ perfil.cidade }} · {% endif %}
+  CNPJ: {{ perfil.cnpj }}
+{% endblock %}
+
+{% block perfil_actions %}
+  {% if perfil.user.email %}
+    <a class="btn btn-primary" href="mailto:{{ perfil.user.email }}">Contato</a>
+  {% endif %}
+{% endblock %}
+
+{% block body %}
+  <section class="grid">
+    <article class="mini-card">
+      <h2>Informações</h2>
+      {% if perfil.cidade %}<p><strong>Cidade:</strong> {{ perfil.cidade }}</p>{% endif %}
+      {% if perfil.telefone %}<p><strong>Telefone:</strong> {{ perfil.telefone }}</p>{% endif %}
+      <p><strong>Produtos ativos:</strong> {{ perfil.qtd_produtos_ativos }}</p>
+    </article>
+
+    <article class="mini-card" style="grid-column:1/-1">
+      <div class="perfil-section-header">
+        <h2>Produtos</h2>
+        <small class="muted">Em destaque</small>
+      </div>
+
+      {% if produtos %}
+        <div class="grid grid-1 grid-md-2 grid-lg-4">
+          {% for prod in produtos %}
+            {% with has_slug=prod.slug %}
+            <article class="mini-card">
+              <a
+                {% if has_slug %}
+                  href="{% url 'amigofiel:produto-detalhe' empresa_handle=perfil.user.username produto_slug=prod.slug %}"
+                {% else %}
+                  href="#"
+                {% endif %}
+                style="text-decoration:none; color:inherit; display:block"
+                aria-label="Abrir produto {{ prod.nome }}"
+              >
+                <img class="thumb"
+                     src="{% if prod.imagem %}{{ prod.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}"
+                     alt="{{ prod.nome }}">
+
+                <h3 style="margin:6px 0 4px">{{ prod.nome }}</h3>
+                {% if prod.descricao %}<p class="muted">{{ prod.descricao|truncatechars:80 }}</p>{% endif %}
+                <p><strong>R$ {{ prod.preco }}</strong></p>
+              </a>
+
+              {% if has_slug %}
+                <div class="actions" style="margin-top:6px">
+                  <a class="btn btn-primary"
+                     href="{% url 'amigofiel:produto-detalhe' empresa_handle=perfil.user.username produto_slug=prod.slug %}">
+                     Ver produto
+                  </a>
+                </div>
+              {% endif %}
+            </article>
+            {% endwith %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="muted">Nenhum produto ativo no momento.</p>
+      {% endif %}
+    </article>
+  </section>
+{% endblock %}

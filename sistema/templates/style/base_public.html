@@ -38,6 +38,7 @@
       <a href="{% url 'amigofiel:listar-animais' %}">Adotar</a>
       <a href="{% url 'amigofiel:listar-ongs' %}">ONGs</a>
       <a href="{% url 'amigofiel:listar-lojas' %}">Lojas</a>
+      <a href="{% url 'amigofiel:listar-produtos' %}">Produtos</a>
       <a href=""></a>
       {% if user.is_authenticated %}
         <form action="{% url 'logout' %}" method="post">

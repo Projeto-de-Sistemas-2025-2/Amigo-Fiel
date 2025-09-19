@@ -95,13 +95,10 @@ class PetAdmin(admin.ModelAdmin):
 
 @admin.register(ProdutoEmpresa)
 class ProdutoEmpresaAdmin(admin.ModelAdmin):
-    list_display = ("nome", "empresa", "preco", "estoque", "ativo", "criado_em", "img")
+    list_display = ("nome", "empresa", "preco", "estoque", "ativo", "criado_em")
     list_filter = ("ativo", "criado_em")
     search_fields = ("nome", "empresa__razao_social")
     list_select_related = ("empresa",)
     autocomplete_fields = ("empresa",)
     ordering = ("nome",)
-    readonly_fields = ("img",)
-    fields = ("empresa", "nome", "descricao", "preco", "estoque", "ativo", "imagem", "img")
-
-    def img(self, obj): return _thumb(obj, "imagem", 64)
+    prepopulated_fields = {"slug": ("nome",)}  # opcional: sugere slug no admin
