@@ -1,5 +1,7 @@
+## Grupo 3 - <img align="right" width="350" height="30" alt="Grupo" src="https://github.com/user-attachments/assets/d20ed508-e74b-4077-81d7-0267a378d38c" />
 
 ![logo](https://avatars.githubusercontent.com/t/14021207?s=116&v=4)
+
 
 # Amigo Fiel — Adoção responsável & marketplace pet
 
