@@ -74,12 +74,13 @@ WSGI_APPLICATION = 'sistema.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',  # em Django 5 use 'postgresql'
+        'ENGINE': 'django.db.backends.postgresql',  
         'NAME': 'amigofiel',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',   # troque se for diferente
-        'HOST': '127.0.0.1',      # ou 'localhost'
+        'USER': 'amigofiel_user',
+        'PASSWORD': 'vIqY4sHC9xRrNhdcaQyrSP1WXSJhSWnL',   
+        'HOST': 'dpg-d3bdicd6ubrc739lel60-a.oregon-postgres.render.com',     
         'PORT': '5432',
+        "OPTIONS": { "sslmode": "require" },
     }
 }
 
