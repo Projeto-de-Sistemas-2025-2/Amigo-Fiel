@@ -1,0 +1,66 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Produtos — Amigo Fiel{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
+
+  <!-- CSS base do site + CSS específico de produtos -->
+  <link rel="stylesheet" href="{% static 'css/pages.css' %}">
+  <link rel="stylesheet" href="{% static 'css/produtos.css' %}">
+
+  {% block produtos_extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <img src="{% static 'img/amigo-fiel-logo.png' %}" alt="Amigo Fiel" width="150" height="150" style="border-radius:10px">
+      <strong>AMIGO FIEL</strong>
+    </div>
+    <nav>
+      <a href="{% url 'amigofiel:home' %}">Início</a>
+      <a href="{% url 'amigofiel:listar-animais' %}">Adotar</a>
+      <a href="{% url 'amigofiel:listar-ongs' %}">ONGs</a>
+      <a href="{% url 'amigofiel:listar-lojas' %}">Lojas</a>
+      {% url 'amigofiel:listar-produtos' as url_produtos %}
+      {% if url_produtos %}<a href="{{ url_produtos }}">Produtos</a>{% endif %}
+      {% if user.is_authenticated %}
+        <a href="{% url 'logout' %}">Sair</a>
+      {% else %}
+        <a href="{% url 'login' %}">Entrar</a>
+      {% endif %}
+    </nav>
+  </div>
+
+  {% block prod_hero %}{% endblock %}
+
+  <div class="wrap">
+    <div class="prod-layout container">
+      <aside class="sidenav" aria-label="Departamentos e filtros">
+        {% block prod_sidebar %}{% endblock %}
+      </aside>
+
+      <main class="prod-main">
+        {% block prod_main %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <!-- Rodapé -->
+  <footer class="topbar" role="contentinfo" style="margin:12px auto 0;">
+    <div class="muted">© {% now "Y" %} Amigo Fiel</div>
+    <nav class="muted" aria-label="Rodapé">
+      <a href="{% url 'amigofiel:sobre' %}" class="muted" style="text-decoration:none;">Sobre</a> ·
+      <a href="{% url 'amigofiel:contato' %}" class="muted" style="text-decoration:none;">Contato</a>
+    </nav>
+  </footer>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

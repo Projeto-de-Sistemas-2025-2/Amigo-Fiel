@@ -20,6 +20,8 @@ urlpatterns = [
 
     # App principal (uma vez só!)
     path('amigofiel/', include(('AmigoFiel.urls', 'amigofiel'), namespace='amigofiel')),
+    path('AmigoFiel/', RedirectView.as_view(url='/amigofiel/', permanent=False)),
+
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

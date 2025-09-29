@@ -1,80 +1,119 @@
-{% extends "style/base_public.html" %}
+{% extends "style/base_produtos.html" %}
 {% load static %}
 
 {% block title %}Produtos — Amigo Fiel{% endblock %}
 
-{% block body %}
-
-  <!-- HERO -->
+{% block prod_hero %}
   <section class="hero center">
-    <div>
-      <h1>Produtos para pets</h1>
-      <p class="muted">Encontre itens de empresas parceiras da sua cidade.</p>
+    <div class="brand">
+      <h1 class="h1">Mais vendidos</h1>
+      <p class="muted">Produtos populares de empresas parceiras. Atualizado com frequência.</p>
     </div>
   </section>
+{% endblock %}
 
-  <!-- FILTROS -->
-  <section class="card" aria-labelledby="filtros">
-    <h2 id="filtros" class="only-desktop" style="margin-bottom:6px">Filtros</h2>
+{% block prod_sidebar %}
+  <h3>Departamentos</h3>
+  <ul>
+    <li>
+      <a href="{% url 'amigofiel:listar-produtos' %}"
+         class="{% if not request.GET.empresa %}active{% endif %}">
+        Todos
+      </a>
+    </li>
 
-    <form method="get" class="grid grid-1 grid-md-2 grid-lg-4">
-      <div class="input-wrap">
-        <label for="q">Pesquisar</label>
-        <input id="q" name="q" class="input" type="text" value="{{ q }}"
-               placeholder="Nome, descrição, empresa ou @username">
+    {# Empresas deduzidas do queryset atual; troque por um contexto 'empresas' se preferir. #}
+    {% regroup produtos by empresa as grupos_empresas %}
+    {% for g in grupos_empresas %}
+      {% with e=g.grouper %}
+        <li>
+          <a href="?empresa={{ e.user.username|urlencode }}"
+             class="{% if request.GET.empresa == e.user.username %}active{% endif %}">
+            {{ e.razao_social }}
+          </a>
+        </li>
+      {% endwith %}
+    {% empty %}
+      <li class="muted">Nenhuma empresa no filtro atual.</li>
+    {% endfor %}
+  </ul>
+
+  <hr>
+
+  <h3>Refinar busca</h3>
+  <form method="get" class="grid grid-1">
+    {% if request.GET.empresa %}
+      <input type="hidden" name="empresa" value="{{ request.GET.empresa }}">
+    {% endif %}
+
+    <div class="input-wrap">
+      <label for="q">Pesquisar</label>
+      <input id="q" name="q" class="input" type="text" value="{{ q }}"
+             placeholder="Nome, descrição, empresa ou @username">
+    </div>
+
+    <div class="input-wrap">
+      <label for="cidade">Cidade</label>
+      <input id="cidade" name="cidade" class="input" type="text" value="{{ cidade }}" placeholder="Ex.: Palmas">
+    </div>
+
+    <div class="input-wrap">
+      <label>Preço (R$)</label>
+      <div style="display:flex; gap:8px;">
+        <input name="preco_min" class="input" type="text" inputmode="decimal" value="{{ preco_min }}" placeholder="Mín">
+        <input name="preco_max" class="input" type="text" inputmode="decimal" value="{{ preco_max }}" placeholder="Máx">
       </div>
+    </div>
 
-      <div class="input-wrap">
-        <label for="cidade">Cidade</label>
-        <input id="cidade" name="cidade" class="input" type="text" value="{{ cidade }}" placeholder="Ex.: Palmas">
-      </div>
+    <div class="input-wrap" style="display:flex;align-items:center;gap:8px">
+      <input id="com_estoque" name="com_estoque" value="1" type="checkbox" {% if com_estoque %}checked{% endif %}>
+      <label for="com_estoque" style="margin:0">Somente com estoque</label>
+    </div>
 
-      <div class="input-wrap">
-        <label>Preço (R$)</label>
-        <div style="display:flex; gap:8px;">
-          <input name="preco_min" class="input" type="text" inputmode="decimal" value="{{ preco_min }}" placeholder="Mín">
-          <input name="preco_max" class="input" type="text" inputmode="decimal" value="{{ preco_max }}" placeholder="Máx">
-        </div>
-      </div>
+    <div class="actions">
+      <button class="btn btn-primary" type="submit">Aplicar</button>
+      <a class="btn btn-secondary" href="{% url 'amigofiel:listar-produtos' %}">Limpar</a>
+    </div>
+  </form>
+{% endblock %}
 
-      <div class="input-wrap" style="display:flex;align-items:center;gap:8px">
-        <input id="com_estoque" name="com_estoque" value="1" type="checkbox" {% if com_estoque %}checked{% endif %}>
-        <label for="com_estoque" style="margin:0">Somente com estoque</label>
-      </div>
+{% block prod_main %}
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+    <h2 style="margin:0">Mais vendidos{% if cidade %} em {{ cidade }}{% endif %}</h2>
+    <a class="btn btn-secondary" href="{% url 'amigofiel:listar-lojas' %}">Ver lojas</a>
+  </div>
 
-      <div class="actions" style="grid-column:1/-1">
-        <button class="btn btn-primary" type="submit">Buscar</button>
-        <a class="btn btn-secondary" href="{% url 'amigofiel:listar-produtos' %}">Limpar</a>
-      </div>
-    </form>
-  </section>
-
-  <!-- LISTA -->
   {% if produtos %}
-    <section class="grid grid-1 grid-md-2 grid-lg-4" aria-label="Resultados" style="margin-top:14px">
+    <section class="product-grid" aria-label="Resultados">
       {% for prod in produtos %}
         {% with handle=prod.empresa.user.username slug=prod.slug %}
-        <article class="mini-card">
+        <article class="mini-card product-card">
+          <span class="rank-badge">#{{ forloop.counter }}</span>
+
           <a
             {% if slug %}
               href="{% url 'amigofiel:produto-detalhe' empresa_handle=handle produto_slug=slug %}"
             {% else %}
-              href="#"
+              href="{% url 'amigofiel:perfil-empresa' handle=handle %}"
             {% endif %}
-            style="text-decoration:none; color:inherit; display:block"
+            style="text-decoration:none;color:inherit;display:block"
             aria-label="Abrir produto {{ prod.nome }}"
           >
-            <img class="thumb"
+            <img class="thumb aspect"
                  src="{% if prod.imagem %}{{ prod.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}"
                  alt="{{ prod.nome }}" loading="lazy" decoding="async">
 
-            <h3 style="margin:6px 0 2px">{{ prod.nome }}</h3>
+            <h3 class="product-title">{{ prod.nome }}</h3>
+
             {% if prod.descricao %}
-              <p class="muted" style="margin:0 0 8px">{{ prod.descricao|truncatechars:90 }}</p>
+              <p class="muted small">{{ prod.descricao|truncatechars:90 }}</p>
             {% endif %}
 
-            <p style="margin:6px 0"><strong>R$ {{ prod.preco }}</strong></p>
-            <p class="muted" style="margin:0 0 8px">Estoque: {{ prod.estoque }}</p>
+            <div class="price">R$ {{ prod.preco }}</div>
+            <p class="muted small">
+              {% if prod.estoque|default:0 > 0 %}Em estoque{% else %}Indisponível{% endif %}
+              · {{ prod.empresa.razao_social }}
+            </p>
           </a>
 
           <div class="actions">
@@ -84,12 +123,10 @@
                  Ver produto
               </a>
             {% endif %}
-
             <a class="btn btn-secondary"
                href="{% url 'amigofiel:perfil-empresa' handle=handle %}">
                Ver empresa
             </a>
-
             {% if prod.empresa.cidade %}
               <a class="btn btn-secondary" href="?cidade={{ prod.empresa.cidade|urlencode }}">
                 {{ prod.empresa.cidade }}
@@ -101,19 +138,30 @@
       {% endfor %}
     </section>
 
-    <!-- PAGINAÇÃO -->
     {% if is_paginated %}
       <nav class="actions" aria-label="Paginação" style="margin-top:16px">
         {% if page_obj.has_previous %}
           <a class="btn btn-secondary"
-             href="?page={{ page_obj.previous_page_number }}&q={{ q|urlencode }}&cidade={{ cidade|urlencode }}&preco_min={{ preco_min }}&preco_max={{ preco_max }}&com_estoque={{ com_estoque }}">Anterior</a>
+             href="?page={{ page_obj.previous_page_number }}
+                {% if request.GET.empresa %}&empresa={{ request.GET.empresa|urlencode }}{% endif %}
+                {% if q %}&q={{ q|urlencode }}{% endif %}
+                {% if cidade %}&cidade={{ cidade|urlencode }}{% endif %}
+                {% if preco_min %}&preco_min={{ preco_min }}{% endif %}
+                {% if preco_max %}&preco_max={{ preco_max }}{% endif %}
+                {% if com_estoque %}&com_estoque={{ com_estoque }}{% endif %}">Anterior</a>
         {% endif %}
 
         <span class="muted">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
 
         {% if page_obj.has_next %}
           <a class="btn btn-secondary"
-             href="?page={{ page_obj.next_page_number }}&q={{ q|urlencode }}&cidade={{ cidade|urlencode }}&preco_min={{ preco_min }}&preco_max={{ preco_max }}&com_estoque={{ com_estoque }}">Próxima</a>
+             href="?page={{ page_obj.next_page_number }}
+                {% if request.GET.empresa %}&empresa={{ request.GET.empresa|urlencode }}{% endif %}
+                {% if q %}&q={{ q|urlencode }}{% endif %}
+                {% if cidade %}&cidade={{ cidade|urlencode }}{% endif %}
+                {% if preco_min %}&preco_min={{ preco_min }}{% endif %}
+                {% if preco_max %}&preco_max={{ preco_max }}{% endif %}
+                {% if com_estoque %}&com_estoque={{ com_estoque }}{% endif %}">Próxima</a>
         {% endif %}
       </nav>
     {% endif %}
@@ -122,5 +170,4 @@
       <p class="muted">Nenhum produto encontrado com esses filtros.</p>
     </section>
   {% endif %}
-
 {% endblock %}

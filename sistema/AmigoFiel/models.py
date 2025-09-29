@@ -16,8 +16,7 @@ class TimeStampedModel(models.Model):
 # ---- Perfis (1-para-1 com User) ----
 class UsuarioComum(TimeStampedModel):
     user = models.OneToOneField(
-        User, on_delete=models.CASCADE, related_name="perfil_comum"
-    )
+        User, on_delete=models.CASCADE, related_name="perfil_comum")
     telefone = models.CharField(max_length=20, blank=True)
     cidade = models.CharField(max_length=80, blank=True, db_index=True)
     foto = models.ImageField(
