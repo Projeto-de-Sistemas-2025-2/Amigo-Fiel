@@ -2,16 +2,18 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 import re
+from .models import ProdutoEmpresa, Pet
 
-TIPOS = (
+
+TIPOS = (##tipos de usuários
     ("comum", "Usuário Comum"),
     ("empresa", "Empresa"),
     ("ong", "ONG"),
 )
 
-CNPJ_REGEX = re.compile(r"^\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}$|^\d{14}$")
+CNPJ_REGEX = re.compile(r"^\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}$|^\d{14}$") ##regex para validar cnpj
 
-class CadastroForm(UserCreationForm):
+class CadastroForm(UserCreationForm): ##formulário de cadastro de usuários
     user_type = forms.ChoiceField(choices=TIPOS, label="Tipo de conta")
 
     telefone = forms.CharField(max_length=20, required=False, label="Telefone")
@@ -63,3 +65,22 @@ class CadastroForm(UserCreationForm):
                 self.add_error("cnpj_ong", "Informe um CNPJ válido.")
 
         return data
+
+class ProdutoForm(forms.ModelForm): ##formulário para produtos de empresas
+    class Meta:
+        model = ProdutoEmpresa
+        fields = ["nome", "descricao", "preco", "estoque", "ativo", "imagem"]
+        widgets = {
+            "descricao": forms.Textarea(attrs={"rows": 4}),
+        }
+
+class PetForm(forms.ModelForm):     ##formulário para cadastro de pets
+    class Meta:
+        model = Pet
+        fields = [
+            "nome", "especie", "raca", "idade_anos", "sexo",
+            "castrado", "vacinado", "descricao", "imagem",
+        ]
+        widgets = {
+            "descricao": forms.Textarea(attrs={"rows": 4}),
+        }

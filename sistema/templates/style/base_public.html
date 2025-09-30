@@ -13,13 +13,26 @@
   <link rel="stylesheet" href="{% static 'css/pages.css' %}">
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
 
-  <!-- Deixa o botão de logout com cara de link -->
+  <!-- Ajustes rápidos -->
   <style>
-    .btn-link {
-      background: none; border: 0; padding: 0; margin: 0;
-      color: inherit; font: inherit; cursor: pointer; text-decoration: none;
+    /* botão de logout com cara de link */
+    .btn-link{background:none;border:0;padding:0;margin:0;color:inherit;font:inherit;cursor:pointer;text-decoration:none}
+    .topbar form{display:inline}
+
+    /* mensagens flash (Django messages) */
+    .flash{max-width:980px;margin:10px auto 0}
+    .flash .msg{padding:10px 12px;border-radius:10px;margin:6px 0}
+    .msg-success{background:#e7f8ef;border:1px solid #a7e3c6}
+    .msg-error{background:#fde7ea;border:1px solid #f5b5be}
+    .msg-warning{background:#fff6e5;border:1px solid #ffe0a3}
+    .msg-info{background:#eaf3ff;border:1px solid #bcd6ff}
+
+    /* responsivo simples do header */
+    @media (max-width:720px){
+      header.topbar{flex-wrap:wrap;gap:10px}
+      header.topbar nav{width:100%;display:flex;flex-wrap:wrap;gap:10px}
+      header.topbar nav a, header.topbar nav form{margin-right:0}
     }
-    .topbar form { display: inline; }
   </style>
 
   {% block extra_head %}{% endblock %}
@@ -28,10 +41,10 @@
 
   <!-- Topbar -->
   <header class="topbar" role="banner">
-    <div style="display:flex; align-items:center; gap:10px;">
+    <a href="{% url 'amigofiel:home' %}" style="display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit">
       <img src="{% static 'img/amigo-fiel-logo.png' %}" alt="Amigo Fiel" width="48" height="48" style="border-radius:10px">
       <strong>AMIGO FIEL</strong>
-    </div>
+    </a>
 
     <nav aria-label="Principal">
       <a href="{% url 'amigofiel:home' %}">Início</a>
@@ -39,8 +52,13 @@
       <a href="{% url 'amigofiel:listar-ongs' %}">ONGs</a>
       <a href="{% url 'amigofiel:listar-lojas' %}">Lojas</a>
       <a href="{% url 'amigofiel:listar-produtos' %}">Produtos</a>
-      <a href=""></a>
+
       {% if user.is_authenticated %}
+        {% if user.is_authenticated %}
+          {% if eh_empresa %}<a href="{% url 'amigofiel:produto-novo' %}">Novo produto </a>{% endif %}
+          {% if eh_comum or eh_ong %}<a href="{% url 'amigofiel:pet-novo' %}">Novo pet </a>{% endif %}
+        {% endif %}
+
         <form action="{% url 'logout' %}" method="post">
           {% csrf_token %}
           <button class="btn-link" type="submit" title="Sair">Sair</button>
@@ -51,7 +69,19 @@
     </nav>
   </header>
 
-  <!-- Shapes decorativos (opcional sobrescrever no bloco) -->
+  <!-- Mensagens flash -->
+  {% if messages %}
+    <div class="flash" role="status" aria-live="polite">
+      {% for message in messages %}
+        <div class="msg
+          {% if message.tags == 'success' %}msg-success{% elif message.tags == 'error' %}msg-error{% elif message.tags == 'warning' %}msg-warning{% else %}msg-info{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Shapes decorativos (customizáveis) -->
   {% block shapes %}
     <div class="shape bl-yellow"></div>
     <div class="shape bl-teal"></div>
@@ -59,7 +89,7 @@
     <div class="shape bl-grey"></div>
   {% endblock %}
 
-  <!-- Área principal (cada página decide usar .container ou não) -->
+  <!-- Área principal -->
   <main class="wrap" role="main">
     {% block body %}{% endblock %}
   </main>

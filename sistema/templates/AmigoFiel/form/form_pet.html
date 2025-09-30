@@ -1,0 +1,73 @@
+{% extends "style/base_public.html" %}
+{% load static %}
+
+{% block title %}Cadastrar pet{% endblock %}
+
+{% block body %}
+<section class="card" style="max-width:720px;margin:auto">
+  <h1 style="margin-bottom:10px">Cadastrar pet</h1>
+
+  <form method="post" enctype="multipart/form-data" class="grid grid-1">
+    {% csrf_token %}
+
+    <div class="grid grid-1 grid-md-2">
+      <div class="input-wrap">
+        <label>Nome</label>
+        {{ form.nome }}
+        {{ form.nome.errors }}
+      </div>
+      <div class="input-wrap">
+        <label>Espécie</label>
+        {{ form.especie }}
+        {{ form.especie.errors }}
+      </div>
+    </div>
+
+    <div class="grid grid-1 grid-md-3">
+      <div class="input-wrap">
+        <label>Raça</label>
+        {{ form.raca }}
+        {{ form.raca.errors }}
+      </div>
+      <div class="input-wrap">
+        <label>Idade (anos)</label>
+        {{ form.idade_anos }}
+        {{ form.idade_anos.errors }}
+      </div>
+      <div class="input-wrap">
+        <label>Sexo</label>
+        {{ form.sexo }}
+        {{ form.sexo.errors }}
+      </div>
+    </div>
+
+    <div class="grid grid-1 grid-md-2">
+      <div class="input-wrap" style="display:flex;gap:8px;align-items:center">
+        {{ form.castrado }} <label style="margin:0">Castrado</label>
+        {{ form.castrado.errors }}
+      </div>
+      <div class="input-wrap" style="display:flex;gap:8px;align-items:center">
+        {{ form.vacinado }} <label style="margin:0">Vacinado</label>
+        {{ form.vacinado.errors }}
+      </div>
+    </div>
+
+    <div class="input-wrap">
+      <label>Descrição</label>
+      {{ form.descricao }}
+      {{ form.descricao.errors }}
+    </div>
+
+    <div class="input-wrap">
+      <label>Imagem</label>
+      {{ form.imagem }}
+      {{ form.imagem.errors }}
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" type="submit">Salvar</button>
+      <a class="btn btn-secondary" href="{% url 'amigofiel:listar-animais' %}">Cancelar</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

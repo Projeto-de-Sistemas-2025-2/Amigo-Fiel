@@ -8,6 +8,15 @@ from .models import Pet, UsuarioComum, UsuarioEmpresarial, UsuarioOng, ProdutoEm
 from .forms import CadastroForm
 from django.contrib.auth import get_user_model  
 
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
+from django.urls import reverse_lazy
+from django.core.exceptions import PermissionDenied
+
+from .forms import ProdutoForm, PetForm
+from .models import ProdutoEmpresa, Pet, UsuarioEmpresarial, UsuarioComum, UsuarioOng
+
+
 class HomeView(TemplateView):
     template_name = "AmigoFiel/home.html"
     def get_context_data(self, **kwargs):
@@ -293,3 +302,83 @@ def tabelas_bruto(request):
         "pets": Pet.objects.select_related("tutor", "tutor__user", "ong", "ong__user").order_by("id"),
     }
     return render(request, "AmigoFiel/tabelas_bruto.html", ctx)
+
+
+class ProdutoCreateView(LoginRequiredMixin, TemplateView): ##view para cadastro de produtos
+    # Usamos TemplateView só para controlar form + post manualmente
+    template_name = "AmigoFiel/form/form_produto.html"
+    form_class = ProdutoForm
+
+    def get(self, request, *args, **kwargs):
+        form = self.form_class()
+        return render(request, self.template_name, {"form": form})
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST, request.FILES)
+
+        # empresa do usuário (se houver)
+        empresa = getattr(request.user, "perfil_empresa", None)
+
+        # Apenas empresa (ou superuser) pode criar
+        if not empresa and not request.user.is_superuser:
+            messages.error(request, "Apenas contas de Empresa podem cadastrar produtos.")
+            raise PermissionDenied("Somente Empresa")
+
+        if form.is_valid():
+            produto: ProdutoEmpresa = form.save(commit=False)
+            if request.user.is_superuser:
+                # superuser pode apontar uma empresa via querystring (?empresa_id=1) — opcional
+                empresa_id = request.GET.get("empresa_id")
+                if empresa_id:
+                    produto.empresa = UsuarioEmpresarial.objects.get(pk=empresa_id)
+                else:
+                    # fallback: se não veio, e o superuser também tem perfil_empresa, usa
+                    if hasattr(request.user, "perfil_empresa"):
+                        produto.empresa = request.user.perfil_empresa
+                    else:
+                        messages.error(request, "Selecione a empresa (adicione ?empresa_id=ID na URL) ou crie com uma conta de Empresa.")
+                        return render(request, self.template_name, {"form": form})
+            else:
+                # usuário empresa comum
+                produto.empresa = empresa
+
+            produto.save()
+            messages.success(request, "Produto cadastrado com sucesso!")
+            return redirect(produto.get_absolute_url())
+
+        return render(request, self.template_name, {"form": form})
+
+
+class PetCreateView(LoginRequiredMixin, TemplateView): ##view para cadastro de pets
+    template_name = "AmigoFiel/form/form_pet.html"
+    form_class = PetForm
+
+    def get(self, request, *args, **kwargs):
+        form = self.form_class()
+        return render(request, self.template_name, {"form": form})
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST, request.FILES)
+
+        perfil_comum: UsuarioComum | None = getattr(request.user, "perfil_comum", None)
+        perfil_ong: UsuarioOng | None = getattr(request.user, "perfil_ong", None)
+
+        if not (perfil_comum or perfil_ong or request.user.is_superuser):
+            messages.error(request, "Apenas Usuário Comum ou ONG podem cadastrar pets.")
+            raise PermissionDenied("Somente Comum/ONG")
+
+        if form.is_valid():
+            pet: Pet = form.save(commit=False)
+            # vincula dono automaticamente
+            if perfil_comum:
+                pet.tutor = perfil_comum
+                pet.ong = None
+            elif perfil_ong:
+                pet.ong = perfil_ong
+                pet.tutor = None
+            # superuser pode deixar sem dono (ou você pode implementar seleção)
+            pet.save()
+            messages.success(request, "Pet cadastrado com sucesso!")
+            return redirect(pet.get_absolute_url())
+
+        return render(request, self.template_name, {"form": form})

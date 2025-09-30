@@ -23,6 +23,10 @@ urlpatterns = [
     path("sobre/", SobreView.as_view(), name="sobre"),
     path("contato/", ContatoView.as_view(), name="contato"),
 
+    path("produtos/novo/", views.ProdutoCreateView.as_view(), name="produto-novo"),
+    path("pets/novo/", views.PetCreateView.as_view(), name="pet-novo"),
+
+
     # Perfis
     path("@<str:handle>/", views.perfil_usuario, name="perfil-usuario"),
     path("Co./<str:handle>/", views.perfil_empresa, name="perfil-empresa"),
@@ -34,5 +38,5 @@ urlpatterns = [
 
 
     path("tabelas/", views.tabelas_bruto, name="tabelas-bruto"),
-
+    
 ]
