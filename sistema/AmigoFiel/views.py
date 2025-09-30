@@ -6,6 +6,7 @@ from django.contrib.auth import login
 from django.db.models import Count, Q
 from .models import Pet, UsuarioComum, UsuarioEmpresarial, UsuarioOng, ProdutoEmpresa
 from .forms import CadastroForm
+from django.contrib.auth import get_user_model  
 
 class HomeView(TemplateView):
     template_name = "AmigoFiel/home.html"
@@ -99,7 +100,6 @@ class ListarLojas(ListView):
         })
         return ctx
 
-
 def cadastro(request):
     if request.method == 'POST':
         form = CadastroForm(request.POST)
@@ -166,10 +166,8 @@ class ListarOngs(ListView):
         ctx["cidade"] = self.request.GET.get("cidade", "")
         return ctx
 
-
 class SobreView(TemplateView):
     template_name = "legal/sobre.html"
-
 
 class ContatoView(TemplateView):
     template_name = "legal/contato.html"
@@ -209,7 +207,6 @@ def perfil_pet(request, handle: str):
         slug=handle
     )
     return render(request, "AmigoFiel/perfil/perfil_pet.html", {"pet": pet})
-
 
 # Lista de produtos
 
@@ -283,3 +280,16 @@ def produto_detalhe(request, empresa_handle: str, produto_slug: str):
         "empresa": produto.empresa,
     }
     return render(request, "AmigoFiel/perfil/perfil_produto.html", ctx)
+
+
+def tabelas_bruto(request):
+    User = get_user_model()
+    ctx = {
+        "usuarios": User.objects.all().order_by("id"),
+        "comuns": UsuarioComum.objects.select_related("user").order_by("id"),
+        "empresas": UsuarioEmpresarial.objects.select_related("user").order_by("id"),
+        "ongs": UsuarioOng.objects.select_related("user").order_by("id"),
+        "produtos": ProdutoEmpresa.objects.select_related("empresa", "empresa__user").order_by("id"),
+        "pets": Pet.objects.select_related("tutor", "tutor__user", "ong", "ong__user").order_by("id"),
+    }
+    return render(request, "AmigoFiel/tabelas_bruto.html", ctx)

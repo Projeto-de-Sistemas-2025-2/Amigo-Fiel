@@ -32,4 +32,7 @@ urlpatterns = [
     # Produto: /amigofiel/<empresa_handle>/<produto_slug>/
     path("<str:empresa_handle>/<slug:produto_slug>/", views.produto_detalhe, name="produto-detalhe"),
 
+
+    path("tabelas/", views.tabelas_bruto, name="tabelas-bruto"),
+
 ]
