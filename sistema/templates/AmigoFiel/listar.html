@@ -5,8 +5,32 @@
 
 {% block body %}
 <div class="container" style="display:grid;grid-template-columns:260px 1fr;gap:16px;">
-  <!-- SIDEBAR / FILTROS -->
-  <aside class="card" aria-label="Filtros para adoção" style="position:sticky;top:16px;height:fit-content;">
+  <!-- SIDEBAR / BANNER + FILTROS -->
+  <aside class="card" aria-label="CTA e Filtros para adoção" style="position:sticky;top:16px;height:fit-content;">
+    <!-- CTA/Banner (1:1) -->
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <a href="{% if can_create_pet %}{% url 'amigofiel:pet-novo' %}{% else %}{% url 'login' %}?next={% url 'amigofiel:pet-novo' %}{% endif %}"
+         aria-label="Cadastrar um novo pet para adoção"
+         style="display:block;">
+        <img
+          src="{% static 'img/banners/cta_cadastrar_pet.png' %}"
+          alt="Anuncie um pet para adoção"
+          style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;display:block;"
+        >
+      </a>
+
+      {% if can_create_pet %}
+        <a class="btn btn-accent" href="{% url 'amigofiel:pet-novo' %}">Cadastrar novo pet</a>
+      {% else %}
+        <a class="btn btn-secondary" href="{% url 'login' %}?next={% url 'amigofiel:pet-novo' %}">
+          Entrar para cadastrar
+        </a>
+      {% endif %}
+    </div>
+
+    <hr style="margin:12px 0;border:none;height:1px;background:#eee;">
+
+    <!-- Filtros -->
     <form method="get">
       <h2 class="h4" style="margin:0 0 10px;">Refinar busca</h2>
 
@@ -76,11 +100,6 @@
         <button class="btn btn-primary" type="submit">Aplicar filtros</button>
         <a class="btn btn-secondary" href="{% url 'amigofiel:listar-animais' %}">Limpar</a>
       </div>
-
-      {% if can_create_pet %}
-        <hr style="margin:12px 0;border:none;height:1px;background:#eee;">
-        <a class="btn btn-accent" href="{% url 'amigofiel:pet-novo' %}">Cadastrar novo pet</a>
-      {% endif %}
     </form>
   </aside>
 
@@ -89,7 +108,8 @@
     <header style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
       <h1 class="h3" style="margin:0;">Pets para adoção</h1>
       <span class="muted">
-        {% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ pets|length }}{% endif %} resultado{{ page_obj.paginator.count|default:pets|length|pluralize }}
+        {% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ pets|length }}{% endif %}
+        resultado{% if page_obj %}{% if page_obj.paginator.count != 1 %}s{% endif %}{% else %}{% if pets|length != 1 %}s{% endif %}{% endif %}
       </span>
     </header>
 
