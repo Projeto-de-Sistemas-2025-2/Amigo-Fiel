@@ -4,25 +4,19 @@
 {% block title %}Pets para adoção — Amigo Fiel{% endblock %}
 
 {% block body %}
-<div class="container">
+<div class="container" style="display:grid;grid-template-columns:260px 1fr;gap:16px;">
+  <!-- SIDEBAR / FILTROS -->
+  <aside class="card" aria-label="Filtros para adoção" style="position:sticky;top:16px;height:fit-content;">
+    <form method="get">
+      <h2 class="h4" style="margin:0 0 10px;">Refinar busca</h2>
 
-  <!-- HERO -->
-  <section class="hero center">
-    <div>
-      <h1>Encontre seu novo melhor amigo</h1>
-      <p class="muted">Filtre por espécie, cidade ou nome.</p>
-    </div>
-  </section>
-
-  <!-- FILTROS -->
-  <section class="card" aria-labelledby="filtros">
-    <h2 id="filtros" class="only-desktop" style="margin-bottom:6px">Filtros</h2>
-    <form method="get" class="grid">
+      <!-- Buscar -->
       <div class="input-wrap">
-        <label for="q">Nome / descrição</label>
-        <input id="q" name="q" type="text" class="input" value="{{ q }}" placeholder="Ex.: Mel, vira-lata, dócil">
+        <label for="q">Pesquisar</label>
+        <input id="q" name="q" class="input" type="text" value="{{ q }}" placeholder="Nome ou descrição">
       </div>
 
+      <!-- Espécie -->
       <div class="input-wrap">
         <label for="especie">Espécie</label>
         <select id="especie" name="especie" class="input">
@@ -33,72 +27,146 @@
         </select>
       </div>
 
+      <!-- Origem -->
       <div class="input-wrap">
-        <label for="cidade">Cidade</label>
-        <input id="cidade" name="cidade" type="text" class="input" value="{{ cidade }}" placeholder="Ex.: Palmas">
+        <label for="origem">Origem</label>
+        <select id="origem" name="origem" class="input">
+          <option value="">ONG ou Independente</option>
+          <option value="ong" {% if origem == "ong" %}selected{% endif %}>Apenas ONGs</option>
+          <option value="indep" {% if origem == "indep" %}selected{% endif %}>Apenas Independentes</option>
+        </select>
       </div>
 
-      <div class="input-wrap" style="display:flex;align-items:center;gap:8px">
+      <!-- Cidade -->
+      <div class="input-wrap">
+        <label for="cidade">Cidade</label>
+        <input id="cidade" name="cidade" class="input" type="text" value="{{ cidade }}" placeholder="Ex.: Palmas">
+      </div>
+
+      <!-- Sexo -->
+      <div class="input-wrap">
+        <label for="sexo">Sexo</label>
+        <select id="sexo" name="sexo" class="input">
+          <option value="">Qualquer</option>
+          <option value="macho" {% if sexo == "macho" %}selected{% endif %}>Macho</option>
+          <option value="femea" {% if sexo == "femea" %}selected{% endif %}>Fêmea</option>
+        </select>
+      </div>
+
+      <!-- Saúde -->
+      <div class="input-wrap" style="display:flex;flex-direction:column;gap:6px;">
+        <label style="font-weight:600;">Saúde</label>
+        <label style="display:flex;gap:8px;align-items:center;">
+          <input type="checkbox" name="castrado" value="1" {% if castrado %}checked{% endif %}>
+          <span>Castrado</span>
+        </label>
+        <label style="display:flex;gap:8px;align-items:center;">
+          <input type="checkbox" name="vacinado" value="1" {% if vacinado %}checked{% endif %}>
+          <span>Vacinado</span>
+        </label>
+      </div>
+
+      <!-- Status -->
+      <div class="input-wrap" style="display:flex;gap:8px;align-items:center;">
         <input id="adotados" name="adotados" value="1" type="checkbox" {% if adotados %}checked{% endif %}>
         <label for="adotados" style="margin:0">Incluir já adotados</label>
       </div>
 
-      <div class="actions" style="grid-column:1/-1">
-        <button class="btn btn-primary" type="submit">Buscar</button>
+      <div class="actions" style="margin-top:10px;display:flex;gap:8px;">
+        <button class="btn btn-primary" type="submit">Aplicar filtros</button>
         <a class="btn btn-secondary" href="{% url 'amigofiel:listar-animais' %}">Limpar</a>
       </div>
+
+      {% if can_create_pet %}
+        <hr style="margin:12px 0;border:none;height:1px;background:#eee;">
+        <a class="btn btn-accent" href="{% url 'amigofiel:pet-novo' %}">Cadastrar novo pet</a>
+      {% endif %}
     </form>
-  </section>
+  </aside>
 
-  <!-- LISTA -->
-  {% if pets %}
-    <section class="grid" aria-label="Resultados" style="margin-top:14px">
-      {% for p in pets %}
-        <article class="mini-card">
-          {% if p.imagem %}
-            <img class="fluid-img" src="{{ p.imagem.url }}" alt="{{ p.nome }}" loading="lazy" decoding="async">
+  <!-- MAIN / RESULTADOS -->
+  <main>
+    <header style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
+      <h1 class="h3" style="margin:0;">Pets para adoção</h1>
+      <span class="muted">
+        {% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ pets|length }}{% endif %} resultado{{ page_obj.paginator.count|default:pets|length|pluralize }}
+      </span>
+    </header>
+
+    {% if pets %}
+      <section class="grid-4" style="align-items:stretch;">
+        {% for p in pets %}
+          <article class="mini-card" style="display:flex;flex-direction:column;">
+            <a
+              {% if p.slug %}
+                href="{% url 'amigofiel:perfil-pet' handle=p.slug %}"
+              {% else %}
+                href="{% url 'amigofiel:listar-animais' %}?q={{ p.nome|urlencode }}"
+              {% endif %}
+              style="text-decoration:none;color:inherit;display:block"
+              aria-label="Abrir perfil de {{ p.nome }}"
+            >
+              <img class="thumb"
+                   src="{% if p.imagem %}{{ p.imagem.url }}{% else %}{% static 'img/defaults/pet.png' %}{% endif %}"
+                   alt="{{ p.nome }}" loading="lazy" decoding="async">
+
+              <h3 style="margin:8px 0 4px">{{ p.nome }}</h3>
+
+              <p class="muted" style="margin:0 0 6px">
+                {{ p.get_especie_display }}
+                {% if p.raca %} • {{ p.raca }}{% endif %}
+                {% if p.idade_anos %} • {{ p.idade_anos }} ano{{ p.idade_anos|pluralize }}{% endif %}
+              </p>
+
+              <p class="muted" style="margin:0 0 6px">
+                {% if p.tutor and p.tutor.cidade %}🏙️ {{ p.tutor.cidade }}
+                {% elif p.ong and p.ong.cidade %}🏙️ {{ p.ong.cidade }}
+                {% endif %}
+                {% if p.adotado %} • ✅ Adotado{% else %} • 💛 Disponível{% endif %}
+              </p>
+
+              <p class="muted small" style="margin:0 0 10px">
+                {% if p.castrado %}✂️ Castrado{% endif %}
+                {% if p.castrado and p.vacinado %} • {% endif %}
+                {% if p.vacinado %}💉 Vacinado{% endif %}
+              </p>
+            </a>
+
+            <div class="actions" style="margin-top:auto;">
+              {% if p.slug %}
+                <a class="btn btn-primary" href="{% url 'amigofiel:perfil-pet' handle=p.slug %}">Ver pet</a>
+              {% else %}
+                <a class="btn btn-primary" href="{% url 'amigofiel:listar-animais' %}?q={{ p.nome|urlencode }}">Ver pet</a>
+              {% endif %}
+              {% if p.tutor and p.tutor.cidade %}
+                <a class="btn btn-secondary" href="?cidade={{ p.tutor.cidade|urlencode }}"> {{ p.tutor.cidade }} </a>
+              {% elif p.ong and p.ong.cidade %}
+                <a class="btn btn-secondary" href="?cidade={{ p.ong.cidade|urlencode }}"> {{ p.ong.cidade }} </a>
+              {% endif %}
+            </div>
+          </article>
+        {% endfor %}
+      </section>
+
+      <!-- Paginação -->
+      {% if is_paginated %}
+        <nav class="actions" aria-label="Paginação" style="margin-top:16px">
+          {% if page_obj.has_previous %}
+            <a class="btn btn-secondary"
+               href="?page={{ page_obj.previous_page_number }}&q={{ q|urlencode }}&especie={{ especie_sel|urlencode }}&origem={{ origem|urlencode }}&cidade={{ cidade|urlencode }}&sexo={{ sexo|urlencode }}&castrado={{ castrado }}&vacinado={{ vacinado }}&adotados={{ adotados }}">Anterior</a>
           {% endif %}
-
-          <h3 style="margin:6px 0 4px">{{ p.nome }}</h3>
-          <p class="muted" style="margin:0 0 8px">
-            {{ p.get_especie_display }}
-            {% if p.raca %} • {{ p.raca }}{% endif %}
-            {% if p.idade_anos %} • {{ p.idade_anos }} ano{% if p.idade_anos|add:-1 %}s{% endif %}{% endif %}
-          </p>
-
-          <p class="muted">
-            {% if p.tutor and p.tutor.cidade %}🏙️ {{ p.tutor.cidade }}{% elif p.ong and p.ong.cidade %}🏙️ {{ p.ong.cidade }}{% endif %}
-            {% if p.adotado %} • ✅ Adotado{% else %} • 💛 Disponível{% endif %}
-          </p>
-
-          <div class="actions">
-            <a class="btn btn-primary" href="#">Quero Adotar</a>
-          </div>
-        </article>
-      {% endfor %}
-    </section>
-
-    <!-- PAGINAÇÃO -->
-    {% if is_paginated %}
-      <nav class="actions" aria-label="Paginação" style="margin-top:16px">
-        {% if page_obj.has_previous %}
-          <a class="btn btn-secondary"
-             href="?page={{ page_obj.previous_page_number }}&q={{ q|urlencode }}&especie={{ especie_sel|urlencode }}&cidade={{ cidade|urlencode }}&adotados={{ adotados }}">Anterior</a>
-        {% endif %}
-
-        <span class="muted">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
-
-        {% if page_obj.has_next %}
-          <a class="btn btn-secondary"
-             href="?page={{ page_obj.next_page_number }}&q={{ q|urlencode }}&especie={{ especie_sel|urlencode }}&cidade={{ cidade|urlencode }}&adotados={{ adotados }}">Próxima</a>
-        {% endif %}
-      </nav>
+          <span class="muted">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+          {% if page_obj.has_next %}
+            <a class="btn btn-secondary"
+               href="?page={{ page_obj.next_page_number }}&q={{ q|urlencode }}&especie={{ especie_sel|urlencode }}&origem={{ origem|urlencode }}&cidade={{ cidade|urlencode }}&sexo={{ sexo|urlencode }}&castrado={{ castrado }}&vacinado={{ vacinado }}&adotados={{ adotados }}">Próxima</a>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% else %}
+      <section class="card center">
+        <p class="muted">Nenhum pet encontrado com esses filtros.</p>
+      </section>
     {% endif %}
-  {% else %}
-    <section class="card center">
-      <p class="muted">Nenhum pet encontrado com esses filtros.</p>
-    </section>
-  {% endif %}
-
+  </main>
 </div>
 {% endblock %}

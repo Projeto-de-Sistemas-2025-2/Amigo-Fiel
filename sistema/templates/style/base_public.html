@@ -9,98 +9,72 @@
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
 
-  <!-- CSS global -->
-  <link rel="stylesheet" href="{% static 'css/pages.css' %}">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
-
-  <!-- Ajustes rápidos -->
-  <style>
-    /* botão de logout com cara de link */
-    .btn-link{background:none;border:0;padding:0;margin:0;color:inherit;font:inherit;cursor:pointer;text-decoration:none}
-    .topbar form{display:inline}
-
-    /* mensagens flash (Django messages) */
-    .flash{max-width:980px;margin:10px auto 0}
-    .flash .msg{padding:10px 12px;border-radius:10px;margin:6px 0}
-    .msg-success{background:#e7f8ef;border:1px solid #a7e3c6}
-    .msg-error{background:#fde7ea;border:1px solid #f5b5be}
-    .msg-warning{background:#fff6e5;border:1px solid #ffe0a3}
-    .msg-info{background:#eaf3ff;border:1px solid #bcd6ff}
-
-    /* responsivo simples do header */
-    @media (max-width:720px){
-      header.topbar{flex-wrap:wrap;gap:10px}
-      header.topbar nav{width:100%;display:flex;flex-wrap:wrap;gap:10px}
-      header.topbar nav a, header.topbar nav form{margin-right:0}
-    }
-  </style>
+  <!-- Fonte + CSS NOVO -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,900;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
 
   {% block extra_head %}{% endblock %}
 </head>
 <body>
 
   <!-- Topbar -->
-  <header class="topbar" role="banner">
-    <a href="{% url 'amigofiel:home' %}" style="display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit">
-      <img src="{% static 'img/amigo-fiel-logo.png' %}" alt="Amigo Fiel" width="48" height="48" style="border-radius:10px">
-      <strong>AMIGO FIEL</strong>
-    </a>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" href="{% url 'amigofiel:home' %}">
+        <span class="logo">🐾</span>
+        <span>AMIGO FIEL</span>
+      </a>
 
-    <nav aria-label="Principal">
-      <a href="{% url 'amigofiel:home' %}">Início</a>
-      <a href="{% url 'amigofiel:listar-animais' %}">Adotar</a>
-      <a href="{% url 'amigofiel:listar-ongs' %}">ONGs</a>
-      <a href="{% url 'amigofiel:listar-lojas' %}">Lojas</a>
-      <a href="{% url 'amigofiel:listar-produtos' %}">Produtos</a>
+      <form class="searchbar" method="get" action="{% url 'amigofiel:listar-produtos' %}">
+        <input name="q" type="search" placeholder="Pesquisar no Amigo Fiel">
+        <button class="btn btn-ghost" type="submit">🔍</button>
+      </form>
 
-      {% if user.is_authenticated %}
+      <div class="quick-actions">
+        <span class="small muted">📍 {{ request.GET.cidade|default:"Sua cidade" }}</span>
+
         {% if user.is_authenticated %}
-          {% if eh_empresa %}<a href="{% url 'amigofiel:produto-novo' %}">Novo produto </a>{% endif %}
-          {% if eh_comum or eh_ong %}<a href="{% url 'amigofiel:pet-novo' %}">Novo pet </a>{% endif %}
+          <details class="icon-btn" style="position:relative;">
+            <summary class="semibold">👤 {{ user.username }}</summary>
+            <div class="card" style="position:absolute; right:0; top:120%; min-width:220px;">
+              <a class="btn btn-ghost" href="{% url 'amigofiel:perfil-usuario' handle=user.username %}">Meu perfil</a>
+              <a class="btn btn-ghost" href="{% url 'logout' %}">Sair</a>
+            </div>
+          </details>
+        {% else %}
+          <a class="btn btn-secondary" href="{% url 'login' %}">Entrar</a>
         {% endif %}
 
-        <form action="{% url 'logout' %}" method="post">
-          {% csrf_token %}
-          <button class="btn-link" type="submit" title="Sair">Sair</button>
-        </form>
-      {% else %}
-        <a href="{% url 'login' %}">Entrar</a>
-      {% endif %}
-    </nav>
+        <a class="icon-btn" href="#"><span aria-hidden="true">🛒</span> <span class="small muted">Carrinho</span></a>
+      </div>
+    </div>
+
+    <!-- Subbar -->
+    <div class="subbar">
+      <nav class="container">
+        <a href="{% url 'amigofiel:home' %}">Início</a>
+        <a href="{% url 'amigofiel:listar-animais' %}">Procurando Adotar</a>
+        <a href="{% url 'amigofiel:listar-produtos' %}">Produtos</a>
+        <a href="{% url 'amigofiel:listar-lojas' %}">Lojas</a>
+        <a href="{% url 'amigofiel:listar-ongs' %}">ONGs</a>
+      </nav>
+    </div>
   </header>
 
-  <!-- Mensagens flash -->
-  {% if messages %}
-    <div class="flash" role="status" aria-live="polite">
-      {% for message in messages %}
-        <div class="msg
-          {% if message.tags == 'success' %}msg-success{% elif message.tags == 'error' %}msg-error{% elif message.tags == 'warning' %}msg-warning{% else %}msg-info{% endif %}">
-          {{ message }}
-        </div>
-      {% endfor %}
-    </div>
-  {% endif %}
-
-  <!-- Shapes decorativos (customizáveis) -->
-  {% block shapes %}
-    <div class="shape bl-yellow"></div>
-    <div class="shape bl-teal"></div>
-    <div class="shape bl-slate"></div>
-    <div class="shape bl-grey"></div>
-  {% endblock %}
-
-  <!-- Área principal -->
-  <main class="wrap" role="main">
+  <!-- Conteúdo -->
+  <main class="container" style="margin-top:16px;">
     {% block body %}{% endblock %}
   </main>
 
   <!-- Rodapé -->
-  <footer class="topbar" role="contentinfo" style="margin:12px auto 0;">
-    <div class="muted">© {% now "Y" %} Amigo Fiel</div>
-    <nav class="muted" aria-label="Rodapé">
-      <a href="{% url 'amigofiel:sobre' %}" class="muted" style="text-decoration:none;">Sobre</a> ·
-      <a href="{% url 'amigofiel:contato' %}" class="muted" style="text-decoration:none;">Contato</a>
-    </nav>
+  <footer class="site-footer">
+    <div class="container inner">
+      <div class="muted small">© {% now "Y" %} Amigo Fiel</div>
+      <nav>
+        <a href="{% url 'amigofiel:contato' %}">Contato</a> ·
+        <a href="{% url 'amigofiel:sobre' %}">Sobre</a>
+      </nav>
+    </div>
   </footer>
 
   {% block extra_js %}{% endblock %}

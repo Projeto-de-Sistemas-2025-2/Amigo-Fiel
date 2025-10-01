@@ -1,173 +1,184 @@
-{% extends "style/base_produtos.html" %}
+{% extends "style/base_public.html" %}
 {% load static %}
 
 {% block title %}Produtos — Amigo Fiel{% endblock %}
 
-{% block prod_hero %}
-  <section class="hero center">
-    <div class="brand">
-      <h1 class="h1">Mais vendidos</h1>
-      <p class="muted">Produtos populares de empresas parceiras. Atualizado com frequência.</p>
-    </div>
-  </section>
+{% block extra_head %}
+<style>
+  /* Layout de listagem ao estilo marketplace */
+  .prod-layout{display:grid;grid-template-columns:280px 1fr;gap:16px}
+  @media (max-width:980px){ .prod-layout{grid-template-columns:1fr} }
+
+  .filters .section + .section{margin-top:14px}
+  .filters h3{font-size:14px;margin:0 0 6px}
+  .filters .input, .filters select{
+    width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;
+  }
+  .filters .check{display:flex;align-items:center;gap:8px;margin:6px 0}
+  .filters .actions{display:flex;gap:8px;margin-top:10px}
+  .filters .btn{cursor:pointer}
+
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media (max-width:1200px){ .grid{grid-template-columns:repeat(3,1fr)} }
+  @media (max-width:820px){ .grid{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:540px){ .grid{grid-template-columns:1fr} }
+
+  .card{display:flex;flex-direction:column;gap:6px}
+  .thumb{
+    width:100%;aspect-ratio:1/1;border-radius:12px;object-fit:cover;border:1px solid #e5e7eb;background:#fff;
+  }
+  .title{font-weight:600;margin:2px 0}
+  .price{font-weight:700}
+  .muted{color:#6b7280}
+  .row{display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .pill{background:#eef2ff;border-radius:999px;padding:2px 8px;font-size:12px}
+  .pagination{display:flex;justify-content:center;gap:8px;margin:16px 0 4px}
+  .pagination a{padding:8px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;text-decoration:none}
+  .pagination .muted{padding:8px 0}
+</style>
 {% endblock %}
 
-{% block prod_sidebar %}
-  <h3>Departamentos</h3>
-  <ul>
-    <li>
-      <a href="{% url 'amigofiel:listar-produtos' %}"
-         class="{% if not request.GET.empresa %}active{% endif %}">
-        Todos
-      </a>
-    </li>
+{% block body %}
 
-    {# Empresas deduzidas do queryset atual; troque por um contexto 'empresas' se preferir. #}
-    {% regroup produtos by empresa as grupos_empresas %}
-    {% for g in grupos_empresas %}
-      {% with e=g.grouper %}
-        <li>
-          <a href="?empresa={{ e.user.username|urlencode }}"
-             class="{% if request.GET.empresa == e.user.username %}active{% endif %}">
-            {{ e.razao_social }}
-          </a>
-        </li>
-      {% endwith %}
-    {% empty %}
-      <li class="muted">Nenhuma empresa no filtro atual.</li>
-    {% endfor %}
-  </ul>
+<div class="prod-layout">
 
-  <hr>
-
-  <h3>Refinar busca</h3>
-  <form method="get" class="grid grid-1">
-    {% if request.GET.empresa %}
-      <input type="hidden" name="empresa" value="{{ request.GET.empresa }}">
-    {% endif %}
-
-    <div class="input-wrap">
-      <label for="q">Pesquisar</label>
-      <input id="q" name="q" class="input" type="text" value="{{ q }}"
-             placeholder="Nome, descrição, empresa ou @username">
-    </div>
-
-    <div class="input-wrap">
-      <label for="cidade">Cidade</label>
-      <input id="cidade" name="cidade" class="input" type="text" value="{{ cidade }}" placeholder="Ex.: Palmas">
-    </div>
-
-    <div class="input-wrap">
-      <label>Preço (R$)</label>
-      <div style="display:flex; gap:8px;">
-        <input name="preco_min" class="input" type="text" inputmode="decimal" value="{{ preco_min }}" placeholder="Mín">
-        <input name="preco_max" class="input" type="text" inputmode="decimal" value="{{ preco_max }}" placeholder="Máx">
+  <!-- Sidebar de filtros -->
+  <aside class="filters card" aria-label="Filtros">
+    <form method="get">
+      <div class="section">
+        <h3>Pesquisar</h3>
+        <input class="input" type="search" name="q" value="{{ q }}" placeholder="Nome, descrição, @empresa">
       </div>
-    </div>
 
-    <div class="input-wrap" style="display:flex;align-items:center;gap:8px">
-      <input id="com_estoque" name="com_estoque" value="1" type="checkbox" {% if com_estoque %}checked{% endif %}>
-      <label for="com_estoque" style="margin:0">Somente com estoque</label>
-    </div>
+      <div class="section">
+        <h3>Cidade</h3>
+        <input class="input" type="text" name="cidade" value="{{ cidade }}" placeholder="Ex.: Palmas">
+      </div>
 
-    <div class="actions">
-      <button class="btn btn-primary" type="submit">Aplicar</button>
-      <a class="btn btn-secondary" href="{% url 'amigofiel:listar-produtos' %}">Limpar</a>
-    </div>
-  </form>
-{% endblock %}
+      <div class="section">
+        <h3>Lojas</h3>
+        <select name="loja">
+          <option value="">Todas</option>
+          {% for loja in lojas %}
+            <option value="{{ loja.user.username }}"
+                    {% if loja.user.username == loja_sel %}selected{% endif %}>
+              {{ loja.razao_social }}
+            </option>
+          {% empty %}
+            {% comment %} fallback sem contexto {% endcomment %}
+          {% endfor %}
+        </select>
+      </div>
 
-{% block prod_main %}
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-    <h2 style="margin:0">Mais vendidos{% if cidade %} em {{ cidade }}{% endif %}</h2>
-    <a class="btn btn-secondary" href="{% url 'amigofiel:listar-lojas' %}">Ver lojas</a>
-  </div>
-
-  {% if produtos %}
-    <section class="product-grid" aria-label="Resultados">
-      {% for prod in produtos %}
-        {% with handle=prod.empresa.user.username slug=prod.slug %}
-        <article class="mini-card product-card">
-          <span class="rank-badge">#{{ forloop.counter }}</span>
-
-          <a
-            {% if slug %}
-              href="{% url 'amigofiel:produto-detalhe' empresa_handle=handle produto_slug=slug %}"
-            {% else %}
-              href="{% url 'amigofiel:perfil-empresa' handle=handle %}"
-            {% endif %}
-            style="text-decoration:none;color:inherit;display:block"
-            aria-label="Abrir produto {{ prod.nome }}"
-          >
-            <img class="thumb aspect"
-                 src="{% if prod.imagem %}{{ prod.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}"
-                 alt="{{ prod.nome }}" loading="lazy" decoding="async">
-
-            <h3 class="product-title">{{ prod.nome }}</h3>
-
-            {% if prod.descricao %}
-              <p class="muted small">{{ prod.descricao|truncatechars:90 }}</p>
-            {% endif %}
-
-            <div class="price">R$ {{ prod.preco }}</div>
-            <p class="muted small">
-              {% if prod.estoque|default:0 > 0 %}Em estoque{% else %}Indisponível{% endif %}
-              · {{ prod.empresa.razao_social }}
-            </p>
-          </a>
-
-          <div class="actions">
-            {% if slug %}
-              <a class="btn btn-primary"
-                 href="{% url 'amigofiel:produto-detalhe' empresa_handle=handle produto_slug=slug %}">
-                 Ver produto
-              </a>
-            {% endif %}
-            <a class="btn btn-secondary"
-               href="{% url 'amigofiel:perfil-empresa' handle=handle %}">
-               Ver empresa
-            </a>
-            {% if prod.empresa.cidade %}
-              <a class="btn btn-secondary" href="?cidade={{ prod.empresa.cidade|urlencode }}">
-                {{ prod.empresa.cidade }}
-              </a>
-            {% endif %}
-          </div>
-        </article>
-        {% endwith %}
+<div class="section">
+  <h3>Categorias</h3>
+  <div style="display:grid;gap:6px">
+    {% if categorias %}
+      {% for val, label in categorias %}
+        <label class="check">
+          <input type="checkbox" name="cat" value="{{ val }}"
+                 {% if val in cat %}checked{% endif %}>
+          <span>{{ label }}</span>
+        </label>
       {% endfor %}
-    </section>
-
-    {% if is_paginated %}
-      <nav class="actions" aria-label="Paginação" style="margin-top:16px">
-        {% if page_obj.has_previous %}
-          <a class="btn btn-secondary"
-             href="?page={{ page_obj.previous_page_number }}
-                {% if request.GET.empresa %}&empresa={{ request.GET.empresa|urlencode }}{% endif %}
-                {% if q %}&q={{ q|urlencode }}{% endif %}
-                {% if cidade %}&cidade={{ cidade|urlencode }}{% endif %}
-                {% if preco_min %}&preco_min={{ preco_min }}{% endif %}
-                {% if preco_max %}&preco_max={{ preco_max }}{% endif %}
-                {% if com_estoque %}&com_estoque={{ com_estoque }}{% endif %}">Anterior</a>
-        {% endif %}
-
-        <span class="muted">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
-
-        {% if page_obj.has_next %}
-          <a class="btn btn-secondary"
-             href="?page={{ page_obj.next_page_number }}
-                {% if request.GET.empresa %}&empresa={{ request.GET.empresa|urlencode }}{% endif %}
-                {% if q %}&q={{ q|urlencode }}{% endif %}
-                {% if cidade %}&cidade={{ cidade|urlencode }}{% endif %}
-                {% if preco_min %}&preco_min={{ preco_min }}{% endif %}
-                {% if preco_max %}&preco_max={{ preco_max }}{% endif %}
-                {% if com_estoque %}&com_estoque={{ com_estoque }}{% endif %}">Próxima</a>
-        {% endif %}
-      </nav>
+    {% else %}
+      {# Fallback estático, sem .split() #}
+      <label class="check">
+        <input type="checkbox" name="cat" value="racao" {% if "racao" in cat %}checked{% endif %}>
+        <span>Ração</span>
+      </label>
+      <label class="check">
+        <input type="checkbox" name="cat" value="brinquedos" {% if "brinquedos" in cat %}checked{% endif %}>
+        <span>Brinquedos</span>
+      </label>
+      <label class="check">
+        <input type="checkbox" name="cat" value="roupas" {% if "roupas" in cat %}checked{% endif %}>
+        <span>Roupas</span>
+      </label>
+      <label class="check">
+        <input type="checkbox" name="cat" value="farmacia" {% if "farmacia" in cat %}checked{% endif %}>
+        <span>Farmácia</span>
+      </label>
+      <label class="check">
+        <input type="checkbox" name="cat" value="banho" {% if "banho" in cat %}checked{% endif %}>
+        <span>Banho &amp; Tosa</span>
+      </label>
     {% endif %}
-  {% else %}
-    <section class="card center">
-      <p class="muted">Nenhum produto encontrado com esses filtros.</p>
-    </section>
-  {% endif %}
+  </div>
+</div>
+
+
+      <div class="section">
+        <h3>Preço (R$)</h3>
+        <div class="row" style="gap:8px">
+          <input class="input" style="flex:1" type="number" step="0.01" min="0" name="preco_min" value="{{ preco_min }}" placeholder="Mín">
+          <input class="input" style="flex:1" type="number" step="0.01" min="0" name="preco_max" value="{{ preco_max }}" placeholder="Máx">
+        </div>
+        <label class="check" style="margin-top:8px">
+          <input type="checkbox" name="com_estoque" value="1" {% if com_estoque %}checked{% endif %}>
+          <span>Somente com estoque</span>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" type="submit">Aplicar</button>
+        <a class="btn" href="{% url 'amigofiel:listar-produtos' %}">Limpar</a>
+      </div>
+    </form>
+  </aside>
+
+  <!-- Lista de produtos -->
+  <section aria-label="Resultados">
+    <header class="row" style="margin-bottom:10px">
+      <h2 style="margin:0">Ofertas e Produtos</h2>
+      {% if current_city %}<span class="pill">📍 {{ current_city }}</span>{% endif %}
+    </header>
+
+    {% if produtos %}
+      <div class="grid">
+        {% for prod in produtos %}
+          {% with handle=prod.empresa.user.username slug=prod.slug %}
+          <article class="card">
+            <a
+              {% if slug %}
+                href="{% url 'amigofiel:produto-detalhe' empresa_handle=handle produto_slug=slug %}"
+              {% else %}
+                href="#"
+              {% endif %}
+              style="text-decoration:none;color:inherit"
+            >
+              <img class="thumb"
+                   src="{% if prod.imagem %}{{ prod.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}"
+                   alt="{{ prod.nome }}" loading="lazy" decoding="async">
+              <div class="title">{{ prod.nome }}</div>
+            </a>
+
+            <div class="row">
+              <div class="price">R$ {{ prod.preco }}</div>
+              <a class="pill" href="{% url 'amigofiel:perfil-empresa' handle=handle %}">{{ prod.empresa.razao_social }}</a>
+            </div>
+          </article>
+          {% endwith %}
+        {% endfor %}
+      </div>
+
+      {% if is_paginated %}
+        <nav class="pagination" aria-label="Paginação">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&q={{ q|urlencode }}&cidade={{ cidade|urlencode }}&loja={{ loja_sel|urlencode }}&preco_min={{ preco_min }}&preco_max={{ preco_max }}&com_estoque={{ com_estoque }}{% for c in cat %}&cat={{ c|urlencode }}{% endfor %}">Anterior</a>
+          {% endif %}
+          <span class="muted">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&q={{ q|urlencode }}&cidade={{ cidade|urlencode }}&loja={{ loja_sel|urlencode }}&preco_min={{ preco_min }}&preco_max={{ preco_max }}&com_estoque={{ com_estoque }}{% for c in cat %}&cat={{ c|urlencode }}{% endfor %}">Próxima</a>
+          {% endif %}
+        </nav>
+      {% endif %}
+
+    {% else %}
+      <div class="card"><p class="muted">Nenhum produto encontrado com esses filtros.</p></div>
+    {% endif %}
+  </section>
+
+</div>
+
 {% endblock %}

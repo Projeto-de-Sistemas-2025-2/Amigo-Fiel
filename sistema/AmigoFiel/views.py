@@ -28,7 +28,7 @@ class ListarAnimais(ListView):
     model = Pet
     template_name = "AmigoFiel/listar.html"
     context_object_name = "pets"
-    paginate_by = 12
+    paginate_by = 24
 
     def get_queryset(self):
         qs = (Pet.objects
