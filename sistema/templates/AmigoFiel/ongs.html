@@ -4,92 +4,98 @@
 {% block title %}ONGs — Amigo Fiel{% endblock %}
 
 {% block body %}
-  <!-- Hero -->
-  <section class="hero center">
-    <div class="brand">
-      <div class="logo">🐾</div>
-      <h1 class="h1">ONGs cadastradas</h1>
-      <p class="muted">Encontre e apoie organizações parceiras</p>
-    </div>
-  </section>
+<div class="container" style="display:grid;grid-template-columns:260px 1fr;gap:16px;">
 
-  <!-- Filtros -->
-  <section class="card">
-    <form method="get" class="grid grid-1 grid-md-2">
+  <!-- SIDEBAR / FILTROS -->
+  <aside class="card" aria-label="Filtros de ONGs" style="position:sticky;top:16px;height:fit-content;">
+    <form method="get">
+      <h2 class="h4" style="margin:0 0 10px;">Refinar busca</h2>
+
       <div class="input-wrap">
-        <label for="q">Buscar por nome ou @username</label>
+        <label for="q">Nome / @username</label>
         <input id="q" name="q" type="text" class="input" value="{{ q }}" placeholder="Ex.: Patinhas Felizes">
       </div>
 
       <div class="input-wrap">
-        <label for="cidade">Filtrar por cidade</label>
+        <label for="cidade">Cidade</label>
         <input id="cidade" name="cidade" type="text" class="input" value="{{ cidade }}" placeholder="Ex.: Palmas">
       </div>
 
-      <div class="actions" style="grid-column:1/-1;">
-        <button class="btn btn-primary" type="submit">Buscar</button>
+      <div class="actions" style="margin-top:10px;display:flex;gap:8px;">
+        <button class="btn btn-primary" type="submit">Aplicar filtros</button>
         <a href="{% url 'amigofiel:listar-ongs' %}" class="btn btn-secondary">Limpar</a>
       </div>
     </form>
+  </aside>
 
-    <div class="actions">
-      <div class="line"></div>
-      <span class="muted">ou</span>
-      <div class="line"></div>
-    </div>
-    <p class="center muted">Deixe os campos vazios para ver todas as ONGs.</p>
-  </section>
+  <!-- MAIN / RESULTADOS -->
+  <main>
+    <!-- HERO compacto -->
+    <header style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
+      <div>
+        <h1 class="h3" style="margin:0;">ONGs cadastradas</h1>
+        <p class="muted" style="margin:2px 0 0;">Encontre e apoie organizações parceiras.</p>
+      </div>
+      <span class="muted">
+        {% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ ongs|length }}{% endif %}
+        resultado{% if page_obj %}{% if page_obj.paginator.count != 1 %}s{% endif %}{% else %}{% if ongs|length != 1 %}s{% endif %}{% endif %}
+      </span>
+    </header>
 
-  <!-- Lista -->
-  {% if ongs %}
-    <section class="grid grid-1 grid-md-2 grid-lg-4">
-      {% for ong in ongs %}
-        {% url 'amigofiel:perfil-ong' handle=ong.user.username as perfil_url %}
-        <article class="mini-card">
-          {% if ong.foto %}
-            <a href="{{ perfil_url }}" aria-label="Perfil da ONG {{ ong.nome_fantasia }}">
-              <img class="fluid-img" src="{{ ong.foto.url }}" alt="Logo da ONG {{ ong.nome_fantasia }}" loading="lazy" decoding="async">
+    {% if ongs %}
+      <section class="grid-4" aria-label="Resultados" style="align-items:stretch;">
+        {% for ong in ongs %}
+          {% url 'amigofiel:perfil-ong' handle=ong.user.username as perfil_url %}
+          <article class="mini-card" style="display:flex;flex-direction:column;">
+            <a href="{{ perfil_url }}" aria-label="Perfil da ONG {{ ong.nome_fantasia }}" style="display:block;text-decoration:none;color:inherit;">
+              {% if ong.foto %}
+                <img class="thumb" src="{{ ong.foto.url }}" alt="Logo da ONG {{ ong.nome_fantasia }}" loading="lazy" decoding="async">
+              {% else %}
+                <img class="thumb" src="{% static 'img/defaults/avatar_ong.png' %}" alt="Logo da ONG {{ ong.nome_fantasia }}" loading="lazy" decoding="async">
+              {% endif %}
+
+              <h3 style="margin:8px 0 4px">{{ ong.nome_fantasia }}</h3>
+
+              <p class="muted" style="margin:0 0 6px">
+                {% if ong.cidade %}🏙️ {{ ong.cidade }}{% else %}—{% endif %}
+              </p>
+
+              <p class="muted" style="margin:0 0 10px">
+                🐾 {{ ong.qtd_pets }} pet{{ ong.qtd_pets|pluralize }}
+              </p>
             </a>
+
+            <div class="actions" style="margin-top:auto;">
+              <a href="{{ perfil_url }}" class="btn btn-primary">Ver perfil</a>
+              {% if ong.site %}
+                <a href="{{ ong.site }}" target="_blank" rel="noopener" class="btn btn-secondary">Visitar site</a>
+              {% endif %}
+              {% if ong.cidade %}
+                <a href="?cidade={{ ong.cidade|urlencode }}" class="btn btn-secondary">Mais em {{ ong.cidade }}</a>
+              {% endif %}
+            </div>
+          </article>
+        {% endfor %}
+      </section>
+
+      {% if is_paginated %}
+        <nav class="actions" aria-label="Paginação" style="margin-top:16px">
+          {% if page_obj.has_previous %}
+            <a class="btn btn-secondary"
+               href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if cidade %}&cidade={{ cidade|urlencode }}{% endif %}">Anterior</a>
           {% endif %}
-
-          <h3 class="h2" style="margin:6px 0;">
-            <a href="{{ perfil_url }}" style="text-decoration:none; color:inherit;">
-              {{ ong.nome_fantasia }}
-            </a>
-          </h3>
-
-          <p class="muted">{% if ong.cidade %}🏙️ {{ ong.cidade }}{% else %}—{% endif %}</p>
-          <p>🐾 {{ ong.qtd_pets }} pet{{ ong.qtd_pets|pluralize }}</p>
-
-          <div class="actions">
-            <a href="{{ perfil_url }}" class="btn btn-primary">Ver perfil</a>
-            {% if ong.site %}
-              <a href="{{ ong.site }}" target="_blank" rel="noopener" class="btn btn-secondary">Visitar site</a>
-            {% endif %}
-            {% if ong.cidade %}
-              <a href="?cidade={{ ong.cidade|urlencode }}" class="btn btn-secondary">ONGs em {{ ong.cidade }}</a>
-            {% endif %}
-          </div>
-        </article>
-      {% endfor %}
-    </section>
-
-    {% if is_paginated %}
-      <nav class="actions" aria-label="Paginação">
-        {% if page_obj.has_previous %}
-          <a class="btn btn-secondary"
-             href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if cidade %}&cidade={{ cidade|urlencode }}{% endif %}">Anterior</a>
-        {% endif %}
-        <span class="muted">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
-        {% if page_obj.has_next %}
-          <a class="btn btn-secondary"
-             href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if cidade %}&cidade={{ cidade|urlencode }}{% endif %}">Próxima</a>
-        {% endif %}
-      </nav>
+          <span class="muted">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+          {% if page_obj.has_next %}
+            <a class="btn btn-secondary"
+               href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if cidade %}&cidade={{ cidade|urlencode }}{% endif %}">Próxima</a>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% else %}
+      <section class="card center">
+        <p class="muted">Nenhuma ONG encontrada para os filtros informados.</p>
+      </section>
     {% endif %}
-  {% else %}
-    <section class="card center">
-      <p class="muted">Nenhuma ONG encontrada para os filtros informados.</p>
-    </section>
-  {% endif %}
+  </main>
+</div>
 {% endblock %}
