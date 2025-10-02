@@ -15,14 +15,50 @@ from django.core.exceptions import PermissionDenied
 
 from .forms import ProdutoForm, PetForm
 from .models import ProdutoEmpresa, Pet, UsuarioEmpresarial, UsuarioComum, UsuarioOng
+from .consts import PRODUTO_CATEGORIAS_CHOICES  # se você criou o arquivo consts.py
 
+
+# class HomeView(TemplateView):
+#     template_name = "AmigoFiel/home.html"
+#     def get_context_data(self, **kwargs):
+#         ctx = super().get_context_data(**kwargs)
+#         ctx["destaques"] = Pet.objects.order_by("-id")[:6]
+#         return ctx
 
 class HomeView(TemplateView):
     template_name = "AmigoFiel/home.html"
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["destaques"] = Pet.objects.order_by("-id")[:6]
+
+        # Pets em destaque (mantém compat com 'destaques' antigo)
+        pets = Pet.objects.order_by("-criado_em")[:8]
+        ctx["pets_destaque"] = pets
+        ctx["destaques"] = pets  # legado usado em outras páginas
+
+        # Produtos / Lojas / ONGs em destaque
+        ctx["produtos_destaque"] = (
+            ProdutoEmpresa.objects.filter(ativo=True)
+            .order_by("-criado_em")[:8]
+        )
+        ctx["lojas_destaque"] = (
+            UsuarioEmpresarial.objects
+            .annotate(qtd_produtos_ativos=Count("produtos", filter=Q(produtos__ativo=True)))
+            .order_by("-qtd_produtos_ativos", "razao_social")[:8]
+        )
+        ctx["ongs_destaque"] = (
+            UsuarioOng.objects
+            .annotate(qtd_pets=Count("pets"))
+            .order_by("-qtd_pets", "nome_fantasia")[:8]
+        )
+
+        # Categorias para a faixa de chips
+        ctx["categorias_produto"] = [{"slug": k, "nome": v} for k, v in PRODUTO_CATEGORIAS_CHOICES]
+
         return ctx
+
+
+
 
 class ListarAnimais(ListView):
     model = Pet
