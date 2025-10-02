@@ -101,13 +101,13 @@
     <div class="carousel__track" id="heroTrack">
       <!-- substitua as imagens conforme quiser -->
       <a class="carousel__item" href="{% url 'amigofiel:listar-animais' %}">
-        <img src="{% static 'img/banners/adote-1.jpg' %}" alt="Adote com responsabilidade">
+        <img src="{% static 'img/banners/homepage_promocionais/Dicas.png' %}" alt="Adote com responsabilidade">
       </a>
       <a class="carousel__item" href="{% url 'amigofiel:listar-produtos' %}">
-        <img src="{% static 'img/banners/produtos-1.jpg' %}" alt="Produtos para o seu pet">
+        <img src="{% static 'img/banners/homepage_promocionais/Procura-se.png' %}" alt="Produtos para o seu pet">
       </a>
       <a class="carousel__item" href="{% url 'amigofiel:listar-ongs' %}">
-        <img src="{% static 'img/banners/ongs-1.jpg' %}" alt="Conheça ONGs parceiras">
+        <img src="{% static 'img/banners/homepage_promocionais/Vacina.png' %}" alt="Conheça ONGs parceiras">
       </a>
     </div>
     <div class="carousel__nav">
@@ -192,13 +192,12 @@
     <!-- Vídeo (YouTube) -->
     <article class="card-hero">
       <h3 class="h4" style="margin:0;">Como adotar com responsabilidade</h3>
-      <div style="border-radius:12px; overflow:hidden; background:#000;">
-        <iframe
-          title="Adote com responsabilidade"
-          width="100%" height="280" style="aspect-ratio:16/9; width:100%; height:auto; display:block;"
-          src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-          frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen></iframe>
+          <iframe
+            title="Adote com responsabilidade"
+            width="100%" height="280" style="aspect-ratio:16/9; width:100%; height:auto; display:block;"
+            src="https://www.youtube.com/embed/f4Rg3GxqCx0"
+            frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen></iframe>
       </div>
     </article>
 
@@ -216,7 +215,7 @@
     </article>
   </section>
 
-  <!-- ====== CATEGORIAS DE PRODUTOS ====== -->
+  <!-- ====== CATEGORIAS DE PRODUTOS ======
   <section class="cats-strip" style="margin-top:16px;">
     <h3 class="strip-title">Navegue pelas categorias</h3>
     <div class="cats-row" aria-label="Categorias">
@@ -225,7 +224,6 @@
           <a class="cat-pill" href="{% url 'amigofiel:listar-produtos' %}?categoria={{ c.slug|urlencode }}">{{ c.nome }}</a>
         {% endfor %}
       {% else %}
-        <!-- fallback simples -->
         <a class="cat-pill" href="{% url 'amigofiel:listar-produtos' %}?categoria=racao">Ração</a>
         <a class="cat-pill" href="{% url 'amigofiel:listar-produtos' %}?categoria=brinquedos">Brinquedos</a>
         <a class="cat-pill" href="{% url 'amigofiel:listar-produtos' %}?categoria=roupas">Roupas</a>
@@ -234,21 +232,24 @@
         <a class="cat-pill" href="{% url 'amigofiel:listar-produtos' %}?categoria=banho-tosa">Banho &amp; Tosa</a>
       {% endif %}
     </div>
-  </section>
+  </section> -->
 
 {% endblock %}
 
 {% block extra_js %}
 <script>
-  // Carrossel simples com auto-play
   (function(){
     const track = document.getElementById('heroTrack');
     const btnPrev = document.querySelector('[data-slide="prev"]');
     const btnNext = document.querySelector('[data-slide="next"]');
+    const items = track.querySelectorAll('.carousel__item');
+    let current = 0;
 
     function slide(dir){
-      const w = track.clientWidth;
-      track.scrollBy({left: dir * w, behavior:'smooth'});
+      current += dir;
+      if(current < 0) current = items.length - 1;
+      if(current >= items.length) current = 0;
+      items[current].scrollIntoView({behavior:'smooth', inline:'start'});
     }
     btnPrev.addEventListener('click', ()=>slide(-1));
     btnNext.addEventListener('click', ()=>slide(1));
