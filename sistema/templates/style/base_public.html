@@ -33,6 +33,10 @@
       <div class="quick-actions">
         <span class="small muted">📍 {{ request.GET.cidade|default:"Sua cidade" }}</span>
 
+      {% if user.is_authenticated %}
+      <a href="{% url 'chat:inbox' %}">Mensagens</a>
+      {% endif %}
+
         {% if user.is_authenticated %}
           <details class="icon-btn" style="position:relative;">
             <summary class="semibold">👤 {{ user.username }}</summary>

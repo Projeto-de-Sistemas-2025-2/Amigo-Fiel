@@ -1,0 +1,68 @@
+{% extends "style/base_public.html" %}
+{% load static %}
+
+{% block title %}Mensagens — Amigo Fiel{% endblock %}
+
+{% block body %}
+<div class="container">
+
+  <section class="hero">
+    <div>
+      <h1>Mensagens</h1>
+      <p class="muted">Converse com usuários, ONGs e lojas.</p>
+    </div>
+  </section>
+
+  {% comment %}
+    A view deve passar "threads" (lista de conversas) e, de preferência,
+    já com "other" (o outro participante) e "last_message" resolvidos.
+    Se a sua view usa outro nome, ajuste abaixo.
+  {% endcomment %}
+
+  {% if threads %}
+    <section class="card">
+      <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;">
+        {% for t in threads %}
+          <li>
+            <a href="{% url 'chat:thread' t.id %}" style="text-decoration:none;color:inherit">
+              <article class="mini-card" style="display:flex;align-items:center;gap:12px;">
+                {% if t.other_avatar_url %}
+                  <img src="{{ t.other_avatar_url }}" alt="" width="48" height="48" style="border-radius:50%;object-fit:cover;">
+                {% else %}
+                  <div style="width:48px;height:48px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;">💬</div>
+                {% endif %}
+
+                <div style="flex:1 1 auto;min-width:0;">
+                  <div style="display:flex;justify-content:space-between;gap:8px;">
+                    <strong style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                      {{ t.other_name|default:"Conversa" }}
+                    </strong>
+                    {% if t.updated_at %}
+                      <small class="muted">{{ t.updated_at|date:"d/m H:i" }}</small>
+                    {% endif %}
+                  </div>
+
+                  {% with last=t.last_message %}
+                    {% if last %}
+                      <p class="muted" style="margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        {{ last.sender_display|default:last.sender }}: {{ last.body|striptags|truncatechars:90 }}
+                      </p>
+                    {% else %}
+                      <p class="muted" style="margin:2px 0 0;">Sem mensagens ainda.</p>
+                    {% endif %}
+                  {% endwith %}
+                </div>
+              </article>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% else %}
+    <section class="card center">
+      <p class="muted">Você ainda não tem conversas.</p>
+    </section>
+  {% endif %}
+
+</div>
+{% endblock %}

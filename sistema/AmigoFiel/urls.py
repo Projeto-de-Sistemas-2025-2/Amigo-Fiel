@@ -3,6 +3,7 @@ from django.urls import path
 from .views import HomeView, ListarAnimais, cadastro, ListarOngs, SobreView, ContatoView, ListarLojas
 from . import views
 
+
 app_name = "amigofiel"
 
 urlpatterns = [
@@ -35,6 +36,19 @@ urlpatterns = [
 
     # Produto: /amigofiel/<empresa_handle>/<produto_slug>/
     path("<str:empresa_handle>/<slug:produto_slug>/", views.produto_detalhe, name="produto-detalhe"),
+
+    # Carrinho / checkout
+    path("carrinho/", views.carrinho_detalhe, name="carrinho"),
+    path("carrinho/adicionar/<int:produto_id>/", views.carrinho_adicionar, name="carrinho-add"),
+    path("carrinho/atualizar/<int:item_id>/", views.carrinho_atualizar, name="carrinho-update"),
+    path("carrinho/remover/<int:item_id>/", views.carrinho_remover, name="carrinho-remove"),
+    path("checkout/simulado/", views.checkout_simulado, name="checkout-simulado"),
+
+    
+
+    # Painéis
+    path("ONG/<str:handle>/painel/", views.painel_ong, name="painel-ong"),
+    path("Co./<str:handle>/painel/", views.painel_empresa, name="painel-empresa"),
 
 
     path("tabelas/", views.tabelas_bruto, name="tabelas-bruto"),

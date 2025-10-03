@@ -1,4 +1,4 @@
-{% extends "style/base_perfil.html" %}
+{% extends "style/base_public.html" %}
 {% load static %}
 
 {% block title %}{{ produto.nome }} — {{ empresa.razao_social }}{% endblock %}
@@ -43,6 +43,22 @@
       </ul>
     </article>
 
+      {% if produto.pk %}
+        <form method="post" action="{% url 'amigofiel:carrinho-add' produto_id=produto.pk %}">
+          {% csrf_token %}
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="number" name="qtd" value="1" min="1" max="{{ produto.estoque }}" class="input" style="width:90px;">
+            <button type="submit" class="btn btn-primary">Adicionar ao carrinho</button>
+          </div>
+        </form>
+      {% else %}
+        <button class="btn btn-primary" disabled>Adicionar ao carrinho</button>
+      {% endif %}
+
+      <a class="btn btn-secondary" href="{% url 'chat:thread-by-username' username=produto.empresa.user.username %}">
+        Conversar com a loja
+      </a>      
+      
     <article class="mini-card">
       <h2>Empresa</h2>
       <p><strong>{{ empresa.razao_social }}</strong></p>

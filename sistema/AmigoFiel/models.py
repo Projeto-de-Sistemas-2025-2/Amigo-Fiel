@@ -8,6 +8,8 @@ from .consts import PET_SPECIES_CHOICES, SEXO_CHOICES, PRODUTO_CATEGORIAS_CHOICE
 
 import uuid
 
+from decimal import Decimal
+from django.db.models import Sum, F
 
 # =============================================================================
 # Abstrações
@@ -242,3 +244,125 @@ class ProdutoEmpresa(TimeStampedModel):
                 "produto_slug": self.slug,
             },
         )
+
+
+
+# --- Empresas "adotam" ONGs (parceria) ---
+class ParceriaOngEmpresa(TimeStampedModel):
+    empresa = models.ForeignKey(
+        UsuarioEmpresarial, on_delete=models.CASCADE, related_name="parcerias_ongs"
+    )
+    ong = models.ForeignKey(
+        UsuarioOng, on_delete=models.CASCADE, related_name="parcerias_empresas"
+    )
+    percentual_padrao = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))  # 0-100
+    ativa = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ("empresa", "ong")
+
+    def __str__(self):
+        return f"{self.empresa.razao_social} ↔ {self.ong.nome_fantasia} ({self.percentual_padrao}%)"
+
+
+# --- Produto vinculado a uma ONG, com % própria (sobrepõe a parceria) ---
+class ProdutoOngVinculo(TimeStampedModel):
+    produto = models.ForeignKey(
+        ProdutoEmpresa, on_delete=models.CASCADE, related_name="vinculos_ong"
+    )
+    ong = models.ForeignKey(
+        UsuarioOng, on_delete=models.CASCADE, related_name="vinculos_produtos"
+    )
+    percentual = models.DecimalField(max_digits=5, decimal_places=2)  # 0-100
+    ativo = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ("produto", "ong")
+
+    def __str__(self):
+        return f"{self.produto.nome} → {self.ong.nome_fantasia} ({self.percentual}%)"
+
+
+# --- Carrinho ---
+class Carrinho(TimeStampedModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="carrinhos")
+    ativo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Carrinho #{self.pk} de {self.user.username}"
+
+    @property
+    def total_itens(self):
+        return self.itens.aggregate(s=Sum("quantidade"))["s"] or 0
+
+    @property
+    def total_bruto(self):
+        return sum((i.subtotal for i in self.itens.select_related("produto")), Decimal("0.00"))
+
+
+class ItemCarrinho(TimeStampedModel):
+    carrinho = models.ForeignKey(Carrinho, on_delete=models.CASCADE, related_name="itens")
+    produto = models.ForeignKey(ProdutoEmpresa, on_delete=models.CASCADE)
+    quantidade = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        unique_together = ("carrinho", "produto")
+
+    def __str__(self):
+        return f"{self.quantidade}x {self.produto.nome}"
+
+    @property
+    def preco_unitario(self):
+        return self.produto.preco
+
+    @property
+    def subtotal(self):
+        return (self.preco_unitario or Decimal("0.00")) * self.quantidade
+
+
+# --- Pedido (checkout simulado) ---
+class Pedido(TimeStampedModel):
+    STATUS = [
+        ("rascunho", "Rascunho"),
+        ("pago", "Pago"),
+        ("enviado", "Enviado"),
+        ("concluido", "Concluído"),
+        ("cancelado", "Cancelado"),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="pedidos")
+    status = models.CharField(max_length=20, choices=STATUS, default="pago")
+    total_bruto = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    total_doacao = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+
+    def __str__(self):
+        return f"Pedido #{self.pk} de {self.user.username}"
+
+    def recalcular_totais(self):
+        aggr = self.itens.aggregate(
+            bruto=Sum(F("total")), doacao=Sum(F("valor_doacao"))
+        )
+        self.total_bruto = aggr["bruto"] or Decimal("0.00")
+        self.total_doacao = aggr["doacao"] or Decimal("0.00")
+        self.save(update_fields=["total_bruto", "total_doacao"])
+
+
+class ItemPedido(TimeStampedModel):
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name="itens")
+    produto = models.ForeignKey(ProdutoEmpresa, on_delete=models.PROTECT)
+    empresa = models.ForeignKey(UsuarioEmpresarial, on_delete=models.PROTECT)
+    ong = models.ForeignKey(UsuarioOng, on_delete=models.SET_NULL, null=True, blank=True)
+
+    quantidade = models.PositiveIntegerField(default=1)
+    preco_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    total = models.DecimalField(max_digits=12, decimal_places=2)
+
+    percentual_doacao = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
+    valor_doacao = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+
+    def __str__(self):
+        return f"{self.quantidade}x {self.produto.nome} (Pedido #{self.pedido_id})"
+
+# dentro de ProdutoEmpresa
+def ong_beneficiada(self):
+    v = self.vinculos_ong.filter(ativo=True).order_by("-percentual").first()
+    return v.ong if v else None, (v.percentual if v else None)

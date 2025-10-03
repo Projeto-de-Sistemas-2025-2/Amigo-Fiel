@@ -96,6 +96,26 @@
 
 {% block body %}
 
+      <!-- ====== CATEGORIAS DE PRODUTOS ====== -->
+  <!-- <section class="cats-strip" style="margin-top:16px;">
+    <h3 class="strip-title">Navegue pelas categorias</h3>
+    <div class="cats-row" aria-label="Categorias">
+      {% if categorias_produto %}
+        {% for c in categorias_produto %}
+          <a class="cat-pill" href="{% url 'amigofiel:listar-produtos' %}?categoria={{ c.slug|urlencode }}">{{ c.nome }}</a>
+        {% endfor %}
+      {% else %}
+        <a class="cat-pill" href="{% url 'amigofiel:listar-produtos' %}?categoria=racao">Ração</a>
+        <a class="cat-pill" href="{% url 'amigofiel:listar-produtos' %}?categoria=brinquedos">Brinquedos</a>
+        <a class="cat-pill" href="{% url 'amigofiel:listar-produtos' %}?categoria=roupas">Roupas</a>
+        <a class="cat-pill" href="{% url 'amigofiel:listar-produtos' %}?categoria=farmacia">Farmácia</a>
+        <a class="cat-pill" href="{% url 'amigofiel:listar-produtos' %}?categoria=higiene">Higiene</a>
+        <a class="cat-pill" href="{% url 'amigofiel:listar-produtos' %}?categoria=banho-tosa">Banho &amp; Tosa</a>
+      {% endif %}
+    </div>
+  </section> -->
+
+
   <!-- ====== BANNER ROTATIVO ====== -->
   <section class="carousel" aria-label="Destaques">
     <div class="carousel__track" id="heroTrack">
@@ -198,7 +218,6 @@
             src="https://www.youtube.com/embed/f4Rg3GxqCx0"
             frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowfullscreen></iframe>
-      </div>
     </article>
 
     <!-- Banner -->
@@ -214,25 +233,6 @@
       </div>
     </article>
   </section>
-
-  <!-- ====== CATEGORIAS DE PRODUTOS ======
-  <section class="cats-strip" style="margin-top:16px;">
-    <h3 class="strip-title">Navegue pelas categorias</h3>
-    <div class="cats-row" aria-label="Categorias">
-      {% if categorias_produto %}
-        {% for c in categorias_produto %}
-          <a class="cat-pill" href="{% url 'amigofiel:listar-produtos' %}?categoria={{ c.slug|urlencode }}">{{ c.nome }}</a>
-        {% endfor %}
-      {% else %}
-        <a class="cat-pill" href="{% url 'amigofiel:listar-produtos' %}?categoria=racao">Ração</a>
-        <a class="cat-pill" href="{% url 'amigofiel:listar-produtos' %}?categoria=brinquedos">Brinquedos</a>
-        <a class="cat-pill" href="{% url 'amigofiel:listar-produtos' %}?categoria=roupas">Roupas</a>
-        <a class="cat-pill" href="{% url 'amigofiel:listar-produtos' %}?categoria=farmacia">Farmácia</a>
-        <a class="cat-pill" href="{% url 'amigofiel:listar-produtos' %}?categoria=higiene">Higiene</a>
-        <a class="cat-pill" href="{% url 'amigofiel:listar-produtos' %}?categoria=banho-tosa">Banho &amp; Tosa</a>
-      {% endif %}
-    </div>
-  </section> -->
 
 {% endblock %}
 

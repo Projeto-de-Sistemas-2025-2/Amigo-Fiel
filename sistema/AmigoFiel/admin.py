@@ -4,6 +4,9 @@ from .models import (
     UsuarioComum, UsuarioEmpresarial, UsuarioOng,
     Pet, ProdutoEmpresa
 )
+from django.contrib import admin
+from .models import ParceriaOngEmpresa, ProdutoOngVinculo, Carrinho, ItemCarrinho, Pedido, ItemPedido
+
 
 # helper p/ thumbnail
 def _thumb(obj, fieldname="imagem", size=56):
@@ -102,3 +105,31 @@ class ProdutoEmpresaAdmin(admin.ModelAdmin):
     autocomplete_fields = ("empresa",)
     ordering = ("nome",)
     prepopulated_fields = {"slug": ("nome",)}  # opcional: sugere slug no admin
+
+
+class ParceriaAdmin(admin.ModelAdmin):
+    list_display = ("empresa", "ong", "percentual_padrao", "ativa")
+    search_fields = ("empresa__razao_social", "ong__nome_fantasia")
+
+@admin.register(ProdutoOngVinculo)
+class VinculoAdmin(admin.ModelAdmin):
+    list_display = ("produto", "ong", "percentual", "ativo")
+    search_fields = ("produto__nome", "ong__nome_fantasia")
+
+class ItemCarrinhoInline(admin.TabularInline):
+    model = ItemCarrinho
+    extra = 0
+
+@admin.register(Carrinho)
+class CarrinhoAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "ativo", "criado_em")
+    inlines = [ItemCarrinhoInline]
+
+class ItemPedidoInline(admin.TabularInline):
+    model = ItemPedido
+    extra = 0
+
+@admin.register(Pedido)
+class PedidoAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "status", "total_bruto", "total_doacao", "criado_em")
+    inlines = [ItemPedidoInline]

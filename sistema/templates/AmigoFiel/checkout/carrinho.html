@@ -1,0 +1,57 @@
+{% extends "style/base_public.html" %}
+{% load static %}
+
+{% block title %}Carrinho — Amigo Fiel{% endblock %}
+
+{% block body %}
+<div class="container">
+  <h1 class="h3">Seu carrinho</h1>
+
+  {% if not grupos %}
+    <section class="card center">
+      <p class="muted">Seu carrinho está vazio.</p>
+      <a class="btn btn-primary" href="{% url 'amigofiel:listar-produtos' %}">Ir aos produtos</a>
+    </section>
+  {% else %}
+    {% for loja, itens in grupos.items %}
+      <section class="card" style="margin-bottom:12px">
+        <h2 class="h4" style="margin:0 0 8px">{{ loja.razao_social }}</h2>
+        <table class="table">
+          <thead>
+            <tr><th>Produto</th><th style="width:110px">Qtd</th><th style="width:140px">Preço</th><th style="width:140px">Subtotal</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for it in itens %}
+            <tr>
+              <td>
+                <strong>{{ it.produto.nome }}</strong><br>
+                <small class="muted">{% if it.produto.vinculos_ong.first %}Beneficia: {{ it.produto.vinculos_ong.first.ong.nome_fantasia }} ({{ it.produto.vinculos_ong.first.percentual }}%){% endif %}</small>
+              </td>
+              <td>
+                <form method="post" action="{% url 'amigofiel:carrinho-update' item_id=it.id %}">{% csrf_token %}
+                  <input name="qtd" type="number" min="0" value="{{ it.quantidade }}" class="input" style="width:90px">
+                </form>
+              </td>
+              <td>R$ {{ it.preco_unitario }}</td>
+              <td><strong>R$ {{ it.subtotal }}</strong></td>
+              <td class="right">
+                <form method="post" action="{% url 'amigofiel:carrinho-remove' item_id=it.id %}">{% csrf_token %}
+                  <button class="btn btn-secondary" type="submit">Remover</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+    {% endfor %}
+
+    <div class="actions">
+      <a class="btn btn-secondary" href="{% url 'amigofiel:listar-produtos' %}">Continuar comprando</a>
+      <form method="post" action="{% url 'amigofiel:checkout-simulado' %}">{% csrf_token %}
+        <button class="btn btn-primary" type="submit">Finalizar pedido (simulado)</button>
+      </form>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -2,11 +2,10 @@
 from django.views.generic import TemplateView, ListView
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db import transaction
-from django.contrib.auth import login
+from django.contrib.auth import login, get_user_model
 from django.db.models import Count, Q
 from .models import Pet, UsuarioComum, UsuarioEmpresarial, UsuarioOng, ProdutoEmpresa
 from .forms import CadastroForm
-from django.contrib.auth import get_user_model  
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
@@ -17,6 +16,18 @@ from .forms import ProdutoForm, PetForm
 from .models import ProdutoEmpresa, Pet, UsuarioEmpresarial, UsuarioComum, UsuarioOng
 from .consts import PRODUTO_CATEGORIAS_CHOICES  # se você criou o arquivo consts.py
 
+# AmigoFiel/views.py (ADICIONAR IMPORTS)
+from decimal import Decimal
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from django.http import HttpResponseBadRequest, HttpResponseForbidden
+from django.db.models import Sum, F, Q
+from django.contrib import messages
+from .models import (
+    Carrinho, ItemCarrinho, ProdutoEmpresa,
+    Pedido, ItemPedido, UsuarioEmpresarial, UsuarioOng,
+    ProdutoOngVinculo
+)
 
 # class HomeView(TemplateView):
 #     template_name = "AmigoFiel/home.html"
@@ -313,19 +324,14 @@ class ListarProdutos(ListView):
         })
         return ctx
 
-def produto_detalhe(request, empresa_handle: str, produto_slug: str):
+def produto_detalhe(request, empresa_handle, produto_slug):
     produto = get_object_or_404(
         ProdutoEmpresa.objects.select_related("empresa", "empresa__user"),
         empresa__user__username=empresa_handle,
         slug=produto_slug,
-        ativo=True,
     )
-    ctx = {
-        "produto": produto,
-        "empresa": produto.empresa,
-    }
+    ctx = {"produto": produto}
     return render(request, "AmigoFiel/perfil/perfil_produto.html", ctx)
-
 
 def tabelas_bruto(request):
     User = get_user_model()
@@ -418,3 +424,226 @@ class PetCreateView(LoginRequiredMixin, TemplateView): ##view para cadastro de p
             return redirect(pet.get_absolute_url())
 
         return render(request, self.template_name, {"form": form})
+
+# --------- helpers ---------
+def _get_or_create_cart(user):
+    cart, _ = Carrinho.objects.get_or_create(user=user, ativo=True)
+    return cart
+
+def _produto_doacao_info(produto: ProdutoEmpresa):
+    # tenta achar vinculo direto; se não houver, nenhum % (poderia herdar Parceria se quiser evoluir)
+    vinc = produto.vinculos_ong.filter(ativo=True).order_by("-percentual").first()
+    if vinc:
+        return vinc.ong, vinc.percentual
+    return None, Decimal("0.00")
+
+
+# --------- Carrinho ----------
+@login_required
+def carrinho_adicionar(request, produto_id):
+    if request.method != "POST":
+        return HttpResponseBadRequest("Use POST")
+    prod = ProdutoEmpresa.objects.filter(pk=produto_id, ativo=True).first()
+    if not prod:
+        messages.error(request, "Produto indisponível.")
+        return redirect("amigofiel:listar-produtos")
+
+    cart = _get_or_create_cart(request.user)
+    item, created = ItemCarrinho.objects.get_or_create(carrinho=cart, produto=prod)
+    qtd = int(request.POST.get("qtd", 1))
+    item.quantidade = max(1, (item.quantidade if not created else 0) + qtd)
+    item.save()
+    messages.success(request, f"{prod.nome} adicionado ao carrinho.")
+    return redirect("amigofiel:carrinho")
+
+
+@login_required
+def carrinho_atualizar(request, item_id):
+    if request.method != "POST":
+        return HttpResponseBadRequest("Use POST")
+    item = ItemCarrinho.objects.select_related("carrinho", "produto").filter(
+        pk=item_id, carrinho__user=request.user, carrinho__ativo=True
+    ).first()
+    if not item:
+        messages.error(request, "Item não encontrado.")
+        return redirect("amigofiel:carrinho")
+
+    qtd = int(request.POST.get("qtd", 1))
+    if qtd <= 0:
+        item.delete()
+    else:
+        item.quantidade = qtd
+        item.save()
+    return redirect("amigofiel:carrinho")
+
+
+@login_required
+def carrinho_remover(request, item_id):
+    item = ItemCarrinho.objects.select_related("carrinho").filter(
+        pk=item_id, carrinho__user=request.user, carrinho__ativo=True
+    ).first()
+    if item:
+        item.delete()
+        messages.success(request, "Item removido.")
+    return redirect("amigofiel:carrinho")
+
+
+@login_required
+def carrinho_detalhe(request):
+    cart = _get_or_create_cart(request.user)
+    itens = (cart.itens
+             .select_related("produto", "produto__empresa")
+             .order_by("produto__empresa__razao_social", "produto__nome"))
+
+    # agrupa por loja para exibir em seções
+    grupos = {}
+    for it in itens:
+        emp = it.produto.empresa
+        grupos.setdefault(emp, []).append(it)
+
+    ctx = {
+        "cart": cart,
+        "grupos": grupos,   # dict {empresa: [itens]}
+    }
+    return render(request, "AmigoFiel/checkout/carrinho.html", ctx)
+
+
+@login_required
+def checkout_simulado(request):
+    cart = _get_or_create_cart(request.user)
+    itens = cart.itens.select_related("produto", "produto__empresa")
+    if not itens.exists():
+        messages.error(request, "Seu carrinho está vazio.")
+        return redirect("amigofiel:carrinho")
+
+    pedido = Pedido.objects.create(user=request.user, status="pago")
+    for it in itens:
+        ong, perc = _produto_doacao_info(it.produto)
+        punit = it.produto.preco or Decimal("0.00")
+        total = punit * it.quantidade
+        valor_doacao = (total * (perc or Decimal("0.00"))) / Decimal("100")
+
+        ItemPedido.objects.create(
+            pedido=pedido,
+            produto=it.produto,
+            empresa=it.produto.empresa,
+            ong=ong,
+            quantidade=it.quantidade,
+            preco_unitario=punit,
+            total=total,
+            percentual_doacao=perc or Decimal("0.00"),
+            valor_doacao=valor_doacao,
+        )
+
+    pedido.recalcular_totais()
+    cart.itens.all().delete()  # limpa carrinho
+    messages.success(request, f"Pedido #{pedido.pk} criado (pagamento simulado).")
+    return redirect("amigofiel:carrinho")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# --------- Pedidos ----------
+
+
+# AmigoFiel/views.py (acrescente)
+
+
+@login_required
+def painel_empresa(request, handle: str):
+    # Empresa dona do painel
+    empresa = get_object_or_404(
+        UsuarioEmpresarial.objects.select_related("user").annotate(
+            total_produtos=Count("produtos"),
+            ativos=Count("produtos", filter=Q(produtos__ativo=True)),
+        ),
+        user__username=handle
+    )
+
+    # (Opcional) restringir para o dono ver seu próprio painel:
+    if request.user != empresa.user and not request.user.is_superuser:
+        return HttpResponseForbidden("Você não tem permissão para ver este painel.")
+
+    # Métricas de vendas/doação se os modelos existirem
+    total_vendas = None
+    total_doacao = None
+    itens_vendidos = 0
+    try:
+        from .models import ItemPedido
+        vendas = ItemPedido.objects.filter(empresa=empresa)
+        agg = vendas.aggregate(total_vendas=Sum("total"), total_doacao=Sum("valor_doacao"))
+        total_vendas = agg["total_vendas"] or 0
+        total_doacao = agg["total_doacao"] or 0
+        itens_vendidos = vendas.count()
+    except Exception:
+        pass  # modelos ainda não migrados? ok, mostra só produtos
+
+    produtos = (
+        empresa.produtos
+        .all()
+        .order_by("-criado_em")[:24]
+    )
+
+    ctx = {
+        "perfil": empresa,
+        "produtos": produtos,
+        "met": {
+            "total_produtos": empresa.total_produtos,
+            "ativos": empresa.ativos,
+            "itens_vendidos": itens_vendidos,
+            "total_vendas": total_vendas,
+            "total_doacao": total_doacao,
+        }
+    }
+    return render(request, "AmigoFiel/painel/empresa_dashboard.html", ctx)
+
+
+@login_required
+def painel_ong(request, handle: str):
+    ong = get_object_or_404(
+        UsuarioOng.objects.select_related("user").annotate(qtd_pets=Count("pets")),
+        user__username=handle
+    )
+
+    if request.user != ong.user and not request.user.is_superuser:
+        return HttpResponseForbidden("Você não tem permissão para ver este painel.")
+
+    # Produtos vinculados à ONG (se o modelo existir)
+    produtos_vinc = []
+    total_doado = None
+    try:
+        from .models import ProdutoOngVinculo, ItemPedido
+        produtos_vinc = (
+            ProdutoOngVinculo.objects
+            .select_related("produto", "produto__empresa")
+            .filter(ong=ong, ativo=True)
+        )
+        total_doado = ItemPedido.objects.filter(ong=ong).aggregate(s=Sum("valor_doacao"))["s"] or 0
+    except Exception:
+        pass
+
+    ctx = {
+        "perfil": ong,
+        "produtos_vinc": produtos_vinc,
+        "qtd_pets": ong.qtd_pets,
+        "total_doado": total_doado,
+    }
+    return render(request, "AmigoFiel/painel/ong_dashboard.html", ctx)

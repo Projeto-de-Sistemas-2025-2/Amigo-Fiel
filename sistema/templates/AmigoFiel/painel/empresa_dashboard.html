@@ -1,0 +1,61 @@
+{% extends "style/base_public.html" %}
+{% load static %}
+
+{% block title %}Painel — {{ perfil.razao_social }}{% endblock %}
+
+{% block body %}
+<section class="hero">
+  <div>
+    <h1>Painel da Empresa</h1>
+    <p class="muted">
+      {{ perfil.razao_social }} · @{{ perfil.user.username }}
+      {% if perfil.cidade %} · 🏙️ {{ perfil.cidade }}{% endif %}
+    </p>
+    <div class="actions" style="margin-top:8px">
+      <a class="btn btn-secondary" href="{% url 'amigofiel:perfil-empresa' handle=perfil.user.username %}">Ver perfil público</a>
+    </div>
+  </div>
+</section>
+
+<section class="grid" style="margin-top:10px">
+  <article class="mini-card">
+    <h3>Produtos</h3>
+    <p class="muted">Ativos: <strong>{{ met.ativos }}</strong></p>
+    <p class="muted">Total: <strong>{{ met.total_produtos }}</strong></p>
+  </article>
+
+  <article class="mini-card">
+    <h3>Vendas</h3>
+    <p class="muted">Itens vendidos: <strong>{{ met.itens_vendidos|default:"—" }}</strong></p>
+    <p class="muted">Total vendido: <strong>R$ {{ met.total_vendas|default:"—" }}</strong></p>
+    <p class="muted">Total doado a ONGs: <strong>R$ {{ met.total_doacao|default:"—" }}</strong></p>
+  </article>
+</section>
+
+<section class="card" style="margin-top:14px">
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <h2>Produtos recentes</h2>
+    <a class="btn btn-secondary" href="{% url 'amigofiel:listar-produtos' %}?q=@{{ perfil.user.username }}">Ver listagem</a>
+  </div>
+
+  {% if produtos %}
+    <div class="grid grid-1 grid-md-2 grid-lg-4" style="margin-top:10px">
+      {% for prod in produtos %}
+        <article class="mini-card">
+          <img class="thumb" src="{% if prod.imagem %}{{ prod.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}" alt="{{ prod.nome }}">
+          <h3>{{ prod.nome }}</h3>
+          <p class="muted">{{ prod.descricao|default:"Sem descrição" |truncatechars:80 }}</p>
+          <p><strong>R$ {{ prod.preco }}</strong> · Estoque: {{ prod.estoque }}</p>
+          <div class="actions">
+            {% if prod.slug %}
+              <a class="btn btn-primary" href="{% url 'amigofiel:produto-detalhe' empresa_handle=perfil.user.username produto_slug=prod.slug %}">Abrir</a>
+            {% endif %}
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="muted">Nenhum produto cadastrado.</p>
+  {% endif %}
+</section>
+{% endblock %}

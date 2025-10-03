@@ -1,0 +1,48 @@
+{% extends "style/base_public.html" %}
+{% load static %}
+
+{% block title %}Painel — {{ perfil.nome_fantasia }}{% endblock %}
+
+{% block body %}
+<section class="hero">
+  <div>
+    <h1>Painel da ONG</h1>
+    <p class="muted">
+      {{ perfil.nome_fantasia }} · @{{ perfil.user.username }}
+      {% if perfil.cidade %} · 🏙️ {{ perfil.cidade }}{% endif %}
+    </p>
+    <div class="actions" style="margin-top:8px">
+      <a class="btn btn-secondary" href="{% url 'amigofiel:perfil-ong' handle=perfil.user.username %}">Ver perfil público</a>
+    </div>
+  </div>
+</section>
+
+<section class="grid" style="margin-top:10px">
+  <article class="mini-card">
+    <h3>Pets</h3>
+    <p class="muted">Cadastrados: <strong>{{ qtd_pets }}</strong></p>
+  </article>
+  <article class="mini-card">
+    <h3>Doações</h3>
+    <p class="muted">Total recebido (simulado): <strong>R$ {{ total_doado|default:"—" }}</strong></p>
+  </article>
+</section>
+
+<section class="card" style="margin-top:14px">
+  <h2>Produtos vinculados</h2>
+  {% if produtos_vinc %}
+    <div class="grid grid-1 grid-md-2 grid-lg-3" style="margin-top:10px">
+      {% for v in produtos_vinc %}
+        <article class="mini-card">
+          <img class="thumb" src="{% if v.produto.imagem %}{{ v.produto.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}" alt="{{ v.produto.nome }}">
+          <h3>{{ v.produto.nome }}</h3>
+          <p class="muted">Empresa: {{ v.produto.empresa.razao_social }}</p>
+          <p class="muted">Doação: <strong>{{ v.percentual }}%</strong></p>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="muted">Nenhum produto vinculado a esta ONG.</p>
+  {% endif %}
+</section>
+{% endblock %}

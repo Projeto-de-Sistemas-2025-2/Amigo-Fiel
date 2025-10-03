@@ -22,6 +22,9 @@ urlpatterns = [
     path('amigofiel/', include(('AmigoFiel.urls', 'amigofiel'), namespace='amigofiel')),
     path('AmigoFiel/', RedirectView.as_view(url='/amigofiel/', permanent=False)),
 
+
+    # Chat
+    path('chat/', include(('chat.urls', 'chat'), namespace='chat')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
