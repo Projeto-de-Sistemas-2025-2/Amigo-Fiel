@@ -1,171 +1,238 @@
 {% extends "style/base_public.html" %}
 {% load static %}
 
-{% block title %}{{ produto.nome }} — {{ produto.empresa.razao_social }}{% endblock %}
+{% block title %}{{ produto.nome }} — Amigo Fiel{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/produto.css' %}">
+<style>
+:root{
+  --af-bg:#f6f8fb;
+  --af-card:#fff;
+  --af-border:#e6ebf2;
+  --af-text:#0f172a;
+  --af-muted:#64748b;
+  --af-accent:#0ea5b7;        /* teal/brand */
+  --af-accent-600:#0e7490;
+  --af-pill:#eef6ff;
+  --af-danger:#991b1b;
+  --radius:16px;
+}
+
+/* layout */
+.pd-grid{
+  display:grid;
+  grid-template-columns: minmax(0,2fr) minmax(320px,1fr);
+  gap:18px;
+}
+@media (max-width:980px){
+  .pd-grid{ grid-template-columns:1fr; }
+}
+
+.pd-card{background:var(--af-card); border:1px solid var(--af-border); border-radius:var(--radius); padding:16px;}
+.pd-hr{height:1px;background:var(--af-border); border:0; margin:12px 0;}
+
+.h1{font-size:clamp(22px,2.6vw,30px); line-height:1.2; margin:0 0 6px; color:var(--af-text);}
+.meta{color:var(--af-muted);}
+.price{font-size:clamp(24px,2.8vw,32px); font-weight:800; margin:6px 0;}
+
+/* media (uma única foto) */
+.media-wrap{
+  background:linear-gradient(180deg,#fff, var(--af-bg));
+  border:1px solid var(--af-border);
+  border-radius:var(--radius);
+  display:flex; align-items:center; justify-content:center;
+  padding:10px; margin-bottom:12px;
+}
+.media-wrap img{
+  width:100%; max-height:560px; aspect-ratio:4/5;
+  object-fit:contain;
+}
+
+/* chips & badges */
+.kv{display:flex; flex-wrap:wrap; gap:10px; align-items:center;}
+.pill{display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; background:var(--af-pill); color:#1d4ed8; font-weight:600; font-size:12px;}
+.tag{display:inline-flex; align-items:center; gap:6px; padding:3px 8px; border-radius:999px; background:#f1f5f9; color:#334155; font-size:12px;}
+.ok{background:#e6fff4; color:#067647;}
+.warn{background:#fee2e2; color:var(--af-danger);}
+
+/* links/ctas em linha */
+.inline-actions{display:flex; flex-wrap:wrap; gap:8px;}
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  border-radius:12px; padding:10px 14px; text-decoration:none; font-weight:600;
+  border:1px solid var(--af-border); color:var(--af-text); background:#fff;
+}
+.btn:hover{box-shadow:0 1px 0 rgba(15,23,42,.06);}
+.btn-primary{background:var(--af-accent); border-color:var(--af-accent); color:#fff;}
+.btn-primary:hover{background:var(--af-accent-600); border-color:var(--af-accent-600);}
+.btn-ghost{background:#fff; border:1px dashed var(--af-border);}
+
+/* buybox */
+.buybox{position:sticky; top:16px;}
+.buybox .row{display:flex; justify-content:space-between; gap:10px; margin:6px 0;}
+.buybox .muted{color:var(--af-muted);}
+
+.qty{
+  display:grid; grid-template-columns:40px 1fr 40px; gap:6px; align-items:center;
+}
+.qty input{
+  height:42px; border:1px solid var(--af-border); border-radius:12px; text-align:center;
+}
+.qty button{
+  height:42px; border-radius:12px; border:1px solid var(--af-border); background:#fff; font-weight:700;
+}
+
+.btn-lg{width:100%; padding:12px 14px; border-radius:12px; font-weight:800;}
+.note{font-size:12px; color:var(--af-muted);}
+</style>
 {% endblock %}
 
 {% block body %}
+<div class="container pd-grid">
 
-<!-- Breadcrumbs simples -->
-<nav class="crumbs container" aria-label="Caminho de navegação">
-  <a href="{% url 'amigofiel:home' %}">Início</a> /
-  <a href="{% url 'amigofiel:listar-produtos' %}">Produtos</a> /
-  <span>{{ produto.nome }}</span>
-</nav>
+  {# ===== COLUNA PRINCIPAL ===== #}
+  <section class="pd-card">
+    <div class="media-wrap">
+      <img src="{% if produto.imagem %}{{ produto.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}"
+           alt="{{ produto.nome }}">
+    </div>
 
-<section class="container prod-detail">
+    <h1 class="h1">{{ produto.nome }}</h1>
 
-  <!-- 1) GALERIA -->
-  <aside class="gallery" aria-label="Galeria de imagens do produto">
-    <div class="thumbs">
-      {% if imagens %}
-        {% for img in imagens %}
-          <button class="thumb" type="button" data-src="{{ img.url }}">
-            <img src="{{ img.url }}" alt="Foto {{ forloop.counter }} de {{ produto.nome }}">
-          </button>
-        {% endfor %}
+    <div class="kv">
+      <span class="meta">
+        Loja:
+        <a class="accent" href="{% url 'amigofiel:perfil-empresa' handle=produto.empresa.user.username %}">
+          {{ produto.empresa.razao_social }}
+        </a>
+      </span>
+
+      {% if produto.empresa.cidade %}
+        <span class="tag">🏙️ {{ produto.empresa.cidade }}</span>
+      {% endif %}
+
+      {% if produto.estoque|default:0 > 0 %}
+        <span class="pill">Em estoque</span>
       {% else %}
-        <button class="thumb is-active" type="button" data-src="{% if produto.imagem %}{{ produto.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}">
-          <img src="{% if produto.imagem %}{{ produto.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}" alt="{{ produto.nome }}">
-        </button>
+        <span class="pill warn">Esgotado</span>
       {% endif %}
     </div>
 
-    <div class="stage">
-      <img id="mainImage" src="{% if produto.imagem %}{{ produto.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}" alt="{{ produto.nome }}">
-    </div>
-  </aside>
+    {% if vinculo_ong %}
+      <div class="pd-hr"></div>
+      <div class="kv">
+        <span class="tag ok">💚 Produto solidário</span>
+        <span class="meta">
+          {{ vinculo_ong.percentual }}% vai para
+          <a class="accent" href="{% url 'amigofiel:perfil-ong' handle=vinculo_ong.ong.user.username %}">
+            {{ vinculo_ong.ong.nome_fantasia }}
+          </a>
+        </span>
+      </div>
+    {% endif %}
 
-  <!-- 2) DETALHES -->
-  <article class="meta">
-    <h1 class="title">{{ produto.nome }}</h1>
+    <div class="pd-hr"></div>
+    <div class="price">R$ {{ produto.preco }}</div>
 
-    <p class="by">
-      por
-      <a class="accent" href="{% url 'amigofiel:perfil-empresa' handle=produto.empresa.user.username %}">
-        {{ produto.empresa.razao_social }}
+    <div class="pd-hr"></div>
+    <h3 style="margin:0 0 6px;">Descrição</h3>
+    {% if produto.descricao %}
+      <p class="meta" style="white-space:pre-line; margin:0;">
+        {{ produto.descricao }}
+      </p>
+    {% else %}
+      <p class="meta" style="margin:0;">Sem descrição informada pela loja.</p>
+    {% endif %}
+
+    <div class="pd-hr"></div>
+    <div class="inline-actions">
+      <a class="btn" href="{% url 'chat:thread-by-username' username=produto.empresa.user.username %}">
+        💬 Falar com a loja
       </a>
-    </p>
+      <a class="btn" href="{% url 'amigofiel:perfil-empresa' handle=produto.empresa.user.username %}">
+        🏪 Ver perfil da loja
+      </a>
+      {% if vinculo_ong %}
+        <a class="btn-ghost btn" href="{% url 'amigofiel:perfil-ong' handle=vinculo_ong.ong.user.username %}">
+          🐾 Conhecer a ONG
+        </a>
+      {% endif %}
+    </div>
+  </section>
 
-    {% if ong_vinculada %}
-      {# Esperado: ong_vinculada.ong (UsuarioOng) e ong_vinculada.percentual #}
-      <p class="donation">
-        <span class="badge">Doação</span>
-        {{ ong_vinculada.percentual }}% da compra destinada à
-        <a href="{% url 'amigofiel:perfil-ong' handle=ong_vinculada.ong.user.username %}">
-          {{ ong_vinculada.ong.nome_fantasia }}
-        </a>.
+  {# ===== COLUNA LATERAL (BUYBOX) ===== #}
+  <aside class="pd-card buybox" aria-label="Comprar">
+    <div class="row">
+      <span class="muted">Preço</span>
+      <strong>R$ {{ produto.preco }}</strong>
+    </div>
+    <div class="row">
+      <span class="muted">Disponibilidade</span>
+      <strong>
+        {% if produto.estoque|default:0 > 0 %}Em estoque{% else %}Esgotado{% endif %}
+      </strong>
+    </div>
+
+    {% if vinculo_ong %}
+      <div class="row">
+        <span class="muted">Doação</span>
+        <strong>{{ vinculo_ong.percentual }}%</strong>
+      </div>
+      <p class="note" style="margin:6px 0 0;">
+        Sua compra apoia <strong>{{ vinculo_ong.ong.nome_fantasia }}</strong>.
       </p>
     {% endif %}
 
-    <div class="price-line">
-      <div class="price">R$ {{ produto.preco }}</div>
-      {% if produto.estoque > 0 %}
-        <span class="stock ok">Em estoque</span>
-      {% else %}
-        <span class="stock out">Indisponível</span>
-      {% endif %}
-    </div>
+    <div class="pd-hr"></div>
 
-    {% if produto.descricao %}
-      <div class="desc">
-        {{ produto.descricao|linebreaksbr }}
+    <form method="post" action="{% url 'amigofiel:carrinho-add' produto_id=produto.id %}">
+      {% csrf_token %}
+
+      <label class="muted" for="qtd">Quantidade</label>
+      <div class="qty" style="margin:6px 0 10px;">
+        <button type="button" data-minus aria-label="diminuir">−</button>
+        <input id="qtd" name="qtd" type="number" min="1"
+               max="{{ produto.estoque|default:99 }}" value="1">
+        <button type="button" data-plus aria-label="aumentar">+</button>
       </div>
-    {% endif %}
 
-    <div class="seller-card">
-      <img class="seller-logo" src="{% if produto.empresa.foto %}{{ produto.empresa.foto.url }}{% else %}{% static 'img/defaults/avatar_empresa.png' %}{% endif %}" alt="Logo {{ produto.empresa.razao_social }}">
-      <div class="seller-info">
-        <div class="seller-name">{{ produto.empresa.razao_social }}</div>
-        <div class="seller-city muted">
-          {% if produto.empresa.cidade %}🏙️ {{ produto.empresa.cidade }}{% endif %}
-        </div>
-        <div class="actions">
-          {% url 'chat:thread-by-username' username=produto.empresa.user.username as chat_url %}
-          {% if chat_url %}
-            <a class="btn btn-secondary" href="{{ chat_url }}">Falar com a empresa</a>
-          {% endif %}
-          <a class="btn btn-secondary" href="{% url 'amigofiel:perfil-empresa' handle=produto.empresa.user.username %}">
-            Ver perfil da loja
-          </a>
-        </div>
-      </div>
-    </div>
-  </article>
+      <button class="btn-primary btn-lg" type="submit"
+              {% if not produto.estoque %}disabled{% endif %}>
+        Comprar agora
+      </button>
+    </form>
 
-  <!-- 3) BUY BOX -->
-  <aside class="buybox" aria-label="Comprar">
-    <div class="buy-price">R$ {{ produto.preco }}</div>
+    <div style="height:8px"></div>
 
-    {% if produto.estoque > 0 %}
-      <div class="buy-stock ok">Em estoque</div>
-      <form class="buy-form" method="post" action="{% url 'amigofiel:carrinho-add' produto_id=produto.id %}">
-        {% csrf_token %}
-        <label for="qty">Quantidade</label>
-        <select id="qty" name="quantidade">
-          {% for i in "123456789"|make_list %}
-            <option value="{{ i }}">{{ i }}</option>
-          {% endfor %}
-        </select>
-        <input type="hidden" name="next" value="{{ request.get_full_path }}">
-        <button class="btn btn-primary" type="submit">Adicionar ao carrinho</button>
-      </form>
-      <form method="post" action="{% url 'amigofiel:carrinho-add' produto_id=produto.id %}">
-        {% csrf_token %}
-        <input type="hidden" name="quantidade" value="1">
-        <input type="hidden" name="buy_now" value="1">
-        <input type="hidden" name="next" value="{% url 'amigofiel:carrinho-ver' %}">
-        <button class="btn btn-accent" type="submit">Comprar agora</button>
-      </form>
-    {% else %}
-      <div class="buy-stock out">Indisponível</div>
-    {% endif %}
-
-    {% if ong_vinculada %}
-      <div class="donation-box">
-        <div class="badge">Apoio</div>
-        Este item destina <strong>{{ ong_vinculada.percentual }}%</strong> para
-        <a href="{% url 'amigofiel:perfil-ong' handle=ong_vinculada.ong.user.username %}">
-          {{ ong_vinculada.ong.nome_fantasia }}
-        </a>.
-      </div>
-    {% endif %}
-
-    <ul class="policies muted">
-      <li>✓ Venda e envio pela empresa parceira</li>
-      <li>↺ Política de devolução conforme a loja</li>
-    </ul>
+    <form method="post" action="{% url 'amigofiel:carrinho-add' produto_id=produto.id %}">
+      {% csrf_token %}
+      <input type="hidden" name="qtd" value="1">
+      <button class="btn btn-lg" type="submit" {% if not produto.estoque %}disabled{% endif %}>
+        Adicionar à sacola
+      </button>
+    </form>
   </aside>
-</section>
 
-<!-- Seções inferiores: especificações / relacionados (opcional) -->
-<section class="container" style="margin-top:16px;">
-  <div class="panel">
-    <h2 style="margin:0 0 8px;">Mais informações</h2>
-    {% if produto.descricao %}
-      <p class="muted">{{ produto.descricao|linebreaksbr }}</p>
-    {% else %}
-      <p class="muted">A loja ainda não adicionou informações detalhadas.</p>
-    {% endif %}
-  </div>
-</section>
-
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-  // troca de imagem principal ao clicar na miniatura
-  document.querySelectorAll('.gallery .thumb').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const src = btn.getAttribute('data-src');
-      const main = document.getElementById('mainImage');
-      if(src && main){ main.src = src; }
-      document.querySelectorAll('.gallery .thumb').forEach(b=>b.classList.remove('is-active'));
-      btn.classList.add('is-active');
-    });
+(function(){
+  const minus = document.querySelector('[data-minus]');
+  const plus  = document.querySelector('[data-plus]');
+  const input = document.querySelector('#qtd');
+  if(!minus || !plus || !input) return;
+  minus.addEventListener('click', ()=> {
+    const min = parseInt(input.min || '1', 10);
+    let v = parseInt(input.value || '1', 10);
+    input.value = Math.max(min, v - 1);
   });
+  plus.addEventListener('click', ()=> {
+    const max = parseInt(input.max || '99', 10);
+    let v = parseInt(input.value || '1', 10);
+    input.value = Math.min(max, v + 1);
+  });
+})();
 </script>
 {% endblock %}
