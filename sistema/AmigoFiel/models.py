@@ -196,7 +196,10 @@ class ProdutoEmpresa(TimeStampedModel):
         max_length=20, choices=PRODUTO_CATEGORIAS_CHOICES, default="outros", db_index=True
     )
     descricao = models.TextField(blank=True)
-
+    descricao_curta = models.CharField(max_length=200, blank=True)
+    desconto_percentual = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal("0.00"), validators=[MinValueValidator(0)]
+    )
     preco = models.DecimalField(
         max_digits=10, decimal_places=2, validators=[MinValueValidator(0)]
     )
