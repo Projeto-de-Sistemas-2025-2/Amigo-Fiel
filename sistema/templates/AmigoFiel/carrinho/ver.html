@@ -1,0 +1,66 @@
+{% extends "style/base_public.html" %}
+{% load static %}
+
+{% block title %}Meu carrinho — Amigo Fiel{% endblock %}
+
+{% block body %}
+<div class="container">
+  <h1 class="h2" style="margin:8px 0 12px;">Meu carrinho</h1>
+
+  {% if not grupos %}
+    <section class="card center">
+      <p class="muted">Seu carrinho está vazio.</p>
+      <a class="btn btn-primary" href="{% url 'amigofiel:listar-produtos' %}">Ver produtos</a>
+    </section>
+  {% else %}
+
+    {% for g in grupos %}
+      <section class="card" style="margin-bottom:12px;">
+        <header style="display:flex;align-items:center;gap:10px; margin-bottom:8px;">
+          <img src="{% if g.empresa.foto %}{{ g.empresa.foto.url }}{% else %}{% static 'img/defaults/avatar_empresa.png' %}{% endif %}"
+               alt="Logo {{ g.empresa.razao_social }}" width="40" height="40" style="border-radius:8px;border:1px solid #eee;">
+          <div>
+            <strong>{{ g.empresa.razao_social }}</strong>
+            {% if g.empresa.cidade %}<div class="muted">🏙️ {{ g.empresa.cidade }}</div>{% endif %}
+          </div>
+        </header>
+
+        <div class="grid grid-1 grid-md-2 grid-lg-3">
+          {% for it in g.itens %}
+            <article class="mini-card">
+              <div style="display:grid;grid-template-columns:80px 1fr;gap:10px;">
+                <img class="thumb"
+                     src="{% if it.produto.imagem %}{{ it.produto.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}"
+                     alt="{{ it.produto.nome }}">
+                <div>
+                  <a href="{{ it.produto.get_absolute_url }}" style="text-decoration:none;color:inherit;">
+                    <h3 style="margin:0 0 4px;">{{ it.produto.nome }}</h3>
+                  </a>
+                  <div class="muted" style="margin-bottom:4px;">Qtd: {{ it.qtd }}</div>
+                  <div><strong>R$ {{ it.subtotal }}</strong></div>
+                </div>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+
+        <footer class="actions" style="justify-content:space-between;margin-top:10px;">
+          <span class="muted">Subtotal da loja</span>
+          <strong>R$ {{ g.total }}</strong>
+        </footer>
+      </section>
+    {% endfor %}
+
+    <section class="card" style="display:flex;align-items:center;justify-content:space-between;">
+      <div class="muted">Total geral</div>
+      <div class="h3">R$ {{ total_geral }}</div>
+    </section>
+
+    <div class="actions" style="margin-top:10px;">
+      <a class="btn btn-secondary" href="{% url 'amigofiel:listar-produtos' %}">Continuar comprando</a>
+      <a class="btn btn-accent" href="#">Finalizar pedido (demo)</a>
+    </div>
+
+  {% endif %}
+</div>
+{% endblock %}

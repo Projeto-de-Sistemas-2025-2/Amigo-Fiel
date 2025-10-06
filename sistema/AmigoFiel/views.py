@@ -28,6 +28,8 @@ from .models import (
     Pedido, ItemPedido, UsuarioEmpresarial, UsuarioOng,
     ProdutoOngVinculo
 )
+from django.core.paginator import Paginator
+
 
 # class HomeView(TemplateView):
 #     template_name = "AmigoFiel/home.html"
@@ -237,16 +239,29 @@ def perfil_usuario(request, handle: str):
     ctx = {"perfil": perfil, "pets": pets}
     return render(request, "AmigoFiel/perfil/perfil_user.html", ctx)
 
-def perfil_empresa(request, handle: str):
-    empresa = get_object_or_404(
-        UsuarioEmpresarial.objects.select_related("user").annotate(
-            qtd_produtos_ativos=Count("produtos", filter=Q(produtos__ativo=True))
-        ),
-        user__username=handle
-    )
-    produtos = (empresa.produtos.filter(ativo=True).order_by("-criado_em")[:12])
-    ctx = {"perfil": empresa, "produtos": produtos}
+def perfil_empresa(request, handle):
+    empresa = get_object_or_404(UsuarioEmpresarial, user__username=handle)
+    aba = request.GET.get("tab", "home")
+
+    qs_prod = ProdutoEmpresa.objects.filter(empresa=empresa, ativo=True).order_by("-criado_em")
+    paginator = Paginator(qs_prod, 12)
+    page = request.GET.get("page")
+    produtos_page = paginator.get_page(page)
+
+    # adapte se você tiver uma relação explícita de parcerias
+    ongs = UsuarioOng.objects.filter(pets__isnull=False).distinct()[:8]
+
+    ctx = {
+        "perfil": empresa,
+        "aba": aba,
+        "is_owner": request.user.is_authenticated and request.user == empresa.user,
+        "produtos": produtos_page,
+        "is_paginated": produtos_page.paginator.num_pages > 1,
+        "page_obj": produtos_page,
+        "ongs": ongs,
+    }
     return render(request, "AmigoFiel/perfil/perfil_empresa.html", ctx)
+
 
 def perfil_ong(request, handle: str):
     ong = get_object_or_404(
@@ -647,3 +662,59 @@ def painel_ong(request, handle: str):
         "total_doado": total_doado,
     }
     return render(request, "AmigoFiel/painel/ong_dashboard.html", ctx)
+
+
+
+from decimal import Decimal
+from collections import defaultdict
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from .models import ProdutoEmpresa
+
+def _get_cart(session):
+    """
+    Carrinho guardado na sessão com o formato:
+    session['cart'] = { "produto_id_str": {"qtd": int} }
+    """
+    return session.setdefault("cart", {})
+
+def carrinho_ver(request):
+    cart = _get_cart(request.session)
+
+    if not cart:
+        return render(request, "AmigoFiel/carrinho/ver.html", {
+            "grupos": [], "total_geral": Decimal("0.00"),
+        })
+
+    ids = [int(pid) for pid in cart.keys()]
+    produtos = ProdutoEmpresa.objects.select_related("empresa", "empresa__user").filter(id__in=ids)
+
+    # agrupar por empresa
+    grupos = []           # lista de dicts: {"empresa": empresa, "itens": [...], "total": Decimal}
+    por_empresa = defaultdict(list)
+    precos = {}
+
+    for p in produtos:
+        por_empresa[p.empresa].append(p)
+        precos[p.id] = p.preco
+
+    total_geral = Decimal("0.00")
+    for empresa, prods in por_empresa.items():
+        itens = []
+        total = Decimal("0.00")
+        for p in prods:
+            qtd = int(cart.get(str(p.id), {}).get("qtd", 1))
+            subtotal = (p.preco or Decimal("0")) * qtd
+            total += subtotal
+            itens.append({
+                "produto": p,
+                "qtd": qtd,
+                "subtotal": subtotal,
+            })
+        grupos.append({"empresa": empresa, "itens": itens, "total": total})
+        total_geral += total
+
+    return render(request, "AmigoFiel/carrinho/ver.html", {
+        "grupos": grupos,
+        "total_geral": total_geral,
+    })

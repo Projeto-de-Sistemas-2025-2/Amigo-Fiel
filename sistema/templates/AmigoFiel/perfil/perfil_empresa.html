@@ -1,80 +1,224 @@
 {% extends "style/base_perfil.html" %}
 {% load static %}
 
-{% block title %}{{ perfil.razao_social }} — Empresa{% endblock %}
+{% block title %}{{ perfil.razao_social }} — Loja{% endblock %}
 
+{% block extra_head %}
+<style>
+  .store-banner{ border-radius: 12px; overflow:hidden; border:1px solid var(--af-border); box-shadow: var(--af-shadow); }
+  .store-banner img{ width:100%; height:240px; object-fit:cover; display:block; }
+  .storebar{ display:flex; align-items:center; gap:14px; padding:10px; background:#fff;
+             border:1px solid var(--af-border); border-radius:12px; box-shadow: var(--af-shadow); margin-top:10px; }
+  .storebar .logo{ width:48px; height:48px; border-radius:10px; object-fit:cover; border:2px solid #eaeef4; }
+  .storebar .name{ font-weight:800; }
+  .storebar .tabs{ display:flex; gap:6px; flex-wrap:wrap; }
+  .storebar .tab{ padding:8px 12px; border-radius:999px; text-decoration:none; color:#0F172A; background:#F1F5F9; font-weight:600; }
+  .storebar .tab.is-active{ background:var(--af-brand); color:#fff; }
+  .storebar .grow{ flex:1; }
+  .storebar .search{ display:flex; align-items:center; gap:8px; background:#F8FAFC; border:1px solid var(--af-border);
+                     padding:0 10px; height:38px; border-radius:999px; }
+  .storebar .search input{ border:none; outline:none; background:transparent; width:100%; }
+  .pill{ display:inline-flex; align-items:center; gap:6px; height:28px; padding:0 10px; border-radius:999px;
+         background:#F1F5F9; color:#0F172A; font-weight:600; }
+</style>
+{% endblock %}
+
+{# --- Cabeçalho do perfil (avatar/nome/meta) --- #}
 {% block avatar %}
   <img class="avatar"
        src="{% if perfil.foto %}{{ perfil.foto.url }}{% else %}{% static 'img/defaults/avatar_empresa.png' %}{% endif %}"
        alt="Logo {{ perfil.razao_social }}">
 {% endblock %}
-
 {% block perfil_name %}{{ perfil.razao_social }}{% endblock %}
-{% block perfil_handle %}@{{ perfil.user.username }}{% endblock %}
+{% block perfil_handle %}{{ perfil.user.username }}{% endblock %}
 {% block perfil_meta %}
-  {% if perfil.cidade %}🏙️ {{ perfil.cidade }} · {% endif %}
-  CNPJ: {{ perfil.cnpj }}
+  {% if perfil.cidade %}🏙️ {{ perfil.cidade }}{% endif %}
+  {% if perfil.cnpj %} · CNPJ: {{ perfil.cnpj }}{% endif %}
+  {% if perfil.slogan %} · “{{ perfil.slogan }}”{% endif %}
 {% endblock %}
 
 {% block perfil_actions %}
-  {% if perfil.user.email %}
-    <a class="btn btn-primary" href="mailto:{{ perfil.user.email }}">Contato</a>
+  {% if is_owner %}
+    <a class="btn btn-accent" href="{% url 'amigofiel:produto-novo' %}">Cadastrar produto</a>
+    <a class="btn btn-secondary" href="{% url 'amigofiel:listar-produtos' %}?loja={{ perfil.user.username|urlencode }}">Ver na vitrine</a>
+  {% else %}
+    {% url 'chat:thread-by-username' username=perfil.user.username as chat_url %}
+    <a class="btn btn-primary" href="{{ chat_url|default:'#' }}">Mensagem</a>
+    {% if perfil.user.email %}<a class="btn btn-secondary" href="mailto:{{ perfil.user.email }}">Contato</a>{% endif %}
   {% endif %}
 {% endblock %}
 
 {% block body %}
-  <section class="grid">
-    <article class="mini-card">
-      <h2>Informações</h2>
-      {% if perfil.cidade %}<p><strong>Cidade:</strong> {{ perfil.cidade }}</p>{% endif %}
-      {% if perfil.telefone %}<p><strong>Telefone:</strong> {{ perfil.telefone }}</p>{% endif %}
-      <p><strong>Produtos ativos:</strong> {{ perfil.qtd_produtos_ativos }}</p>
-    </article>
 
-    <article class="mini-card" style="grid-column:1/-1">
-      <div class="perfil-section-header">
-        <h2>Produtos</h2>
-        <small class="muted">Em destaque</small>
+  {# Banner grande da loja #}
+  <section class="store-banner">
+    {% if perfil.banner %}
+      <img src="{{ perfil.banner.url }}" alt="Banner da {{ perfil.razao_social }}">
+    {% else %}
+      <img src="{% static 'img/defaults/loja_banner.jpg' %}" alt="">
+    {% endif %}
+  </section>
+
+  {# Barra de loja (logo + abas + busca só dentro da loja) #}
+  <section class="storebar" aria-label="Navegação da loja">
+    <img class="logo"
+         src="{% if perfil.foto %}{{ perfil.foto.url }}{% else %}{% static 'img/defaults/avatar_empresa.png' %}{% endif %}"
+         alt="Logo {{ perfil.razao_social }}">
+    <div class="name">{{ perfil.razao_social }}</div>
+
+    <nav class="tabs" aria-label="Abas">
+      {% with current=aba|default:"home" handle=perfil.user.username %}
+        <a class="tab {% if current == 'home' %}is-active{% endif %}"
+           href="{% url 'amigofiel:perfil-empresa' handle=handle %}">Página inicial</a>
+        <a class="tab {% if current == 'produtos' %}is-active{% endif %}"
+           href="{% url 'amigofiel:perfil-empresa' handle=handle %}?tab=produtos">Produtos</a>
+        <a class="tab {% if current == 'ongs' %}is-active{% endif %}"
+           href="{% url 'amigofiel:perfil-empresa' handle=handle %}?tab=ongs">ONGs parceiras</a>
+        <a class="tab {% if current == 'sobre' %}is-active{% endif %}"
+           href="{% url 'amigofiel:perfil-empresa' handle=handle %}?tab=sobre">Sobre</a>
+      {% endwith %}
+    </nav>
+
+    <form class="grow" action="{% url 'amigofiel:listar-produtos' %}" method="get" role="search" aria-label="Buscar na loja">
+      <div class="search">
+        <input type="hidden" name="loja" value="{{ perfil.user.username }}">
+        <input type="text" name="q" placeholder="Pesquisar nesta loja..." value="{{ request.GET.q }}">
+      </div>
+    </form>
+  </section>
+
+  {# CONTEÚDO POR ABA ------------------------------------------------------- #}
+  {% with current=aba|default:"home" %}
+  {% if current == "home" %}
+    <section class="panel" style="margin-top:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <h2 style="margin:0;">Destaques da loja</h2>
+        <a class="btn btn-secondary" href="{% url 'amigofiel:perfil-empresa' handle=perfil.user.username %}?tab=produtos">Ver todos</a>
       </div>
 
       {% if produtos %}
-        <div class="grid grid-1 grid-md-2 grid-lg-4">
+        <div class="grid grid-4" style="margin-top:10px;">
           {% for prod in produtos %}
-            {% with has_slug=prod.slug %}
             <article class="mini-card">
-              <a
-                {% if has_slug %}
-                  href="{% url 'amigofiel:produto-detalhe' empresa_handle=perfil.user.username produto_slug=prod.slug %}"
-                {% else %}
-                  href="#"
-                {% endif %}
-                style="text-decoration:none; color:inherit; display:block"
-                aria-label="Abrir produto {{ prod.nome }}"
-              >
+              <a class="card-link"
+                 href="{% url 'amigofiel:produto-detalhe' empresa_handle=perfil.user.username produto_slug=prod.slug %}">
                 <img class="thumb"
                      src="{% if prod.imagem %}{{ prod.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}"
-                     alt="{{ prod.nome }}">
-
-                <h3 style="margin:6px 0 4px">{{ prod.nome }}</h3>
-                {% if prod.descricao %}<p class="muted">{{ prod.descricao|truncatechars:80 }}</p>{% endif %}
-                <p><strong>R$ {{ prod.preco }}</strong></p>
+                     alt="{{ prod.nome }}" loading="lazy" decoding="async">
+                <h3 style="margin:8px 0 2px;">{{ prod.nome }}</h3>
+                {% if prod.descricao %}<p class="muted small" style="margin:0 0 6px;">{{ prod.descricao|truncatechars:80 }}</p>{% endif %}
+                <strong>R$ {{ prod.preco }}</strong>
+                <div class="muted small">Estoque: {{ prod.estoque }}</div>
               </a>
-
-              {% if has_slug %}
-                <div class="actions" style="margin-top:6px">
-                  <a class="btn btn-primary"
-                     href="{% url 'amigofiel:produto-detalhe' empresa_handle=perfil.user.username produto_slug=prod.slug %}">
-                     Ver produto
-                  </a>
-                </div>
-              {% endif %}
+              <div class="actions" style="margin-top:8px;">
+                <a class="btn btn-primary"
+                   href="{% url 'amigofiel:carrinho-add' produto_id=prod.id %}">Adicionar ao carrinho</a>
+              </div>
             </article>
-            {% endwith %}
           {% endfor %}
         </div>
       {% else %}
-        <p class="muted">Nenhum produto ativo no momento.</p>
+        <p class="muted" style="margin-top:8px;">Nenhum produto ativo no momento.</p>
       {% endif %}
-    </article>
-  </section>
+    </section>
+
+    {% if ongs %}
+      <section class="panel" style="margin-top:12px;">
+        <h2 style="margin:0 0 8px;">ONGs parceiras</h2>
+        <div class="grid grid-4">
+          {% for o in ongs %}
+            {% url 'amigofiel:perfil-ong' handle=o.user.username as o_url %}
+            <article class="mini-card">
+              <a class="card-link" href="{{ o_url }}">
+                <img class="thumb"
+                     src="{% if o.foto %}{{ o.foto.url }}{% else %}{% static 'img/defaults/avatar_ong.png' %}{% endif %}"
+                     alt="ONG {{ o.nome_fantasia }}">
+                <h3 style="margin:8px 0 2px;">{{ o.nome_fantasia }}</h3>
+                <p class="muted small" style="margin:0;">
+                  {% if o.cidade %}🏙️ {{ o.cidade }}{% endif %}
+                </p>
+              </a>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+  {% elif current == "produtos" %}
+    <section class="panel" style="margin-top:12px;">
+      <h2 style="margin:0 0 8px;">Produtos da loja</h2>
+      {% if produtos %}
+        <div class="grid grid-4">
+          {% for prod in produtos %}
+            <article class="mini-card">
+              <a class="card-link"
+                 href="{% url 'amigofiel:produto-detalhe' empresa_handle=perfil.user.username produto_slug=prod.slug %}">
+                <img class="thumb"
+                     src="{% if prod.imagem %}{{ prod.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}"
+                     alt="{{ prod.nome }}">
+                <h3 style="margin:8px 0 2px;">{{ prod.nome }}</h3>
+                <strong>R$ {{ prod.preco }}</strong>
+                <div class="muted small">Estoque: {{ prod.estoque }}</div>
+              </a>
+              <div class="actions" style="margin-top:8px;">
+                <a class="btn btn-primary"
+                   href="{% url 'amigofiel:carrinho-add' produto_id=prod.id %}">Adicionar ao carrinho</a>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+
+        {% if is_paginated %}
+          <nav class="actions" aria-label="Paginação" style="margin-top:12px;">
+            {% if page_obj.has_previous %}
+              <a class="btn btn-secondary" href="?tab=produtos&page={{ page_obj.previous_page_number }}">Anterior</a>
+            {% endif %}
+            <span class="muted">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+              <a class="btn btn-secondary" href="?tab=produtos&page={{ page_obj.next_page_number }}">Próxima</a>
+            {% endif %}
+          </nav>
+        {% endif %}
+      {% else %}
+        <p class="muted">Nenhum produto encontrado.</p>
+      {% endif %}
+    </section>
+
+  {% elif current == "ongs" %}
+    <section class="panel" style="margin-top:12px;">
+      <h2 style="margin:0 0 8px;">ONGs parceiras</h2>
+      {% if ongs %}
+        <div class="grid grid-4">
+          {% for o in ongs %}
+            {% url 'amigofiel:perfil-ong' handle=o.user.username as o_url %}
+            <article class="mini-card">
+              <a class="card-link" href="{{ o_url }}">
+                <img class="thumb"
+                     src="{% if o.foto %}{{ o.foto.url }}{% else %}{% static 'img/defaults/avatar_ong.png' %}{% endif %}"
+                     alt="ONG {{ o.nome_fantasia }}">
+                <h3 style="margin:8px 0 2px;">{{ o.nome_fantasia }}</h3>
+                <p class="muted small" style="margin:0;">{% if o.cidade %}🏙️ {{ o.cidade }}{% endif %}</p>
+              </a>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="muted">Nenhuma parceria cadastrada.</p>
+      {% endif %}
+    </section>
+
+  {% else %} {# sobre #}
+    <section class="panel" style="margin-top:12px;">
+      <h2 style="margin:0 0 8px;">Sobre a {{ perfil.razao_social }}</h2>
+      <p class="muted">Aqui você pode contar a história da loja, missão, atendimento e políticas.</p>
+      <ul class="info-list" style="margin-top:8px;">
+        {% if perfil.cidade %}<li>🏙️ <span>{{ perfil.cidade }}</span></li>{% endif %}
+        {% if perfil.telefone %}<li>📞 <span>{{ perfil.telefone }}</span></li>{% endif %}
+        {% if perfil.user.email %}<li>✉️ <span>{{ perfil.user.email }}</span></li>{% endif %}
+        <li><span class="pill">Desde {{ perfil.criado_em|date:"M/Y" }}</span></li>
+      </ul>
+    </section>
+  {% endif %}
+  {% endwith %}
+
 {% endblock %}

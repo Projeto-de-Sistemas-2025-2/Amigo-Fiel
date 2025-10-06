@@ -3,95 +3,68 @@
 <html lang="pt-br">
 <head>
   <meta charset="utf-8">
-  <title>{% block title %}Amigo Fiel{% endblock %}</title>
+  <title>{% block title %}Perfil — Amigo Fiel{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
-
-  <!-- CSS principal do site -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/perfil.css' %}">
-  <!-- <link rel="stylesheet" href="{% static 'css/perfil.css' %}"> -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
   {% block extra_head %}{% endblock %}
 </head>
-<body class="af">
+<body>
 
-  <!-- TOPBAR -->
-  <header class="af-top" role="banner">
-    <div class="af-top__inner container">
-      <!-- Marca -->
-      <a class="af-brand" href="{% url 'amigofiel:home' %}">
-        <img class="af-brand__logo" src="{% static 'img/amigo-fiel-logo.png' %}" alt="Amigo Fiel" width="40" height="40">
-        <span class="af-brand__name">Amigo Fiel</span>
+  <!-- Topbar -->
+  <header class="topbar" role="banner">
+    <div class="container topbar-inner">
+      <a class="brand" href="{% url 'amigofiel:home' %}">
+        <img src="{% static 'img/amigo-fiel-logo.png' %}" alt="Amigo Fiel">
+        <strong>AMIGO FIEL</strong>
       </a>
-
-      <div class="af-top__right">
-        <!-- Cidade atual (opcional) -->
-        <a class="af-city" href="{% url 'amigofiel:listar-lojas' %}{% if cidade_atual %}?cidade={{ cidade_atual|urlencode }}{% endif %}">
-          <span class="af-city__label">Cidade</span>
-          <span class="af-city__value">{{ cidade_atual|default:"Definir" }}</span>
-        </a>
-
-        <!-- Conta (retrátil) -->
-        <details class="af-account">
-          <summary>
-            {% if user.is_authenticated %}
-              <span class="af-account__hello">Olá, {{ user.username }}</span>
-            {% else %}
-              <span class="af-account__hello">Entrar</span>
-            {% endif %}
-          </summary>
-
-          <div class="af-account__menu">
-            {% if user.is_authenticated %}
-              {% if user.perfil_comum_id %}
-                <a href="{% url 'amigofiel:perfil-usuario' handle=user.username %}">Meu perfil</a>
-              {% elif user.perfil_empresa_id %}
-                <a href="{% url 'amigofiel:perfil-empresa' handle=user.username %}">Meu perfil</a>
-              {% elif user.perfil_ong_id %}
-                <a href="{% url 'amigofiel:perfil-ong' handle=user.username %}">Meu perfil</a>
-              {% endif %}
-              <a href="{% url 'logout' %}">Sair</a>
-            {% else %}
-              <a href="{% url 'login' %}">Entrar</a>
-              <a href="{% url 'cadastro' %}">Criar conta</a>
-            {% endif %}
-          </div>
-        </details>
-
-        <!-- Carrinho (placeholder) -->
-        <a class="af-cart" href="#">
-          <span aria-hidden="true">🛒</span>
-          <small>{{ cart_count|default:0 }}</small>
-        </a>
-      </div>
-    </div>
-
-    <!-- Sub navegação -->
-    <nav class="af-subnav" aria-label="Seções">
-      <div class="container af-subnav__inner">
+      <nav aria-label="Principal">
         <a href="{% url 'amigofiel:listar-animais' %}">Adotar</a>
-        {% url 'amigofiel:listar-produtos' as url_produtos %}
-        {% if url_produtos %}<a href="{{ url_produtos }}">Produtos</a>{% endif %}
+        <a href="{% url 'amigofiel:listar-produtos' %}">Produtos</a>
         <a href="{% url 'amigofiel:listar-lojas' %}">Lojas</a>
         <a href="{% url 'amigofiel:listar-ongs' %}">ONGs</a>
-      </div>
-    </nav>
+        {% if user.is_authenticated %}
+          <a href="{% url 'logout' %}">Sair</a>
+        {% else %}
+          <a href="{% url 'login' %}">Entrar</a>
+        {% endif %}
+      </nav>
+    </div>
   </header>
 
-  <!-- CONTEÚDO -->
-  <main class="af-main">
+  <!-- Cabeçalho do perfil -->
+  <section class="perfil-hero">
+    <div class="container">
+      <div class="perfil-row">
+        <div class="perfil-left">
+          {% block avatar %}
+            <img class="avatar" src="{% static 'img/defaults/avatar_comum.png' %}" alt="Avatar">
+          {% endblock %}
+          <div class="perfil-id">
+            <h1>{% block perfil_name %}Nome do Perfil{% endblock %}</h1>
+            <div class="handle">@{% block perfil_handle %}handle{% endblock %}</div>
+            <div class="meta">{% block perfil_meta %}{% endblock %}</div>
+          </div>
+        </div>
+        <div class="perfil-actions">
+          {% block perfil_actions %}{% endblock %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Corpo -->
+  <main class="container" role="main" style="margin-top: 12px;">
     {% block body %}{% endblock %}
   </main>
 
-  <!-- RODAPÉ -->
-  <footer class="af-footer" role="contentinfo">
-    <div class="container af-footer__inner">
-      <span>© {% now "Y" %} Amigo Fiel</span>
-      <nav class="af-footer__nav" aria-label="Rodapé">
-        <a href="{% url 'amigofiel:sobre' %}">Sobre</a>
+  <!-- Rodapé -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="container footer-inner">
+      <div>© {% now "Y" %} Amigo Fiel</div>
+      <nav aria-label="Rodapé">
+        <a href="{% url 'amigofiel:sobre' %}">Sobre</a> ·
         <a href="{% url 'amigofiel:contato' %}">Contato</a>
       </nav>
     </div>

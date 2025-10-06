@@ -1,78 +1,60 @@
-
-
-/* ====== Layout principal ====== */
-.prod-layout{
+/* Layout de 3 colunas */
+.prod-detail{
   display:grid;
-  grid-template-columns:260px 1fr;
-  gap:1px;
+  grid-template-columns: 420px 1fr 320px;
+  gap:16px;
 }
-@media (max-width:1024px){
-  .prod-layout{ grid-template-columns:1fr; }
-}
-
-/* ====== Sidebar ====== */
-.sidenav{
-  background:#fff;
-  border-radius:12px;
-  padding:12px;
-}
-.sidenav h3{
-  font-size:16px;
-  margin:0 0 8px;
-}
-.sidenav ul{
-  list-style:none;
-  padding:0;
-  margin:0;
-}
-.sidenav li a{
-  display:block;
-  padding:6px 0;
-  text-decoration:none;
-  color:inherit;
-}
-.sidenav li a.active{
-  font-weight:600;
-  text-decoration:underline;
-}
-.sidenav hr{
-  border:none;
-  height:1px;
-  background:#e6e6e6;
-  margin:10px 0;
+@media (max-width: 1100px){
+  .prod-detail{ grid-template-columns: 1fr; }
 }
 
-/* ====== Grade de produtos ====== */
-.product-grid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:12px;
-  width:15%;
+/* Breadcrumbs */
+.crumbs{ font-size:14px; margin:10px auto 8px; color:#334155; }
+.crumbs a{ color:#0F172A; text-decoration:none; }
+.crumbs a:hover{ text-decoration:underline; }
 
-}
-@media (max-width:1200px){ .product-grid{ grid-template-columns:repeat(3,1fr); } }
-@media (max-width:800px){ .product-grid{ grid-template-columns:repeat(2,1fr); } }
-@media (max-width:520px){ .product-grid{ grid-template-columns:1fr; } }
+/* Galeria */
+.gallery{ background:#fff; border:1px solid #eaeef4; border-radius:12px; padding:12px; display:grid; grid-template-columns: 72px 1fr; gap:10px; }
+.gallery .thumbs{ display:flex; flex-direction:column; gap:8px; overflow:auto; max-height:500px; }
+.gallery .thumb{ border:1px solid #eaeef4; background:#fff; padding:4px; border-radius:10px; cursor:pointer; }
+.gallery .thumb.is-active{ outline:2px solid var(--af-brand); }
+.gallery .thumb img{ width:64px; height:64px; object-fit:cover; display:block; border-radius:8px; }
+.gallery .stage{ display:flex; align-items:center; justify-content:center; border:1px solid #eaeef4; border-radius:12px; }
+.gallery .stage img{ width:100%; height:500px; object-fit:contain; }
 
-.product-card{ position:relative; }
-.rank-badge{
-  position:absolute; top:8px; left:8px;
-  background:#e47911; color:#fff;
-  border-radius:4px; font-weight:700;
-  padding:3px 6px; font-size:12px;
-  
-}
+/* Meta (centro) */
+.meta{ background:#fff; border:1px solid #eaeef4; border-radius:12px; padding:14px; }
+.title{ font-size:clamp(20px, 2.2vw, 28px); line-height:1.2; margin:0 0 6px; }
+.by{ margin:0 0 10px; color:#334155; }
+.accent{ color:#0ea5e9; text-decoration:none; }
+.accent:hover{ text-decoration:underline; }
+.price-line{ display:flex; align-items:center; gap:12px; margin:6px 0 10px; }
+.price{ font-weight:800; font-size:28px; }
+.stock{ font-weight:700; }
+.stock.ok{ color:#047857; }
+.stock.out{ color:#b91c1c; }
+.desc{ color:#334155; margin:8px 0 12px; }
 
-.thumb.aspect{
-  width:100%;
-  aspect-ratio:1/1;
-  object-fit:cover;
-  border-radius:12px;
-}
+/* Dona da loja */
+.seller-card{ display:grid; grid-template-columns:60px 1fr; gap:10px; border:1px solid #eaeef4; border-radius:12px; padding:10px; }
+.seller-logo{ width:60px; height:60px; object-fit:cover; border-radius:10px; border:1px solid #eaeef4; }
+.seller-info .seller-name{ font-weight:800; }
+.seller-info .actions{ margin-top:6px; display:flex; gap:8px; flex-wrap:wrap; }
 
-.product-title{ margin:8px 0 4px; font-size:16px; line-height:1.25; }
-.price{ font-weight:700; margin:4px 0; }
-.muted.small{ font-size:12px; }
+/* Doação */
+.badge{ background:#e6f4ea; color:#0e7a3e; border-radius:6px; font-weight:700; font-size:12px; padding:2px 8px; margin-right:6px; }
+.donation{ color:#14532d; }
+.donation-box{ margin-top:10px; padding:8px; border-radius:10px; background:#f0fdf4; border:1px solid #dcfce7; }
 
-/* util */
-.prod-main .actions{ margin-top:6px; }
+/* Buybox (direita) */
+.buybox{ background:#fff; border:1px solid #eaeef4; border-radius:12px; padding:14px; height:fit-content; position:sticky; top:12px; }
+.buy-price{ font-weight:800; font-size:26px; }
+.buy-stock{ margin:4px 0 10px; font-weight:700; }
+.buy-stock.ok{ color:#047857; }
+.buy-stock.out{ color:#b91c1c; }
+.buy-form{ display:grid; gap:8px; margin-bottom:8px; }
+.buy-form select{ height:36px; border:1px solid #e2e8f0; border-radius:8px; padding:0 8px; }
+.policies{ margin:10px 0 0; padding-left:18px; font-size:13px; color:#475569; }
+
+/* Util */
+.panel{ background:#fff; border:1px solid #eaeef4; border-radius:12px; padding:14px; }

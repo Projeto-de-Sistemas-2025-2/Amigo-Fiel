@@ -38,7 +38,7 @@ urlpatterns = [
     path("<str:empresa_handle>/<slug:produto_slug>/", views.produto_detalhe, name="produto-detalhe"),
 
     # Carrinho / checkout
-    path("carrinho/", views.carrinho_detalhe, name="carrinho"),
+    path("carrinho/", views.carrinho_ver, name="carrinho-ver"),
     path("carrinho/adicionar/<int:produto_id>/", views.carrinho_adicionar, name="carrinho-add"),
     path("carrinho/atualizar/<int:item_id>/", views.carrinho_atualizar, name="carrinho-update"),
     path("carrinho/remover/<int:item_id>/", views.carrinho_remover, name="carrinho-remove"),

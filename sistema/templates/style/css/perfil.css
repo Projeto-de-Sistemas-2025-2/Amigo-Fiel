@@ -1,109 +1,142 @@
-/* =========================
-   Amigo Fiel - Perfil.css
-   Layout base de perfis
-   ========================= */
+/* ===========================
+   Amigo Fiel — Perfil (do zero)
+   =========================== */
 
+/* --- Reset curto --- */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #0F172A; background:#F7FAFC; }
+
+/* --- Tokens de cor/spacing --- */
 :root{
-  --bg:#ffffff;
-  --ink:#0f172a;
-  --muted:#6b7280;
-  --brand:#FFC400;
-  --teal:#C7E1E4;
-  --slate:#2D4650;
-  --radius:16px;
-  --shadow:0 10px 26px rgba(0,0,0,.10);
+  --af-bg: #F7FAFC;
+  --af-surface: #FFFFFF;
+  --af-border: #E2E8F0;
+  --af-muted: #64748B;
+
+  --af-brand: #005C7A;      /* azul petróleo */
+  --af-brand-2: #00A7B5;    /* teal */
+  --af-accent: #FFB703;     /* amarelo */
+  --af-danger: #DC2626;
+
+  --af-radius: 14px;
+  --af-shadow: 0 8px 24px rgba(2, 6, 23, .06);
 }
 
-*{ box-sizing:border-box }
-body{ background:var(--bg); color:var(--ink) }
+/* --- Utilidades --- */
+.container{
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+.muted{ color: var(--af-muted); }
+.small{ font-size: .875rem; }
+.center{ text-align:center; }
 
-/* ====== HERO DO PERFIL ====== */
+/* --- Botões --- */
+.btn{
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px; height: 38px; padding: 0 14px;
+  border-radius: 999px; border: 1px solid transparent;
+  background: #F1F5F9; color:#0F172A; text-decoration: none; font-weight: 600;
+}
+.btn:hover{ filter: brightness(.97); }
+.btn:active{ transform: translateY(1px); }
+
+.btn-primary{ background: var(--af-brand); color:#fff; }
+.btn-primary:hover{ filter: brightness(1.05); }
+.btn-accent{ background: var(--af-accent); color:#1f2937; }
+.btn-secondary{ background: #fff; border-color: var(--af-border); }
+
+/* --- Topbar (igual espírito do base_public, mas local) --- */
+.topbar{
+  position: sticky; top: 0; z-index: 40;
+  background: #0B2A3D; color: #E6F1F4;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+.topbar-inner{
+  height: 64px; display:flex; align-items:center; justify-content:space-between; gap:16px;
+}
+.topbar .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit; }
+.topbar .brand img{ width:40px; height:40px; border-radius:10px; }
+.topbar nav a{
+  color:#E6F1F4; text-decoration:none; padding:8px 10px; border-radius:8px; font-weight:600;
+}
+.topbar nav a:hover{ background: rgba(255,255,255,.08); }
+
+/* --- Rodapé --- */
+.site-footer{
+  margin-top: 28px; background:#0B2A3D; color:#E6F1F4;
+}
+.site-footer .footer-inner{
+  height: 64px; display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.site-footer a{ color:#CFE6EA; text-decoration:none; }
+.site-footer a:hover{ text-decoration: underline; }
+
+/* --- Hero do Perfil --- */
 .perfil-hero{
-  position:relative;
-  padding:24px 0 12px;
-  margin:0 0 8px;
-  overflow:hidden;
+  position: relative; margin: 0 0 18px; padding: 38px 0 22px;
+  background: linear-gradient(135deg, #0B2A3D 0%, #0B2A3D 50%, #0E3D52 100%);
+  color: #E6F1F4;
 }
-.perfil-hero__bg .shape{ position:absolute; z-index:-1; filter:drop-shadow(var(--shadow)) }
-.perfil-hero__bg .bl-yellow{ top:-40px; left:-60px; width:180px; height:180px; background:var(--brand); border-radius:999px }
-.perfil-hero__bg .bl-teal{ top:20px; right:-30px; width:80px; height:80px; background:var(--teal); border-radius:999px }
-.perfil-hero__bg .bl-slate{ bottom:-30px; left:-30px; width:0; height:0; border-left:120px solid transparent; border-top:120px solid var(--slate); transform:rotate(12deg) }
-
-.perfil-hero__content{
-  display:grid;
-  grid-template-columns: 1fr;
-  gap:14px;
+.perfil-row{
+  display:flex; align-items: center; justify-content: space-between; gap: 18px;
 }
-.perfil-hero__left{
-  display:flex;
-  align-items:center;
-  gap:14px;
-}
-.perfil-hero__right{
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;
-  gap:8px;
-}
-
-/* Avatar */
+.perfil-left{ display:flex; align-items: center; gap: 16px; min-width:0; }
 .avatar{
-  width:96px;
-  height:96px;
-  border-radius:999px;
-  object-fit:cover;
-  box-shadow:var(--shadow);
-  border:3px solid #fff;
-  background:#fff;
+  width: 120px; height: 120px; border-radius: 50%;
+  border: 4px solid #fff; box-shadow: var(--af-shadow); object-fit: cover; background:#fff;
 }
-.avatar--placeholder{
-  width:96px; height:96px; border-radius:999px;
-  display:grid; place-items:center;
-  background:var(--teal);
-  font-size:40px;
+.perfil-id h1{
+  font-size: clamp(20px, 3.4vw, 32px);
+  margin: 0; color: #fff;
+}
+.perfil-id .handle{ color: #CFE6EA; font-weight: 600; }
+.perfil-id .meta{ color:#D9EEF2; margin-top:4px; }
+
+.perfil-actions{ display:flex; gap: 8px; flex-wrap: wrap; }
+
+/* --- Grid e cartões --- */
+.grid{
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(12, 1fr);
+}
+.grid > *{ grid-column: span 12; }
+@media (min-width: 720px){
+  .grid-2 > *{ grid-column: span 6; }
+}
+@media (min-width: 980px){
+  .grid-3 > *{ grid-column: span 4; }
+  .grid-4 > *{ grid-column: span 3; }
 }
 
-/* Identidade */
-.perfil-name{
-  margin:0;
-  font-size: clamp(20px, 3.6vw, 28px);
+.mini-card, .panel{
+  background: var(--af-surface); border:1px solid var(--af-border);
+  border-radius: var(--af-radius); padding: 14px; box-shadow: var(--af-shadow);
 }
-.perfil-handle{ font-size: .95rem }
-.perfil-meta{ font-size: .95rem; margin-top:4px }
+.panel h2, .mini-card h2{ margin: 0 0 8px; }
+.card-link{ text-decoration: none; color: inherit; }
 
-/* Ações */
-.btn{ display:inline-block; padding:10px 16px; border-radius:14px; border:none; cursor:pointer; font-weight:700 }
-.btn-primary{ background:var(--teal); color:#0f172a }
-.btn-secondary{ background:#1118270f; color:#0f172a }
-
-/* Seções */
-.perfil-section-header{
-  display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:6px;
-}
-.card-link{ text-decoration:none; color:inherit }
-
-/* ====== Responsividade ====== */
-@media (min-width: 768px){
-  .perfil-hero__content{
-    grid-template-columns: 1.2fr .8fr;
-    align-items:center;
-  }
-  .perfil-hero__right{ justify-content:flex-end }
-}
-
-/* Ajustes em cards e thumbs (herdando do pages.css) */
-.mini-card{
-  border:1px solid #eaeaea;
-  border-radius:18px;
-  padding:16px;
-  background:#fff;
-  box-shadow:var(--shadow);
-}
 .thumb{
-  aspect-ratio:16/10;
-  width:100%;
-  object-fit:cover;
-  border-radius:14px;
-  margin-bottom:8px;
-  background:#f2f2f2;
+  width: 100%; aspect-ratio: 1/1; object-fit: cover;
+  border-radius: 12px; background:#EEF2F7;
+}
+
+/* --- Listas de info --- */
+.info-list{ display:grid; gap:6px; margin:0; padding:0; list-style:none; }
+.info-list li{ display:flex; align-items:center; gap:8px; color:#0F172A; }
+.info-list small{ color: var(--af-muted); }
+
+/* --- Responsivo --- */
+@media (max-width: 640px){
+  .avatar{ width: 88px; height: 88px; }
+  .perfil-actions{ width:100%; justify-content: flex-start; }
+}
+
+/* --- Badges e chips --- */
+.badge{
+  display:inline-flex; align-items:center; height:28px; padding:0 10px;
+  border-radius:999px; background:#F1F5F9; color:#0F172A; font-weight:600; font-size:.875rem;
 }

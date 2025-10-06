@@ -1,78 +1,171 @@
 {% extends "style/base_public.html" %}
 {% load static %}
 
-{% block title %}{{ produto.nome }} — {{ empresa.razao_social }}{% endblock %}
+{% block title %}{{ produto.nome }} — {{ produto.empresa.razao_social }}{% endblock %}
 
-{% block avatar %}
-  <img class="avatar"
-       src="{% if produto.imagem %}{{ produto.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}"
-       alt="{{ produto.nome }}">
-{% endblock %}
-
-{% block perfil_name %}{{ produto.nome }}{% endblock %}
-{% block perfil_handle %}@{{ empresa.user.username }}{% endblock %}
-
-{% block perfil_meta %}
-  <strong>R$ {{ produto.preco }}</strong>
-  · Estoque: {{ produto.estoque }}
-  {% if not produto.ativo %} · <span class="muted">inativo</span>{% endif %}
-{% endblock %}
-
-{% block perfil_actions %}
-  <a class="btn btn-primary"
-     href="{% url 'amigofiel:perfil-empresa' handle=empresa.user.username %}">
-     Ver empresa
-  </a>
-  {% if empresa.cidade %}
-    <span class="pill" style="margin-left:6px">{{ empresa.cidade }}</span>
-  {% endif %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/produto.css' %}">
 {% endblock %}
 
 {% block body %}
-  <section class="grid">
-    <article class="mini-card">
-      <h2>Sobre o produto</h2>
-      {% if produto.descricao %}
-        <p>{{ produto.descricao|linebreaksbr }}</p>
-      {% else %}
-        <p class="muted">Este produto ainda não possui uma descrição detalhada.</p>
-      {% endif %}
-      <ul class="muted" style="margin-top:8px">
-        <li>Cadastrado: {{ produto.criado_em|date:"d/m/Y H:i" }}</li>
-        <li>Atualizado: {{ produto.atualizado_em|date:"d/m/Y H:i" }}</li>
-      </ul>
-    </article>
 
-      {% if produto.pk %}
-        <form method="post" action="{% url 'amigofiel:carrinho-add' produto_id=produto.pk %}">
-          {% csrf_token %}
-          <div style="display:flex; gap:8px; align-items:center;">
-            <input type="number" name="qtd" value="1" min="1" max="{{ produto.estoque }}" class="input" style="width:90px;">
-            <button type="submit" class="btn btn-primary">Adicionar ao carrinho</button>
-          </div>
-        </form>
-      {% else %}
-        <button class="btn btn-primary" disabled>Adicionar ao carrinho</button>
-      {% endif %}
+<!-- Breadcrumbs simples -->
+<nav class="crumbs container" aria-label="Caminho de navegação">
+  <a href="{% url 'amigofiel:home' %}">Início</a> /
+  <a href="{% url 'amigofiel:listar-produtos' %}">Produtos</a> /
+  <span>{{ produto.nome }}</span>
+</nav>
 
-      <a class="btn btn-secondary" href="{% url 'chat:thread-by-username' username=produto.empresa.user.username %}">
-        Conversar com a loja
-      </a>      
-      
-    <article class="mini-card">
-      <h2>Empresa</h2>
-      <p><strong>{{ empresa.razao_social }}</strong></p>
-      <p class="muted">@{{ empresa.user.username }}</p>
-      {% if empresa.cidade %}<p>🏙️ {{ empresa.cidade }}</p>{% endif %}
-      {% if empresa.telefone %}<p>📞 {{ empresa.telefone }}</p>{% endif %}
-      {% if empresa.user.email %}
-        <p style="margin-top:10px">
-          <a class="btn btn-secondary"
-             href="mailto:{{ empresa.user.email }}?subject={{ produto.nome|urlencode }}%20-%20Amigo%20Fiel">
-             Falar com a empresa
+<section class="container prod-detail">
+
+  <!-- 1) GALERIA -->
+  <aside class="gallery" aria-label="Galeria de imagens do produto">
+    <div class="thumbs">
+      {% if imagens %}
+        {% for img in imagens %}
+          <button class="thumb" type="button" data-src="{{ img.url }}">
+            <img src="{{ img.url }}" alt="Foto {{ forloop.counter }} de {{ produto.nome }}">
+          </button>
+        {% endfor %}
+      {% else %}
+        <button class="thumb is-active" type="button" data-src="{% if produto.imagem %}{{ produto.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}">
+          <img src="{% if produto.imagem %}{{ produto.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}" alt="{{ produto.nome }}">
+        </button>
+      {% endif %}
+    </div>
+
+    <div class="stage">
+      <img id="mainImage" src="{% if produto.imagem %}{{ produto.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}" alt="{{ produto.nome }}">
+    </div>
+  </aside>
+
+  <!-- 2) DETALHES -->
+  <article class="meta">
+    <h1 class="title">{{ produto.nome }}</h1>
+
+    <p class="by">
+      por
+      <a class="accent" href="{% url 'amigofiel:perfil-empresa' handle=produto.empresa.user.username %}">
+        {{ produto.empresa.razao_social }}
+      </a>
+    </p>
+
+    {% if ong_vinculada %}
+      {# Esperado: ong_vinculada.ong (UsuarioOng) e ong_vinculada.percentual #}
+      <p class="donation">
+        <span class="badge">Doação</span>
+        {{ ong_vinculada.percentual }}% da compra destinada à
+        <a href="{% url 'amigofiel:perfil-ong' handle=ong_vinculada.ong.user.username %}">
+          {{ ong_vinculada.ong.nome_fantasia }}
+        </a>.
+      </p>
+    {% endif %}
+
+    <div class="price-line">
+      <div class="price">R$ {{ produto.preco }}</div>
+      {% if produto.estoque > 0 %}
+        <span class="stock ok">Em estoque</span>
+      {% else %}
+        <span class="stock out">Indisponível</span>
+      {% endif %}
+    </div>
+
+    {% if produto.descricao %}
+      <div class="desc">
+        {{ produto.descricao|linebreaksbr }}
+      </div>
+    {% endif %}
+
+    <div class="seller-card">
+      <img class="seller-logo" src="{% if produto.empresa.foto %}{{ produto.empresa.foto.url }}{% else %}{% static 'img/defaults/avatar_empresa.png' %}{% endif %}" alt="Logo {{ produto.empresa.razao_social }}">
+      <div class="seller-info">
+        <div class="seller-name">{{ produto.empresa.razao_social }}</div>
+        <div class="seller-city muted">
+          {% if produto.empresa.cidade %}🏙️ {{ produto.empresa.cidade }}{% endif %}
+        </div>
+        <div class="actions">
+          {% url 'chat:thread-by-username' username=produto.empresa.user.username as chat_url %}
+          {% if chat_url %}
+            <a class="btn btn-secondary" href="{{ chat_url }}">Falar com a empresa</a>
+          {% endif %}
+          <a class="btn btn-secondary" href="{% url 'amigofiel:perfil-empresa' handle=produto.empresa.user.username %}">
+            Ver perfil da loja
           </a>
-        </p>
-      {% endif %}
-    </article>
-  </section>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 3) BUY BOX -->
+  <aside class="buybox" aria-label="Comprar">
+    <div class="buy-price">R$ {{ produto.preco }}</div>
+
+    {% if produto.estoque > 0 %}
+      <div class="buy-stock ok">Em estoque</div>
+      <form class="buy-form" method="post" action="{% url 'amigofiel:carrinho-add' produto_id=produto.id %}">
+        {% csrf_token %}
+        <label for="qty">Quantidade</label>
+        <select id="qty" name="quantidade">
+          {% for i in "123456789"|make_list %}
+            <option value="{{ i }}">{{ i }}</option>
+          {% endfor %}
+        </select>
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button class="btn btn-primary" type="submit">Adicionar ao carrinho</button>
+      </form>
+      <form method="post" action="{% url 'amigofiel:carrinho-add' produto_id=produto.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="quantidade" value="1">
+        <input type="hidden" name="buy_now" value="1">
+        <input type="hidden" name="next" value="{% url 'amigofiel:carrinho-ver' %}">
+        <button class="btn btn-accent" type="submit">Comprar agora</button>
+      </form>
+    {% else %}
+      <div class="buy-stock out">Indisponível</div>
+    {% endif %}
+
+    {% if ong_vinculada %}
+      <div class="donation-box">
+        <div class="badge">Apoio</div>
+        Este item destina <strong>{{ ong_vinculada.percentual }}%</strong> para
+        <a href="{% url 'amigofiel:perfil-ong' handle=ong_vinculada.ong.user.username %}">
+          {{ ong_vinculada.ong.nome_fantasia }}
+        </a>.
+      </div>
+    {% endif %}
+
+    <ul class="policies muted">
+      <li>✓ Venda e envio pela empresa parceira</li>
+      <li>↺ Política de devolução conforme a loja</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- Seções inferiores: especificações / relacionados (opcional) -->
+<section class="container" style="margin-top:16px;">
+  <div class="panel">
+    <h2 style="margin:0 0 8px;">Mais informações</h2>
+    {% if produto.descricao %}
+      <p class="muted">{{ produto.descricao|linebreaksbr }}</p>
+    {% else %}
+      <p class="muted">A loja ainda não adicionou informações detalhadas.</p>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // troca de imagem principal ao clicar na miniatura
+  document.querySelectorAll('.gallery .thumb').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const src = btn.getAttribute('data-src');
+      const main = document.getElementById('mainImage');
+      if(src && main){ main.src = src; }
+      document.querySelectorAll('.gallery .thumb').forEach(b=>b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+    });
+  });
+</script>
 {% endblock %}

@@ -65,6 +65,9 @@ class UsuarioEmpresarial(TimeStampedModel):
         ordering = ("razao_social",)
         indexes = [models.Index(fields=["cidade"])]
 
+    banner = models.ImageField(upload_to="usuarios/empresa/banner/%Y/%m/", blank=True, null=True)
+    slogan = models.CharField(max_length=160, blank=True)
+
     def __str__(self):
         return f"Empresa: {self.razao_social}"
 
@@ -88,6 +91,9 @@ class UsuarioOng(TimeStampedModel):
     class Meta:
         ordering = ("nome_fantasia",)
         indexes = [models.Index(fields=["cidade"])]
+
+    banner = models.ImageField(upload_to="usuarios/ong/banner/%Y/%m/", blank=True, null=True)
+    slogan = models.CharField(max_length=160, blank=True)
 
     def __str__(self):
         return f"ONG: {self.nome_fantasia}"

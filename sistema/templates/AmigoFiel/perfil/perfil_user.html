@@ -1,9 +1,8 @@
-{% extends "style/base_public.html" %}
+{% extends "style/base_perfil.html" %}
 {% load static %}
 
 {% block title %}{{ perfil.user.get_full_name|default:perfil.user.username }} — Amigo Fiel{% endblock %}
 
-{# --- Avatar no cabeçalho do base_perfil --- #}
 {% block avatar %}
   <img class="avatar"
        src="{% if perfil.foto %}{{ perfil.foto.url }}{% else %}{% static 'img/defaults/avatar_comum.png' %}{% endif %}"
@@ -11,127 +10,100 @@
 {% endblock %}
 
 {% block perfil_name %}{{ perfil.user.get_full_name|default:perfil.user.username }}{% endblock %}
-{% block perfil_handle %}@{{ perfil.user.username }}{% endblock %}
+{% block perfil_handle %}{{ perfil.user.username }}{% endblock %}
 {% block perfil_meta %}
   {% if perfil.cidade %}🏙️ {{ perfil.cidade }} · {% endif %}
   Usuário comum
 {% endblock %}
 
 {% block perfil_actions %}
-  <div class="actions" style="gap:8px; flex-wrap:wrap;">
+  {% if request.user.is_authenticated and request.user.pk == perfil.user.pk %}
+    <a class="btn btn-accent" href="{% url 'amigofiel:pet-novo' %}">Cadastrar pet</a>
+    {# ajuste esta URL para sua view de edição de perfil #}
+    <a class="btn btn-primary" href="{% url 'amigofiel:perfil-usuario' handle=perfil.user.username %}?edit=1">Editar perfil</a>
+  {% else %}
+    {% url 'chat:thread-by-username' username=perfil.user.username as chat_url %}
+    {% if chat_url %}
+      <a class="btn btn-primary" href="{{ chat_url }}">Conversar</a>
+    {% endif %}
     {% if perfil.user.email %}
-      <a class="btn btn-primary"
-         href="mailto:{{ perfil.user.email }}?subject=Contato%20-%20Amigo%20Fiel">
-        Contato
-      </a>
+      <a class="btn btn-secondary" href="mailto:{{ perfil.user.email }}?subject=Contato%20-%20Amigo%20Fiel">Contato</a>
     {% endif %}
-    {# se for o dono do perfil, mostra o atalho para cadastrar pet #}
-    {% if request.user.is_authenticated and request.user.username == perfil.user.username %}
-      <a class="btn btn-accent" href="{% url 'amigofiel:pet-novo' %}">
-        Cadastrar pet
-      </a>
-    {% endif %}
-  </div>
+  {% endif %}
 {% endblock %}
 
 {% block body %}
-  <section class="grid" style="align-items:start;">
-    <!-- Informações básicas -->
-    <article class="mini-card">
-      <h2 style="margin:0 0 8px;">Informações</h2>
-
-      <p style="margin:0 0 6px;">
-        <strong>Usuário:</strong> @{{ perfil.user.username }}
-      </p>
-
-      {% if perfil.cidade %}
-        <p class="muted" style="margin:0 0 6px;">
-          🏙️ {{ perfil.cidade }}
-        </p>
-      {% endif %}
-
-      {% if perfil.telefone %}
-        <p class="muted" style="margin:0 0 6px;">
-          📞 {{ perfil.telefone }}
-        </p>
-      {% endif %}
-
-      {% if perfil.user.email %}
-        <p class="muted" style="margin:0;">
-          ✉️ {{ perfil.user.email }}
-        </p>
-      {% endif %}
+  <section class="grid grid-3">
+    <!-- Painel de informações -->
+    <article class="panel">
+      <h2>Informações</h2>
+      <ul class="info-list">
+        <li><strong>@{{ perfil.user.username }}</strong></li>
+        {% if perfil.cidade %}<li>🏙️ <span>{{ perfil.cidade }}</span></li>{% endif %}
+        {% if perfil.telefone %}<li>📞 <span>{{ perfil.telefone }}</span></li>{% endif %}
+        {% if perfil.user.email %}<li>✉️ <span>{{ perfil.user.email }}</span></li>{% endif %}
+        <li class="small muted">Membro desde {{ perfil.user.date_joined|date:"M/Y" }}</li>
+      </ul>
     </article>
 
-    <!-- Botão para conversar (aparece para outros usuários) -->
-    {% for p in pets %}
-    {% if p.ong %}
-      <a class="btn btn-secondary" href="{% url 'chat:thread-by-username' username=p.ong.user.username %}">Conversar com a ONG</a>
-    {% elif p.tutor %}
-      <a class="btn btn-secondary" href="{% url 'chat:thread-by-username' username=p.tutor.user.username %}">Conversar com o tutor</a>
-    {% endif %}
+    {# Espaço para futuros widgets (ex.: adoções, favoritos) #}
+    <article class="panel">
+      <h2>Atividades</h2>
+      <p class="muted small">Em breve: histórico de interesse em adoção, favoritos, etc.</p>
+    </article>
 
+    <article class="panel">
+      <h2>Privacidade</h2>
+      <p class="muted small">Configure o que outras pessoas podem ver no seu perfil.</p>
+    </article>
+  </section>
 
-    <!-- Ações rápidas (aparece apenas para o próprio usuário) -->
-    {% if request.user.is_authenticated and request.user.username == perfil.user.username %}
-      <article class="mini-card">
-        <h2 style="margin:0 0 8px;">Ações rápidas</h2>
-        <div class="actions" style="gap:8px; flex-wrap:wrap;">
-          <a class="btn btn-accent" href="{% url 'amigofiel:pet-novo' %}">Cadastrar pet</a>
-          <a class="btn btn-secondary" href="{% url 'amigofiel:listar-animais' %}?cidade={{ perfil.cidade|urlencode }}">
-            Ver pets na minha cidade
-          </a>
-        </div>
-      </article>
-    {% endif %}
-
-    <!-- Pets do usuário -->
-    <article class="mini-card" style="grid-column:1/-1">
-      <div class="perfil-section-header" style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;">
-        <div>
-          <h2 style="margin:0;">Pets</h2>
-          <small class="muted">Últimos cadastrados</small>
-        </div>
-        <div class="muted">
-          {% with total=pets_total|default:pets|length %}
-            {{ total }} registro{{ total|pluralize }}
-          {% endwith %}
-        </div>
+  <!-- Pets do usuário -->
+  <section class="panel" style="margin-top:14px;">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;">
+      <div>
+        <h2 style="margin:0;">Pets</h2>
+        <small class="muted">Últimos cadastrados</small>
       </div>
+      <div class="muted">
+        {% with total=pets_total|default:pets|length %}
+          {{ total }} registro{{ total|pluralize }}
+        {% endwith %}
+      </div>
+    </div>
 
-      {% if pets %}
-        <div class="grid grid-1 grid-md-2 grid-lg-4" style="margin-top:10px;">
-          {% for p in pets %}
-            <a class="card-link" href="{% url 'amigofiel:perfil-pet' handle=p.slug %}" style="text-decoration:none;">
-              <article class="mini-card" style="height:100%;">
-                <img class="thumb"
-                     src="{% if p.imagem %}{{ p.imagem.url }}{% else %}{% static 'img/defaults/pet.png' %}{% endif %}"
-                     alt="{{ p.nome }}" loading="lazy" decoding="async">
+    {% if pets %}
+      <div class="grid grid-4" style="margin-top:10px;">
+        {% for p in pets %}
+          <a class="card-link" href="{% url 'amigofiel:perfil-pet' handle=p.slug %}">
+            <article class="mini-card">
+              <img class="thumb"
+                   src="{% if p.imagem %}{{ p.imagem.url }}{% else %}{% static 'img/defaults/pet.png' %}{% endif %}"
+                   alt="{{ p.nome }}" loading="lazy" decoding="async">
 
-                <h3 style="margin:8px 0 4px;">{{ p.nome }}</h3>
+              <h3 style="margin:8px 0 4px;">{{ p.nome }}</h3>
 
-                <p class="muted" style="margin:0 0 6px;">
-                  {{ p.get_especie_display }}{% if p.raca %} • {{ p.raca }}{% endif %}
-                  {% if p.idade_anos %} • {{ p.idade_anos }} ano{{ p.idade_anos|pluralize }}{% endif %}
-                </p>
+              <p class="muted" style="margin:0 0 6px;">
+                {{ p.get_especie_display }}{% if p.raca %} • {{ p.raca }}{% endif %}
+                {% if p.idade_anos %} • {{ p.idade_anos }} ano{{ p.idade_anos|pluralize }}{% endif %}
+              </p>
 
-                <p class="muted" style="margin:0;">
-                  {% if p.castrado %}✂️ Castrado{% endif %}
-                  {% if p.castrado and p.vacinado %} • {% endif %}
-                  {% if p.vacinado %}💉 Vacinado{% endif %}
-                </p>
-              </article>
-            </a>
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="card center" style="margin-top:8px;">
-          <p class="muted" style="margin:0 0 8px;">Nenhum pet listado.</p>
-          {% if request.user.is_authenticated and request.user.username == perfil.user.username %}
-            <a class="btn btn-accent" href="{% url 'amigofiel:pet-novo' %}">Cadastrar primeiro pet</a>
-          {% endif %}
-        </div>
-      {% endif %}
-    </article>
+              <p class="muted small" style="margin:0;">
+                {% if p.castrado %}✂️ Castrado{% endif %}
+                {% if p.castrado and p.vacinado %} • {% endif %}
+                {% if p.vacinado %}💉 Vacinado{% endif %}
+              </p>
+            </article>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="center" style="margin-top:10px;">
+        <p class="muted">Nenhum pet listado.</p>
+        {% if request.user.is_authenticated and request.user.pk == perfil.user.pk %}
+          <a class="btn btn-accent" href="{% url 'amigofiel:pet-novo' %}">Cadastrar primeiro pet</a>
+        {% endif %}
+      </div>
+    {% endif %}
   </section>
 {% endblock %}
