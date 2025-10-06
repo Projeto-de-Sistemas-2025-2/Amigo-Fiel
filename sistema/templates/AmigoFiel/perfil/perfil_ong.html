@@ -22,6 +22,17 @@
 
   .badge-pct{ display:inline-flex; align-items:center; height:26px; padding:0 8px; border-radius:6px;
               background:#E6F4EA; color:#0E7A3E; font-weight:700; font-size:12px; }
+
+  /* cor amarela para o botão "Mensagem" apenas neste perfil */
+  .perfil-actions .btn.btn-primary {
+    background: rgb(255, 237, 2);
+    color: #0F172A;
+    border-color: rgba(0,0,0,0.06);
+    box-shadow: none;
+  }
+  .perfil-actions .btn.btn-primary:hover {
+    filter: brightness(0.95);
+  }
 </style>
 {% endblock %}
 
@@ -53,14 +64,26 @@
 
 {% block body %}
 
-  {# Banner grande da ONG #}
-  <section class="org-banner">
-    {% if perfil.banner %}
-      <img src="{{ perfil.banner.url }}" alt="Banner da {{ perfil.nome_fantasia }}">
-    {% else %}
-      <img src="{% static 'img/defaults/ong_banner.jpg' %}" alt="">
-    {% endif %}
-  </section>
+{# Banner grande da ONG (fallback aleatório) #}
+<section class="org-banner">
+  {% if perfil.banner %}
+    <img src="{{ perfil.banner.url }}" alt="Banner da {{ perfil.nome_fantasia }}">
+  {% else %}
+    <img id="org-banner-random" src="{% static 'img/defaults/Banner/Ong/Empre1.png' %}" alt="Banner da {{ perfil.nome_fantasia }}">
+    <script>
+      (function(){
+        const imgs = [
+          "{% static 'img/defaults/Banner/Ong/Ong1.png' %}",
+          "{% static 'img/defaults/Banner/Ong/Ong2.png' %}",
+          "{% static 'img/defaults/Banner/Ong/Ong3.png' %}"
+        ];
+        const el = document.getElementById('org-banner-random');
+        if (!el) return;
+        el.src = imgs[Math.floor(Math.random() * imgs.length)];
+      })();
+    </script>
+  {% endif %}
+</section>
 
   {# Barra com abas e busca #}
   <section class="orgbar" aria-label="Navegação da ONG">

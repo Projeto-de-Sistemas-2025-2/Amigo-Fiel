@@ -55,7 +55,20 @@
     {% if perfil.banner %}
       <img src="{{ perfil.banner.url }}" alt="Banner da {{ perfil.razao_social }}">
     {% else %}
-      <img src="{% static 'img/defaults/loja_banner.jpg' %}" alt="">
+      <!-- fallback aleatório -->
+      <img id="store-banner-random" src="{% static 'img/defaults/Empre/Empre1.png' %}" alt="Banner da {{ perfil.razao_social }}">
+      <script>
+        (function(){
+          const imgs = [
+            "{% static 'img/defaults/Banner/Empre/Empre1.png' %}",
+            "{% static 'img/defaults/Banner/Empre/Empre2.png' %}",
+            "{% static 'img/defaults/Banner/Empre/Empre3.png' %}"
+          ];
+          const el = document.getElementById('store-banner-random');
+          if (!el) return;
+          el.src = imgs[Math.floor(Math.random() * imgs.length)];
+        })();
+      </script>
     {% endif %}
   </section>
 

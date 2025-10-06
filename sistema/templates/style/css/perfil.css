@@ -140,3 +140,7 @@ body { margin: 0; font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Ro
   display:inline-flex; align-items:center; height:28px; padding:0 10px;
   border-radius:999px; background:#F1F5F9; color:#0F172A; font-weight:600; font-size:.875rem;
 }
+
+.brand-name {
+  color: rgb(251, 195, 9);
+}

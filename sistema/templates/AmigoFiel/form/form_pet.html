@@ -7,67 +7,107 @@
 <section class="card" style="max-width:720px;margin:auto">
   <h1 style="margin-bottom:10px">Cadastrar pet</h1>
 
-  <form method="post" enctype="multipart/form-data" class="grid grid-1">
+  <form method="post" enctype="multipart/form-data" class="grid grid-1" novalidate>
     {% csrf_token %}
 
-    <div class="grid grid-1 grid-md-2">
-      <div class="input-wrap">
-        <label>Nome</label>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:220px">
+        <label>Nome <span class="muted" style="font-weight:600">*</span></label>
         {{ form.nome }}
-        {{ form.nome.errors }}
+        {% if form.nome.errors %}<div class="muted" style="color:#b91c1c">{{ form.nome.errors }}</div>{% endif %}
+        <small class="muted">Nome do pet (ex: "Luna").</small>
       </div>
-      <div class="input-wrap">
-        <label>Espécie</label>
+
+      <div style="width:180px;min-width:140px">
+        <label>Espécie <span class="muted" style="font-weight:600">*</span></label>
         {{ form.especie }}
-        {{ form.especie.errors }}
+        {% if form.especie.errors %}<div class="muted" style="color:#b91c1c">{{ form.especie.errors }}</div>{% endif %}
+        <small class="muted">Cachorro, Gato, etc.</small>
       </div>
     </div>
 
-    <div class="grid grid-1 grid-md-3">
-      <div class="input-wrap">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
+      <div style="flex:1;min-width:180px">
         <label>Raça</label>
         {{ form.raca }}
-        {{ form.raca.errors }}
+        {% if form.raca.errors %}<div class="muted" style="color:#b91c1c">{{ form.raca.errors }}</div>{% endif %}
       </div>
-      <div class="input-wrap">
+      <div style="width:140px;min-width:120px">
         <label>Idade (anos)</label>
         {{ form.idade_anos }}
-        {{ form.idade_anos.errors }}
+        {% if form.idade_anos.errors %}<div class="muted" style="color:#b91c1c">{{ form.idade_anos.errors }}</div>{% endif %}
       </div>
-      <div class="input-wrap">
+      <div style="width:140px;min-width:120px">
         <label>Sexo</label>
         {{ form.sexo }}
-        {{ form.sexo.errors }}
+        {% if form.sexo.errors %}<div class="muted" style="color:#b91c1c">{{ form.sexo.errors }}</div>{% endif %}
       </div>
     </div>
 
-    <div class="grid grid-1 grid-md-2">
-      <div class="input-wrap" style="display:flex;gap:8px;align-items:center">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;align-items:center">
+      <div style="display:flex;gap:8px;align-items:center">
         {{ form.castrado }} <label style="margin:0">Castrado</label>
-        {{ form.castrado.errors }}
+        {% if form.castrado.errors %}<div class="muted" style="color:#b91c1c">{{ form.castrado.errors }}</div>{% endif %}
       </div>
-      <div class="input-wrap" style="display:flex;gap:8px;align-items:center">
+      <div style="display:flex;gap:8px;align-items:center">
         {{ form.vacinado }} <label style="margin:0">Vacinado</label>
-        {{ form.vacinado.errors }}
+        {% if form.vacinado.errors %}<div class="muted" style="color:#b91c1c">{{ form.vacinado.errors }}</div>{% endif %}
       </div>
     </div>
 
-    <div class="input-wrap">
+    <div style="margin-top:12px">
       <label>Descrição</label>
       {{ form.descricao }}
-      {{ form.descricao.errors }}
+      {% if form.descricao.errors %}<div class="muted" style="color:#b91c1c">{{ form.descricao.errors }}</div>{% endif %}
+      <small class="muted">Conte um pouco sobre comportamento, necessidades ou observações (máx. 500 caracteres).</small>
     </div>
 
-    <div class="input-wrap">
-      <label>Imagem</label>
-      {{ form.imagem }}
-      {{ form.imagem.errors }}
+    <div style="margin-top:12px;display:flex;gap:12px;align-items:flex-start">
+      <div style="flex:1;min-width:220px">
+        <label>Imagem</label>
+        {{ form.imagem }}
+        {% if form.imagem.errors %}<div class="muted" style="color:#b91c1c">{{ form.imagem.errors }}</div>{% endif %}
+        <small class="muted">PNG/JPG até 5MB. Imagem principal do pet.</small>
+      </div>
+
+      <div style="width:180px;text-align:center">
+        <label style="display:block;margin-bottom:6px">Pré-visualização</label>
+        <img id="pet-image-preview" src="{% static 'img/defaults/avatar_comum.png' %}" alt="Pré-visualização" style="width:160px;height:120px;object-fit:cover;border-radius:8px;border:1px solid #e6e6e6;display:block">
+        <div class="muted small" style="margin-top:6px">Sem imagem carregada</div>
+      </div>
     </div>
 
-    <div class="actions">
+    <div class="actions" style="margin-top:14px">
       <button class="btn btn-primary" type="submit">Salvar</button>
       <a class="btn btn-secondary" href="{% url 'amigofiel:listar-animais' %}">Cancelar</a>
     </div>
   </form>
 </section>
+
+<script>
+  (function(){
+    // tenta localizar o input file por name (compatível com Django forms)
+    const fileInput = document.querySelector('input[type="file"][name$="imagem"]') || document.querySelector('input[type="file"]');
+    const preview = document.getElementById('pet-image-preview');
+    if (!fileInput || !preview) return;
+
+    fileInput.addEventListener('change', function(e){
+      const f = e.target.files && e.target.files[0];
+      if (!f) {
+        preview.src = "{% static 'img/defaults/avatar_comum.png' %}";
+        return;
+      }
+      if (!f.type.startsWith('image/')) {
+        alert('Por favor selecione um arquivo de imagem.');
+        fileInput.value = '';
+        preview.src = "{% static 'img/defaults/avatar_comum.png' %}";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(ev){ preview.src = ev.target.result; };
+      reader.readAsDataURL(f);
+    });
+  })();
+</script>
 {% endblock %}
+// ...existing code...
