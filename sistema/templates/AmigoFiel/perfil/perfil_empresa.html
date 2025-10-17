@@ -42,10 +42,13 @@
     <a class="btn btn-accent" href="{% url 'amigofiel:produto-novo' %}">Cadastrar produto</a>
     <a class="btn btn-primary" href="{% url 'amigofiel:perfil-editar' %}">✏️ Editar perfil</a>
     <a class="btn btn-secondary" href="{% url 'amigofiel:painel-empresa' handle=perfil.user.username %}">📊 Painel</a>
-  {% else %}
-    {% url 'chat:thread-by-username' username=perfil.user.username as chat_url %}
-    <a class="btn btn-primary" href="{{ chat_url|default:'#' }}">Mensagem</a>
-    {% if perfil.user.email %}<a class="btn btn-secondary" href="mailto:{{ perfil.user.email }}">Contato</a>{% endif %}
+  {% elif request.user.is_authenticated %}
+    <a class="btn btn-primary" href="{% url 'chat:thread' username=perfil.user.username %}" style="display:flex;align-items:center;gap:6px;">
+      <span>💬</span> Enviar mensagem
+    </a>
+    {% if perfil.user.email %}
+      <a class="btn btn-secondary" href="mailto:{{ perfil.user.email }}">📧 Contato</a>
+    {% endif %}
   {% endif %}
 {% endblock %}
 

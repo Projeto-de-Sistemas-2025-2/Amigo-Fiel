@@ -227,7 +227,7 @@
 
     <div class="pd-hr"></div>
     <div class="inline-actions">
-      <a class="btn" href="{% url 'chat:thread-by-username' username=produto.empresa.user.username %}">
+  <a class="btn" href="{% url 'chat:thread' username=produto.empresa.user.username %}">
         💬 Falar com a loja
       </a>
       <a class="btn" href="{% url 'amigofiel:perfil-empresa' handle=produto.empresa.user.username %}">

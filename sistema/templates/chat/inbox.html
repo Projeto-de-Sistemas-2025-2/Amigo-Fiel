@@ -3,52 +3,249 @@
 
 {% block title %}Mensagens — Amigo Fiel{% endblock %}
 
+{% block extra_head %}
+<style>
+  .chat-item-unread {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border-left: 4px solid #3b82f6;
+  }
+  .text-unread {
+    font-weight: 600;
+    color: #1e40af;
+  }
+  .text-read {
+    color: #64748b;
+  }
+  .filter-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .filter-tab {
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 2px solid #e2e8f0;
+    background: white;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .filter-tab:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+  }
+  .filter-tab.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+  }
+  .filter-badge {
+    background: rgba(255,255,255,0.3);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .filter-tab.active .filter-badge {
+    background: rgba(255,255,255,0.3);
+  }
+  .search-box {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+  }
+  .search-box input {
+    width: 100%;
+    padding: 10px 16px 10px 40px;
+    border-radius: 999px;
+    border: 2px solid #e2e8f0;
+    font-size: 14px;
+  }
+  .search-box input:focus {
+    outline: none;
+    border-color: #3b82f6;
+  }
+  .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.5;
+  }
+  
+  /* Layout responsivo */
+  .inbox-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 24px;
+    align-items: start;
+  }
+  
+  @media (max-width: 768px) {
+    .inbox-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block body %}
 <div class="container">
 
-  <section class="hero">
-    <div>
-      <h1>Mensagens</h1>
-      <p class="muted">Converse com usuários, ONGs e lojas.</p>
+  {# Header com Título e Filtros lado a lado #}
+  <section class="card" style="margin-bottom: 16px;">
+    <div class="inbox-grid">
+      
+      {# Coluna 1: Título e Badge #}
+      <div>
+        <h1 style="margin: 0 0 8px;">💬 Mensagens</h1>
+        <p class="muted" style="margin: 0 0 12px;">Converse com usuários, ONGs e lojas.</p>
+        {% if total_unread > 0 %}
+          <span style="background: #3b82f6; color: white; padding: 8px 16px; border-radius: 999px; font-weight: 700; font-size: 14px; display: inline-block;">
+            {{ total_unread }} não lida{{ total_unread|pluralize }}
+          </span>
+        {% endif %}
+      </div>
+
+      {# Coluna 2: Filtros #}
+      <form method="get" action="{% url 'chat:inbox' %}" style="display: flex; flex-direction: column; gap: 12px;">
+        
+        {# Busca #}
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="search" name="q" placeholder="Buscar por nome ou @username..." 
+                 value="{{ search_query }}" autocomplete="off">
+        </div>
+
+        {# Filtro por Status #}
+        <div>
+          <label style="font-weight: 600; font-size: 13px; color: #64748b; margin-bottom: 6px; display: block;">Status:</label>
+          <div class="filter-tabs">
+            <a href="?type={{ filter_type }}{% if search_query %}&q={{ search_query }}{% endif %}&status=all" 
+               class="filter-tab {% if filter_status == 'all' %}active{% endif %}">
+              Todas
+            </a>
+            <a href="?type={{ filter_type }}{% if search_query %}&q={{ search_query }}{% endif %}&status=unread" 
+               class="filter-tab {% if filter_status == 'unread' %}active{% endif %}">
+              📬 Não lidas
+              {% if total_unread > 0 %}
+                <span class="filter-badge">{{ total_unread }}</span>
+              {% endif %}
+            </a>
+            <a href="?type={{ filter_type }}{% if search_query %}&q={{ search_query }}{% endif %}&status=read" 
+               class="filter-tab {% if filter_status == 'read' %}active{% endif %}">
+              ✉️ Lidas
+            </a>
+          </div>
+        </div>
+
+        {# Filtro por Tipo #}
+        <div>
+          <label style="font-weight: 600; font-size: 13px; color: #64748b; margin-bottom: 6px; display: block;">Tipo de usuário:</label>
+          <div class="filter-tabs">
+            <a href="?status={{ filter_status }}{% if search_query %}&q={{ search_query }}{% endif %}&type=all" 
+               class="filter-tab {% if filter_type == 'all' %}active{% endif %}">
+              Todos
+            </a>
+            <a href="?status={{ filter_status }}{% if search_query %}&q={{ search_query }}{% endif %}&type=empresa" 
+               class="filter-tab {% if filter_type == 'empresa' %}active{% endif %}">
+              🏢 Lojas
+            </a>
+            <a href="?status={{ filter_status }}{% if search_query %}&q={{ search_query }}{% endif %}&type=ong" 
+               class="filter-tab {% if filter_type == 'ong' %}active{% endif %}">
+              💚 ONGs
+            </a>
+            <a href="?status={{ filter_status }}{% if search_query %}&q={{ search_query }}{% endif %}&type=comum" 
+               class="filter-tab {% if filter_type == 'comum' %}active{% endif %}">
+              👤 Usuários
+            </a>
+          </div>
+        </div>
+
+      </form>
     </div>
   </section>
 
-  {% comment %}
-    A view deve passar "threads" (lista de conversas) e, de preferência,
-    já com "other" (o outro participante) e "last_message" resolvidos.
-    Se a sua view usa outro nome, ajuste abaixo.
-  {% endcomment %}
-
+  {# Resultados #}
   {% if threads %}
     <section class="card">
-      <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;">
+      <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;">
         {% for t in threads %}
           <li>
-            <a href="{% url 'chat:thread' t.id %}" style="text-decoration:none;color:inherit">
-              <article class="mini-card" style="display:flex;align-items:center;gap:12px;">
-                {% if t.other_avatar_url %}
-                  <img src="{{ t.other_avatar_url }}" alt="" width="48" height="48" style="border-radius:50%;object-fit:cover;">
-                {% else %}
-                  <div style="width:48px;height:48px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;">💬</div>
-                {% endif %}
+            <a href="{% url 'chat:thread' t.other_username %}" style="text-decoration:none;color:inherit">
+              <article class="mini-card {% if t.unread_count %}chat-item-unread{% endif %}" 
+                       style="display:flex;align-items:center;gap:14px;position:relative;padding:14px;border-radius:12px;transition:all 0.2s;">
+                
+                {# Avatar com badge de tipo #}
+                <div style="position:relative;">
+                  <img src="{{ t.other_avatar_url }}" alt="{{ t.other_name }}" 
+                       width="56" height="56" 
+                       style="border-radius:50%;object-fit:cover;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                  
+                  {# Badge de tipo de usuário #}
+                  {% if t.other_type == 'empresa' %}
+                    <span style="position:absolute;bottom:-2px;right:-2px;background:#f59e0b;color:white;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white;">🏢</span>
+                  {% elif t.other_type == 'ong' %}
+                    <span style="position:absolute;bottom:-2px;right:-2px;background:#16a34a;color:white;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white;">💚</span>
+                  {% else %}
+                    <span style="position:absolute;bottom:-2px;right:-2px;background:#52dae4;color:white;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white;">👤</span>
+                  {% endif %}
+                </div>
 
                 <div style="flex:1 1 auto;min-width:0;">
-                  <div style="display:flex;justify-content:space-between;gap:8px;">
-                    <strong style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                      {{ t.other_name|default:"Conversa" }}
-                    </strong>
-                    {% if t.updated_at %}
-                      <small class="muted">{{ t.updated_at|date:"d/m H:i" }}</small>
-                    {% endif %}
+                  <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:4px;">
+                    <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
+                      <strong class="{% if t.unread_count %}text-unread{% endif %}" 
+                              style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:16px;">
+                        {{ t.other_name }}
+                      </strong>
+                      {% if t.other_type == 'empresa' %}
+                        <span class="badge" style="background:#fef3c7;color:#92400e;font-size:11px;padding:2px 8px;border-radius:999px;font-weight:600;">LOJA</span>
+                      {% elif t.other_type == 'ong' %}
+                        <span class="badge" style="background:#dcfce7;color:#166534;font-size:11px;padding:2px 8px;border-radius:999px;font-weight:600;">ONG</span>
+                      {% endif %}
+                    </div>
+                    
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      {% if t.unread_count %}
+                        <span style="background:#3b82f6;color:white;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;min-width:24px;text-align:center;">
+                          {{ t.unread_count }}
+                        </span>
+                      {% endif %}
+                      {% if t.updated_at %}
+                        <small class="muted" style="white-space:nowrap;">{{ t.updated_at|timesince }} atrás</small>
+                      {% endif %}
+                    </div>
                   </div>
+
+                  <p class="muted" style="margin:2px 0 0;font-size:13px;">
+                    <span style="opacity:0.7;">@{{ t.other_username }}</span>
+                    {% if t.other_location %}
+                      <span style="opacity:0.5;"> · 📍 {{ t.other_location }}</span>
+                    {% endif %}
+                  </p>
 
                   {% with last=t.last_message %}
                     {% if last %}
-                      <p class="muted" style="margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                        {{ last.sender_display|default:last.sender }}: {{ last.body|striptags|truncatechars:90 }}
+                      <p class="{% if t.unread_count %}text-unread{% else %}text-read{% endif %}" 
+                         style="margin:6px 0 0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        {% if last.sender.username == user.username %}
+                          <span style="opacity:0.7;">Você:</span>
+                        {% else %}
+                          <span style="opacity:0.7;">{{ last.sender.username }}:</span>
+                        {% endif %}
+                        {{ last.text|striptags|truncatechars:80 }}
                       </p>
                     {% else %}
-                      <p class="muted" style="margin:2px 0 0;">Sem mensagens ainda.</p>
+                      <p class="muted" style="margin:6px 0 0;font-size:14px;opacity:0.6;">Sem mensagens ainda.</p>
                     {% endif %}
                   {% endwith %}
                 </div>
@@ -59,9 +256,39 @@
       </ul>
     </section>
   {% else %}
-    <section class="card center">
-      <p class="muted">Você ainda não tem conversas.</p>
+    <section class="card center" style="padding:40px;text-align:center;">
+      <div style="font-size:64px;margin-bottom:16px;opacity:0.3;">
+        {% if search_query or filter_type != 'all' or filter_status != 'all' %}
+          �
+        {% else %}
+          �💬
+        {% endif %}
+      </div>
+      
+      {% if search_query or filter_type != 'all' or filter_status != 'all' %}
+        <h3 style="margin:0 0 8px;color:#64748b;">Nenhum resultado encontrado</h3>
+        <p class="muted">
+          Nenhuma conversa corresponde aos filtros aplicados.
+          <br>
+          <a href="{% url 'chat:inbox' %}" style="color:#3b82f6;text-decoration:underline;margin-top:8px;display:inline-block;">Limpar filtros</a>
+        </p>
+      {% else %}
+        <h3 style="margin:0 0 8px;color:#64748b;">Nenhuma conversa ainda</h3>
+        <p class="muted">Suas conversas aparecerão aqui. Visite perfis de usuários, ONGs ou lojas para iniciar uma conversa!</p>
+      {% endif %}
     </section>
+  {% endif %}
+
+  {# Contador de resultados #}
+  {% if threads %}
+    <div style="text-align:center;padding:16px;color:#94a3b8;font-size:14px;">
+      Mostrando {{ threads|length }} conversa{{ threads|length|pluralize }}
+      {% if search_query %} com "{{ search_query }}"{% endif %}
+      {% if filter_type != 'all' %}
+        {% if filter_type == 'empresa' %}de lojas{% elif filter_type == 'ong' %}de ONGs{% elif filter_type == 'comum' %}de usuários{% endif %}
+      {% endif %}
+      {% if filter_status == 'unread' %}não lidas{% elif filter_status == 'read' %}lidas{% endif %}
+    </div>
   {% endif %}
 
 </div>
