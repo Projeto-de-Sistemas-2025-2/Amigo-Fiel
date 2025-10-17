@@ -12,6 +12,7 @@
       {% if perfil.cidade %} · 🏙️ {{ perfil.cidade }}{% endif %}
     </p>
     <div class="actions" style="margin-top:8px">
+      <a class="btn btn-primary" href="{% url 'amigofiel:produto-novo' %}">➕ Cadastrar produto</a>
       <a class="btn btn-secondary" href="{% url 'amigofiel:perfil-empresa' handle=perfil.user.username %}">Ver perfil público</a>
     </div>
   </div>
@@ -35,11 +36,14 @@
 <section class="card" style="margin-top:14px">
   <div style="display:flex;align-items:center;justify-content:space-between">
     <h2>Produtos recentes</h2>
-    <a class="btn btn-secondary" href="{% url 'amigofiel:listar-produtos' %}?q=@{{ perfil.user.username }}">Ver listagem</a>
+    <div class="actions" style="display:flex; gap:8px; align-items:center">
+      <a class="btn btn-secondary" href="{% url 'amigofiel:listar-produtos' %}?q=@{{ perfil.user.username }}">Ver listagem</a>
+      <a class="btn btn-primary" href="{% url 'amigofiel:produto-novo' %}">Novo produto</a>
+    </div>
   </div>
 
   {% if produtos %}
-    <div class="grid grid-1 grid-md-2 grid-lg-4" style="margin-top:10px">
+    <div class="products-grid">
       {% for prod in produtos %}
         <article class="mini-card">
           <img class="thumb" src="{% if prod.imagem %}{{ prod.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}" alt="{{ prod.nome }}">
@@ -58,4 +62,49 @@
     <p class="muted">Nenhum produto cadastrado.</p>
   {% endif %}
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+  /* Responsive 4-column grid for products */
+  .products-grid {
+    display: grid;
+    gap: 12px;
+    margin-top: 10px;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  @media (min-width: 640px) { /* ~sm */
+    .products-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (min-width: 900px) { /* ~md */
+    .products-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (min-width: 1200px) { /* ~lg */
+    .products-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  /* Consistent card layout */
+  .products-grid .mini-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .products-grid .mini-card .thumb {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #eee;
+  }
+  .products-grid .mini-card h3 {
+    margin: 8px 0 4px;
+    font-size: 1rem;
+  }
+  .products-grid .mini-card p.muted {
+    margin: 0 0 8px;
+  }
+  .products-grid .mini-card .actions {
+    margin-top: auto;
+  }
+</style>
 {% endblock %}

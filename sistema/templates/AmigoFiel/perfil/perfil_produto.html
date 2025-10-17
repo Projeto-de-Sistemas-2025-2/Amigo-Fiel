@@ -34,6 +34,9 @@
 .h1{font-size:clamp(22px,2.6vw,30px); line-height:1.2; margin:0 0 6px; color:var(--af-text);}
 .meta{color:var(--af-muted);}
 .price{font-size:clamp(24px,2.8vw,32px); font-weight:800; margin:6px 0;}
+.old-price{color:var(--af-muted); text-decoration: line-through; font-weight:600;}
+.savings{color:#067647; font-weight:600;}
+.deal{background:#fff1e6; color:#9a3412;}
 
 /* media (uma única foto) */
 .media-wrap{
@@ -99,6 +102,10 @@
 
     <h1 class="h1">{{ produto.nome }}</h1>
 
+    {% if produto.descricao_curta %}
+      <p class="meta" style="margin:0 0 8px;">{{ produto.descricao_curta }}</p>
+    {% endif %}
+
     <div class="kv">
       <span class="meta">
         Loja:
@@ -110,6 +117,8 @@
       {% if produto.empresa.cidade %}
         <span class="tag">🏙️ {{ produto.empresa.cidade }}</span>
       {% endif %}
+
+      <span class="tag">🏷️ {{ produto.get_categoria_display }}</span>
 
       {% if produto.estoque|default:0 > 0 %}
         <span class="pill">Em estoque</span>
@@ -132,7 +141,16 @@
     {% endif %}
 
     <div class="pd-hr"></div>
-    <div class="price">R$ {{ produto.preco }}</div>
+    {% if produto.tem_desconto %}
+      <div class="kv" style="margin-bottom:6px">
+        <span class="tag deal">-{{ produto.desconto_percentual|floatformat:0 }}% OFF</span>
+      </div>
+      <div class="old-price">De R$ {{ produto.preco|floatformat:2 }}</div>
+      <div class="price">Por R$ {{ produto.preco_com_desconto|floatformat:2 }}</div>
+      <div class="savings">Você economiza R$ {{ produto.valor_desconto|floatformat:2 }}</div>
+    {% else %}
+      <div class="price">R$ {{ produto.preco|floatformat:2 }}</div>
+    {% endif %}
 
     <div class="pd-hr"></div>
     <h3 style="margin:0 0 6px;">Descrição</h3>
@@ -162,10 +180,25 @@
 
   {# ===== COLUNA LATERAL (BUYBOX) ===== #}
   <aside class="pd-card buybox" aria-label="Comprar">
-    <div class="row">
-      <span class="muted">Preço</span>
-      <strong>R$ {{ produto.preco }}</strong>
-    </div>
+    {% if produto.tem_desconto %}
+      <div class="row">
+        <span class="muted">De</span>
+        <span class="old-price">R$ {{ produto.preco|floatformat:2 }}</span>
+      </div>
+      <div class="row">
+        <span class="muted">Por</span>
+        <strong>R$ {{ produto.preco_com_desconto|floatformat:2 }}</strong>
+      </div>
+      <div class="row">
+        <span class="muted">Economia</span>
+        <span class="savings">R$ {{ produto.valor_desconto|floatformat:2 }} ({{ produto.desconto_percentual|floatformat:0 }}%)</span>
+      </div>
+    {% else %}
+      <div class="row">
+        <span class="muted">Preço</span>
+        <strong>R$ {{ produto.preco|floatformat:2 }}</strong>
+      </div>
+    {% endif %}
     <div class="row">
       <span class="muted">Disponibilidade</span>
       <strong>
