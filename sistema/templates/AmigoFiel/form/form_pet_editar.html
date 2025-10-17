@@ -1,0 +1,345 @@
+{% extends "style/base_public.html" %}
+{% load static %}
+
+{% block title %}Editar Pet — Amigo Fiel{% endblock %}
+
+{% block extra_head %}
+<style>
+:root {
+  --af-bg: #f6f8fb;
+  --af-card: #fff;
+  --af-border: #e6ebf2;
+  --af-text: #0f172a;
+  --af-muted: #64748b;
+  --af-accent: #0ea5b7;
+  --radius: 16px;
+}
+
+.form-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.form-card {
+  background: var(--af-card);
+  border: 1px solid var(--af-border);
+  border-radius: var(--radius);
+  padding: 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--af-border);
+}
+
+.form-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--af-text);
+  margin: 0 0 8px;
+}
+
+.form-header .subtitle {
+  color: var(--af-muted);
+  font-size: 14px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  color: var(--af-text);
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.form-group .help-text {
+  display: block;
+  font-size: 12px;
+  color: var(--af-muted);
+  margin-top: 4px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--af-border);
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--af-accent);
+  box-shadow: 0 0 0 3px rgba(14, 165, 183, 0.1);
+}
+
+.form-group input[type="checkbox"] {
+  width: auto;
+  margin-right: 8px;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.error {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.errorlist {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  color: #dc2626;
+  font-size: 12px;
+}
+
+.messages {
+  margin-bottom: 20px;
+}
+
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.alert-success {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.alert-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--af-border);
+}
+
+.btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: var(--af-accent);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #0e7490;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary {
+  background: #f1f5f9;
+  color: var(--af-text);
+}
+
+.btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+.btn-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.btn-warning:hover {
+  background: #fde68a;
+}
+
+.preview-image {
+  max-width: 300px;
+  margin-top: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--af-border);
+}
+
+.section-divider {
+  margin: 32px 0;
+  border-top: 2px solid var(--af-border);
+  padding-top: 24px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--af-text);
+  margin-bottom: 16px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="form-container">
+  <div class="form-card">
+    <div class="form-header">
+      <h1>🐾 Editar Pet</h1>
+      <p class="subtitle">Atualize as informações de "{{ pet.nome }}"</p>
+    </div>
+
+    {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      <!-- Informações Básicas -->
+      <div class="form-group">
+        <label for="{{ form.nome.id_for_label }}">{{ form.nome.label }}</label>
+        {{ form.nome }}
+        {% if form.nome.help_text %}<span class="help-text">{{ form.nome.help_text }}</span>{% endif %}
+        {{ form.nome.errors }}
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="{{ form.especie.id_for_label }}">{{ form.especie.label }}</label>
+          {{ form.especie }}
+          {% if form.especie.help_text %}<span class="help-text">{{ form.especie.help_text }}</span>{% endif %}
+          {{ form.especie.errors }}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.sexo.id_for_label }}">{{ form.sexo.label }}</label>
+          {{ form.sexo }}
+          {% if form.sexo.help_text %}<span class="help-text">{{ form.sexo.help_text }}</span>{% endif %}
+          {{ form.sexo.errors }}
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="{{ form.raca.id_for_label }}">{{ form.raca.label }}</label>
+          {{ form.raca }}
+          {% if form.raca.help_text %}<span class="help-text">{{ form.raca.help_text }}</span>{% endif %}
+          {{ form.raca.errors }}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.idade_anos.id_for_label }}">{{ form.idade_anos.label }}</label>
+          {{ form.idade_anos }}
+          {% if form.idade_anos.help_text %}<span class="help-text">{{ form.idade_anos.help_text }}</span>{% endif %}
+          {{ form.idade_anos.errors }}
+        </div>
+      </div>
+
+      <!-- Saúde -->
+      <div class="section-divider">
+        <h3 class="section-title">🏥 Saúde e Cuidados</h3>
+      </div>
+
+      <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+        <div class="form-group">
+          <div class="checkbox-wrapper">
+            {{ form.castrado }}
+            <label for="{{ form.castrado.id_for_label }}">{{ form.castrado.label }}</label>
+          </div>
+          {% if form.castrado.help_text %}<span class="help-text">{{ form.castrado.help_text }}</span>{% endif %}
+          {{ form.castrado.errors }}
+        </div>
+
+        <div class="form-group">
+          <div class="checkbox-wrapper">
+            {{ form.vacinado }}
+            <label for="{{ form.vacinado.id_for_label }}">{{ form.vacinado.label }}</label>
+          </div>
+          {% if form.vacinado.help_text %}<span class="help-text">{{ form.vacinado.help_text }}</span>{% endif %}
+          {{ form.vacinado.errors }}
+        </div>
+      </div>
+
+      <!-- Descrição -->
+      <div class="section-divider">
+        <h3 class="section-title">📝 Sobre o Pet</h3>
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.descricao.id_for_label }}">{{ form.descricao.label }}</label>
+        {{ form.descricao }}
+        {% if form.descricao.help_text %}<span class="help-text">{{ form.descricao.help_text }}</span>{% endif %}
+        {{ form.descricao.errors }}
+      </div>
+
+      <!-- Imagem -->
+      <div class="section-divider">
+        <h3 class="section-title">📸 Foto do Pet</h3>
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.imagem.id_for_label }}">{{ form.imagem.label }}</label>
+        {% if pet.imagem %}
+        <img src="{{ pet.imagem.url }}" alt="{{ pet.nome }}" class="preview-image">
+        <p class="help-text">Foto atual. Escolha um novo arquivo para substituir.</p>
+        {% endif %}
+        {{ form.imagem }}
+        {% if form.imagem.help_text %}<span class="help-text">{{ form.imagem.help_text }}</span>{% endif %}
+        {{ form.imagem.errors }}
+      </div>
+
+      <!-- Botões de Ação -->
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">💾 Salvar Alterações</button>
+        <a href="{{ pet.get_absolute_url }}" class="btn btn-secondary">❌ Cancelar</a>
+        <a href="{% url 'amigofiel:pet-marcar-adotado' pet.slug %}" 
+           class="btn btn-warning">
+          {% if pet.adotado %}🔄 Marcar como Disponível{% else %}✅ Marcar como Adotado{% endif %}
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

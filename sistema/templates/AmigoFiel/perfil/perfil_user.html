@@ -19,8 +19,7 @@
 {% block perfil_actions %}
   {% if request.user.is_authenticated and request.user.pk == perfil.user.pk %}
     <a class="btn btn-accent" href="{% url 'amigofiel:pet-novo' %}">Cadastrar pet</a>
-    {# ajuste esta URL para sua view de edição de perfil #}
-    <a class="btn btn-primary" href="{% url 'amigofiel:perfil-usuario' handle=perfil.user.username %}?edit=1">Editar perfil</a>
+    <a class="btn btn-primary" href="{% url 'amigofiel:perfil-editar' %}">✏️ Editar perfil</a>
   {% else %}
     {% url 'chat:thread-by-username' username=perfil.user.username as chat_url %}
     {% if chat_url %}

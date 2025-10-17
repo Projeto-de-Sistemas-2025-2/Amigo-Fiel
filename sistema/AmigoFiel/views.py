@@ -12,7 +12,10 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django.core.exceptions import PermissionDenied
 
-from .forms import ProdutoForm, PetForm
+from .forms import (
+    ProdutoForm, PetForm,
+    PerfilComumEditForm, PerfilEmpresaEditForm, PerfilOngEditForm
+)
 from .models import ProdutoEmpresa, Pet, UsuarioEmpresarial, UsuarioComum, UsuarioOng
 from .consts import PRODUTO_CATEGORIAS_CHOICES  # se você criou o arquivo consts.py
 
@@ -300,6 +303,7 @@ def perfil_ong(request, handle: str):
         "produtos": produtos_display,
         "empresas": list(empresas_parceiras),
         "aba": tab,
+        "is_owner": request.user.is_authenticated and request.user == ong.user,
     }
     return render(request, "AmigoFiel/perfil/perfil_ong.html", ctx)
 
@@ -821,4 +825,194 @@ def carrinho_ver(request):
     return render(request, "AmigoFiel/carrinho/ver.html", {
         "grupos": grupos,
         "total_geral": total_geral,
+    })
+
+
+# ==================== VIEWS DE EDIÇÃO ====================
+
+@login_required
+def produto_editar(request, empresa_handle, produto_slug):
+    """Editar produto existente"""
+    produto = get_object_or_404(
+        ProdutoEmpresa.objects.select_related("empresa", "empresa__user"),
+        empresa__user__username=empresa_handle,
+        slug=produto_slug,
+    )
+    
+    # Verificar permissão: apenas dono da empresa ou superuser
+    if request.user != produto.empresa.user and not request.user.is_superuser:
+        messages.error(request, "Você não tem permissão para editar este produto.")
+        return redirect(produto.get_absolute_url())
+    
+    if request.method == "POST":
+        form = ProdutoForm(request.POST, request.FILES, instance=produto)
+        if form.is_valid():
+            produto = form.save()
+            
+            # Processar vínculo com ONG
+            ong = form.cleaned_data.get("ong_vinculo")
+            percentual = form.cleaned_data.get("percentual_doacao")
+            vinculo_ativo = form.cleaned_data.get("vinculo_ativo", True)
+            
+            # Desativar vínculos antigos
+            produto.vinculos_ong.update(ativo=False)
+            
+            # Criar/atualizar vínculo se houver ONG e percentual
+            if ong and percentual and percentual > 0:
+                from .models import ProdutoOngVinculo
+                ProdutoOngVinculo.objects.update_or_create(
+                    produto=produto,
+                    ong=ong,
+                    defaults={
+                        "percentual": percentual,
+                        "ativo": vinculo_ativo,
+                    }
+                )
+            
+            messages.success(request, f"Produto '{produto.nome}' atualizado com sucesso!")
+            return redirect(produto.get_absolute_url())
+    else:
+        form = ProdutoForm(instance=produto)
+    
+    return render(request, "AmigoFiel/form/form_produto_editar.html", {
+        "form": form,
+        "produto": produto,
+        "is_edit": True,
+    })
+
+
+@login_required
+def pet_editar(request, handle):
+    """Editar pet existente"""
+    pet = get_object_or_404(
+        Pet.objects.select_related("tutor", "tutor__user", "ong", "ong__user"),
+        slug=handle
+    )
+    
+    # Verificar permissão: tutor, ONG responsável ou superuser
+    is_owner = False
+    if pet.tutor and request.user == pet.tutor.user:
+        is_owner = True
+    elif pet.ong and request.user == pet.ong.user:
+        is_owner = True
+    elif request.user.is_superuser:
+        is_owner = True
+    
+    if not is_owner:
+        messages.error(request, "Você não tem permissão para editar este pet.")
+        return redirect(pet.get_absolute_url())
+    
+    if request.method == "POST":
+        form = PetForm(request.POST, request.FILES, instance=pet)
+        if form.is_valid():
+            pet = form.save()
+            messages.success(request, f"Pet '{pet.nome}' atualizado com sucesso!")
+            return redirect(pet.get_absolute_url())
+    else:
+        form = PetForm(instance=pet)
+    
+    return render(request, "AmigoFiel/form/form_pet_editar.html", {
+        "form": form,
+        "pet": pet,
+        "is_edit": True,
+    })
+
+
+@login_required
+def perfil_editar(request):
+    """Editar perfil do usuário logado (detecta o tipo automaticamente)"""
+    user = request.user
+    
+    # Detectar tipo de perfil
+    perfil_comum = getattr(user, "perfil_comum", None)
+    perfil_empresa = getattr(user, "perfil_empresa", None)
+    perfil_ong = getattr(user, "perfil_ong", None)
+    
+    if perfil_comum:
+        perfil = perfil_comum
+        form_class = PerfilComumEditForm
+        template = "AmigoFiel/form/form_perfil_comum.html"
+        redirect_url = reverse_lazy("amigofiel:perfil-usuario", kwargs={"handle": user.username})
+    elif perfil_empresa:
+        perfil = perfil_empresa
+        form_class = PerfilEmpresaEditForm
+        template = "AmigoFiel/form/form_perfil_empresa.html"
+        redirect_url = reverse_lazy("amigofiel:perfil-empresa", kwargs={"handle": user.username})
+    elif perfil_ong:
+        perfil = perfil_ong
+        form_class = PerfilOngEditForm
+        template = "AmigoFiel/form/form_perfil_ong.html"
+        redirect_url = reverse_lazy("amigofiel:perfil-ong", kwargs={"handle": user.username})
+    else:
+        messages.error(request, "Perfil não encontrado.")
+        return redirect("amigofiel:home")
+    
+    if request.method == "POST":
+        form = form_class(request.POST, request.FILES, instance=perfil)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Perfil atualizado com sucesso!")
+            return redirect(redirect_url)
+    else:
+        form = form_class(instance=perfil)
+    
+    return render(request, template, {
+        "form": form,
+        "perfil": perfil,
+        "user": user,
+    })
+
+
+@login_required
+def produto_deletar(request, empresa_handle, produto_slug):
+    """Deletar produto (soft delete - apenas desativa)"""
+    produto = get_object_or_404(
+        ProdutoEmpresa.objects.select_related("empresa", "empresa__user"),
+        empresa__user__username=empresa_handle,
+        slug=produto_slug,
+    )
+    
+    # Verificar permissão
+    if request.user != produto.empresa.user and not request.user.is_superuser:
+        messages.error(request, "Você não tem permissão para deletar este produto.")
+        return redirect(produto.get_absolute_url())
+    
+    if request.method == "POST":
+        produto.ativo = False
+        produto.save()
+        messages.success(request, f"Produto '{produto.nome}' desativado com sucesso!")
+        return redirect("amigofiel:painel-empresa", handle=empresa_handle)
+    
+    return render(request, "AmigoFiel/form/confirmar_deletar_produto.html", {
+        "produto": produto,
+    })
+
+
+@login_required
+def pet_marcar_adotado(request, handle):
+    """Marcar pet como adotado"""
+    pet = get_object_or_404(Pet, slug=handle)
+    
+    # Verificar permissão
+    is_owner = False
+    if pet.tutor and request.user == pet.tutor.user:
+        is_owner = True
+    elif pet.ong and request.user == pet.ong.user:
+        is_owner = True
+    elif request.user.is_superuser:
+        is_owner = True
+    
+    if not is_owner:
+        messages.error(request, "Você não tem permissão para realizar esta ação.")
+        return redirect(pet.get_absolute_url())
+    
+    if request.method == "POST":
+        pet.adotado = not pet.adotado
+        pet.save()
+        status = "adotado" if pet.adotado else "disponível para adoção"
+        messages.success(request, f"Pet '{pet.nome}' marcado como {status}!")
+        return redirect(pet.get_absolute_url())
+    
+    return render(request, "AmigoFiel/form/confirmar_adocao.html", {
+        "pet": pet,
     })

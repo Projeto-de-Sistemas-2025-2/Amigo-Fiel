@@ -50,6 +50,16 @@ urlpatterns = [
     path("ONG/<str:handle>/painel/", views.painel_ong, name="painel-ong"),
     path("Co./<str:handle>/painel/", views.painel_empresa, name="painel-empresa"),
 
+    # Edição de perfil
+    path("perfil/editar/", views.perfil_editar, name="perfil-editar"),
+    
+    # Edição de produto
+    path("<str:empresa_handle>/<slug:produto_slug>/editar/", views.produto_editar, name="produto-editar"),
+    path("<str:empresa_handle>/<slug:produto_slug>/deletar/", views.produto_deletar, name="produto-deletar"),
+    
+    # Edição de pet
+    path("pet/<slug:handle>/editar/", views.pet_editar, name="pet-editar"),
+    path("pet/<slug:handle>/adotado/", views.pet_marcar_adotado, name="pet-marcar-adotado"),
 
     path("tabelas/", views.tabelas_bruto, name="tabelas-bruto"),
     

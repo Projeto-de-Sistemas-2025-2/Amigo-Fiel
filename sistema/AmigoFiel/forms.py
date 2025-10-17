@@ -202,3 +202,124 @@ class PetForm(forms.ModelForm):     ##formulário para cadastro de pets
             if name not in ["castrado", "vacinado"]:  # checkboxes não precisam da classe input
                 css = field.widget.attrs.get("class", "")
                 field.widget.attrs["class"] = (css + " input").strip()
+
+
+# ==================== FORMULÁRIOS DE EDIÇÃO DE PERFIL ====================
+
+from .models import UsuarioComum, UsuarioEmpresarial, UsuarioOng
+
+class PerfilComumEditForm(forms.ModelForm):
+    """Formulário para edição de perfil de usuário comum"""
+    class Meta:
+        model = UsuarioComum
+        fields = ["telefone", "cidade", "foto"]
+        widgets = {
+            "telefone": forms.TextInput(attrs={"placeholder": "Ex: (11) 98765-4321"}),
+            "cidade": forms.TextInput(attrs={"placeholder": "Ex: São Paulo"}),
+        }
+        labels = {
+            "telefone": "Telefone",
+            "cidade": "Cidade",
+            "foto": "Foto de Perfil",
+        }
+        help_texts = {
+            "foto": "Escolha uma nova foto ou deixe em branco para manter a atual",
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            css = field.widget.attrs.get("class", "")
+            field.widget.attrs["class"] = (css + " input").strip()
+
+
+class PerfilEmpresaEditForm(forms.ModelForm):
+    """Formulário para edição de perfil de empresa"""
+    class Meta:
+        model = UsuarioEmpresarial
+        fields = ["razao_social", "cnpj", "telefone", "cidade", "foto", "banner", "slogan"]
+        widgets = {
+            "razao_social": forms.TextInput(attrs={"placeholder": "Nome da empresa"}),
+            "cnpj": forms.TextInput(attrs={"placeholder": "00.000.000/0000-00"}),
+            "telefone": forms.TextInput(attrs={"placeholder": "(11) 98765-4321"}),
+            "cidade": forms.TextInput(attrs={"placeholder": "São Paulo"}),
+            "slogan": forms.TextInput(attrs={"placeholder": "Slogan da empresa (máx. 160 caracteres)"}),
+        }
+        labels = {
+            "razao_social": "Razão Social",
+            "cnpj": "CNPJ",
+            "telefone": "Telefone",
+            "cidade": "Cidade",
+            "foto": "Logo/Foto",
+            "banner": "Banner",
+            "slogan": "Slogan",
+        }
+        help_texts = {
+            "foto": "Logo ou foto de perfil da empresa",
+            "banner": "Imagem de banner para o perfil",
+            "slogan": "Frase de destaque que aparecerá no perfil",
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            css = field.widget.attrs.get("class", "")
+            field.widget.attrs["class"] = (css + " input").strip()
+    
+    def clean_cnpj(self):
+        cnpj = self.cleaned_data.get("cnpj")
+        if cnpj and not CNPJ_REGEX.match(cnpj):
+            raise forms.ValidationError("Informe um CNPJ válido.")
+        # Verifica se outro usuário já usa este CNPJ
+        if cnpj:
+            qs = UsuarioEmpresarial.objects.filter(cnpj=cnpj).exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError("Este CNPJ já está cadastrado.")
+        return cnpj
+
+
+class PerfilOngEditForm(forms.ModelForm):
+    """Formulário para edição de perfil de ONG"""
+    class Meta:
+        model = UsuarioOng
+        fields = ["nome_fantasia", "cnpj", "telefone", "cidade", "site", "foto", "banner", "slogan"]
+        widgets = {
+            "nome_fantasia": forms.TextInput(attrs={"placeholder": "Nome da ONG"}),
+            "cnpj": forms.TextInput(attrs={"placeholder": "00.000.000/0000-00"}),
+            "telefone": forms.TextInput(attrs={"placeholder": "(11) 98765-4321"}),
+            "cidade": forms.TextInput(attrs={"placeholder": "São Paulo"}),
+            "site": forms.URLInput(attrs={"placeholder": "https://www.exemplo.com.br"}),
+            "slogan": forms.TextInput(attrs={"placeholder": "Slogan da ONG (máx. 160 caracteres)"}),
+        }
+        labels = {
+            "nome_fantasia": "Nome Fantasia",
+            "cnpj": "CNPJ",
+            "telefone": "Telefone",
+            "cidade": "Cidade",
+            "site": "Website",
+            "foto": "Logo/Foto",
+            "banner": "Banner",
+            "slogan": "Slogan",
+        }
+        help_texts = {
+            "foto": "Logo ou foto de perfil da ONG",
+            "banner": "Imagem de banner para o perfil",
+            "slogan": "Frase de destaque que aparecerá no perfil",
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            css = field.widget.attrs.get("class", "")
+            field.widget.attrs["class"] = (css + " input").strip()
+    
+    def clean_cnpj(self):
+        cnpj = self.cleaned_data.get("cnpj")
+        if cnpj and not CNPJ_REGEX.match(cnpj):
+            raise forms.ValidationError("Informe um CNPJ válido.")
+        # Verifica se outra ONG já usa este CNPJ
+        if cnpj:
+            qs = UsuarioOng.objects.filter(cnpj=cnpj).exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError("Este CNPJ já está cadastrado.")
+        return cnpj

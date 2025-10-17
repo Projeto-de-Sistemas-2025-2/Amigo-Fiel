@@ -22,6 +22,7 @@
   </div>
   <div class="actions" style="margin-top:12px">
     <a class="btn btn-primary" href="{% url 'amigofiel:produto-novo' %}">➕ Cadastrar produto</a>
+    <a class="btn" href="{% url 'amigofiel:perfil-editar' %}" style="background:#f59e0b;color:white;border-color:#f59e0b;">✏️ Editar Perfil</a>
     <a class="btn btn-secondary" href="{% url 'amigofiel:perfil-empresa' handle=perfil.user.username %}">Ver perfil público</a>
   </div>
 </section>

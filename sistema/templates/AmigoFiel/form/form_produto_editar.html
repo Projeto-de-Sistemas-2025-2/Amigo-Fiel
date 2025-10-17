@@ -1,0 +1,347 @@
+{% extends "style/base_public.html" %}
+{% load static %}
+
+{% block title %}Editar Produto — Amigo Fiel{% endblock %}
+
+{% block extra_head %}
+<style>
+:root {
+  --af-bg: #f6f8fb;
+  --af-card: #fff;
+  --af-border: #e6ebf2;
+  --af-text: #0f172a;
+  --af-muted: #64748b;
+  --af-accent: #0ea5b7;
+  --radius: 16px;
+}
+
+.form-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.form-card {
+  background: var(--af-card);
+  border: 1px solid var(--af-border);
+  border-radius: var(--radius);
+  padding: 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--af-border);
+}
+
+.form-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--af-text);
+  margin: 0 0 8px;
+}
+
+.form-header .subtitle {
+  color: var(--af-muted);
+  font-size: 14px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  color: var(--af-text);
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.form-group .help-text {
+  display: block;
+  font-size: 12px;
+  color: var(--af-muted);
+  margin-top: 4px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--af-border);
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--af-accent);
+  box-shadow: 0 0 0 3px rgba(14, 165, 183, 0.1);
+}
+
+.form-group input[type="checkbox"] {
+  width: auto;
+  margin-right: 8px;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.error {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.errorlist {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  color: #dc2626;
+  font-size: 12px;
+}
+
+.messages {
+  margin-bottom: 20px;
+}
+
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.alert-success {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.alert-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--af-border);
+}
+
+.btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--af-accent);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #0e7490;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary {
+  background: #f1f5f9;
+  color: var(--af-text);
+}
+
+.btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+.btn-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.btn-danger:hover {
+  background: #fecaca;
+}
+
+.preview-image {
+  max-width: 300px;
+  margin-top: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--af-border);
+}
+
+.section-divider {
+  margin: 32px 0;
+  border-top: 2px solid var(--af-border);
+  padding-top: 24px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--af-text);
+  margin-bottom: 16px;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="form-container">
+  <div class="form-card">
+    <div class="form-header">
+      <h1>✏️ Editar Produto</h1>
+      <p class="subtitle">Atualize as informações do produto "{{ produto.nome }}"</p>
+    </div>
+
+    {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      <!-- Informações Básicas -->
+      <div class="form-group">
+        <label for="{{ form.nome.id_for_label }}">{{ form.nome.label }}</label>
+        {{ form.nome }}
+        {% if form.nome.help_text %}<span class="help-text">{{ form.nome.help_text }}</span>{% endif %}
+        {{ form.nome.errors }}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}</label>
+        {{ form.categoria }}
+        {% if form.categoria.help_text %}<span class="help-text">{{ form.categoria.help_text }}</span>{% endif %}
+        {{ form.categoria.errors }}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.descricao_curta.id_for_label }}">{{ form.descricao_curta.label }}</label>
+        {{ form.descricao_curta }}
+        {% if form.descricao_curta.help_text %}<span class="help-text">{{ form.descricao_curta.help_text }}</span>{% endif %}
+        {{ form.descricao_curta.errors }}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.descricao.id_for_label }}">{{ form.descricao.label }}</label>
+        {{ form.descricao }}
+        {% if form.descricao.help_text %}<span class="help-text">{{ form.descricao.help_text }}</span>{% endif %}
+        {{ form.descricao.errors }}
+      </div>
+
+      <!-- Preço e Estoque -->
+      <div class="section-divider">
+        <h3 class="section-title">💰 Preço e Estoque</h3>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="form-group">
+          <label for="{{ form.preco.id_for_label }}">{{ form.preco.label }}</label>
+          {{ form.preco }}
+          {% if form.preco.help_text %}<span class="help-text">{{ form.preco.help_text }}</span>{% endif %}
+          {{ form.preco.errors }}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.desconto_percentual.id_for_label }}">{{ form.desconto_percentual.label }}</label>
+          {{ form.desconto_percentual }}
+          {% if form.desconto_percentual.help_text %}<span class="help-text">{{ form.desconto_percentual.help_text }}</span>{% endif %}
+          {{ form.desconto_percentual.errors }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.estoque.id_for_label }}">{{ form.estoque.label }}</label>
+        {{ form.estoque }}
+        {% if form.estoque.help_text %}<span class="help-text">{{ form.estoque.help_text }}</span>{% endif %}
+        {{ form.estoque.errors }}
+      </div>
+
+      <div class="form-group">
+        <div class="checkbox-wrapper">
+          {{ form.ativo }}
+          <label for="{{ form.ativo.id_for_label }}">{{ form.ativo.label }}</label>
+        </div>
+        {% if form.ativo.help_text %}<span class="help-text">{{ form.ativo.help_text }}</span>{% endif %}
+        {{ form.ativo.errors }}
+      </div>
+
+      <!-- Vínculo com ONG -->
+      <div class="section-divider">
+        <h3 class="section-title">❤️ Doação para ONG</h3>
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.ong_vinculo.id_for_label }}">{{ form.ong_vinculo.label }}</label>
+        {{ form.ong_vinculo }}
+        {% if form.ong_vinculo.help_text %}<span class="help-text">{{ form.ong_vinculo.help_text }}</span>{% endif %}
+        {{ form.ong_vinculo.errors }}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.percentual_doacao.id_for_label }}">{{ form.percentual_doacao.label }}</label>
+        {{ form.percentual_doacao }}
+        {% if form.percentual_doacao.help_text %}<span class="help-text">{{ form.percentual_doacao.help_text }}</span>{% endif %}
+        {{ form.percentual_doacao.errors }}
+      </div>
+
+      <div class="form-group">
+        <div class="checkbox-wrapper">
+          {{ form.vinculo_ativo }}
+          <label for="{{ form.vinculo_ativo.id_for_label }}">{{ form.vinculo_ativo.label }}</label>
+        </div>
+        {% if form.vinculo_ativo.help_text %}<span class="help-text">{{ form.vinculo_ativo.help_text }}</span>{% endif %}
+        {{ form.vinculo_ativo.errors }}
+      </div>
+
+      <!-- Imagem -->
+      <div class="section-divider">
+        <h3 class="section-title">📸 Imagem do Produto</h3>
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.imagem.id_for_label }}">{{ form.imagem.label }}</label>
+        {% if produto.imagem %}
+        <img src="{{ produto.imagem.url }}" alt="{{ produto.nome }}" class="preview-image">
+        <p class="help-text">Imagem atual. Escolha um novo arquivo para substituir.</p>
+        {% endif %}
+        {{ form.imagem }}
+        {% if form.imagem.help_text %}<span class="help-text">{{ form.imagem.help_text }}</span>{% endif %}
+        {{ form.imagem.errors }}
+      </div>
+
+      <!-- Botões de Ação -->
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">💾 Salvar Alterações</button>
+        <a href="{{ produto.get_absolute_url }}" class="btn btn-secondary">❌ Cancelar</a>
+        <a href="{% url 'amigofiel:produto-deletar' produto.empresa.user.username produto.slug %}" 
+           class="btn btn-danger" 
+           onclick="return confirm('Tem certeza que deseja desativar este produto?')">
+          🗑️ Desativar Produto
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

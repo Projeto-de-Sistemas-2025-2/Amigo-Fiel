@@ -40,7 +40,8 @@
 {% block perfil_actions %}
   {% if is_owner %}
     <a class="btn btn-accent" href="{% url 'amigofiel:produto-novo' %}">Cadastrar produto</a>
-    <a class="btn btn-secondary" href="{% url 'amigofiel:listar-produtos' %}?loja={{ perfil.user.username|urlencode }}">Ver na vitrine</a>
+    <a class="btn btn-primary" href="{% url 'amigofiel:perfil-editar' %}">✏️ Editar perfil</a>
+    <a class="btn btn-secondary" href="{% url 'amigofiel:painel-empresa' handle=perfil.user.username %}">📊 Painel</a>
   {% else %}
     {% url 'chat:thread-by-username' username=perfil.user.username as chat_url %}
     <a class="btn btn-primary" href="{{ chat_url|default:'#' }}">Mensagem</a>

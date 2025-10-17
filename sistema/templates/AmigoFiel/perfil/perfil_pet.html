@@ -5,11 +5,30 @@
 
 {% block extra_head %}
 <style>
-  /* pequenininha para a “tabelinha” de informações */
+  /* pequenininha para a "tabelinha" de informações */
   .dl{list-style:none;margin:0;padding:0}
   .dl li{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed #e9edf3}
   .dl li:last-child{border-bottom:none}
   .dl span{color:var(--af-muted,#64748b)}
+
+  /* Botões de edição - estados de adoção */
+  .btn-edit-pet {
+    background: #f59e0b;
+    color: white;
+    border-color: #f59e0b;
+  }
+
+  .btn-adopt-toggle.adopted {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fde68a;
+  }
+
+  .btn-adopt-toggle.available {
+    background: #dcfce7;
+    color: #067647;
+    border-color: #bbf7d0;
+  }
 </style>
 {% endblock %}
 
@@ -60,6 +79,19 @@
          href="{% url 'amigofiel:listar-animais' %}?q={{ pet.nome|urlencode }}">
         Quero adotar
       </a>
+    {% endif %}
+
+    {# Botões de edição para o dono do pet #}
+    {% if user.is_authenticated %}
+      {% if pet.tutor and user == pet.tutor.user or pet.ong and user == pet.ong.user or user.is_superuser %}
+        <a class="btn btn-edit-pet" href="{% url 'amigofiel:pet-editar' pet.slug %}">
+          ✏️ Editar Pet
+        </a>
+        <a class="btn btn-adopt-toggle {% if pet.adotado %}adopted{% else %}available{% endif %}" 
+           href="{% url 'amigofiel:pet-marcar-adotado' pet.slug %}">
+          {% if pet.adotado %}🔄 Disponibilizar{% else %}✅ Marcar Adotado{% endif %}
+        </a>
+      {% endif %}
     {% endif %}
   </div>
 {% endblock %}
