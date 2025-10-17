@@ -400,6 +400,25 @@ class ProdutoCreateView(LoginRequiredMixin, TemplateView): ##view para cadastro 
                 produto.empresa = empresa
 
             produto.save()
+            
+            # Processa vínculo com ONG
+            ong_vinculo = form.cleaned_data.get('ong_vinculo')
+            percentual_doacao = form.cleaned_data.get('percentual_doacao')
+            vinculo_ativo = form.cleaned_data.get('vinculo_ativo', True)
+            
+            if ong_vinculo and percentual_doacao:
+                # Remove vínculos antigos (garantir unique_together)
+                ProdutoOngVinculo.objects.filter(produto=produto).delete()
+                
+                # Cria novo vínculo
+                ProdutoOngVinculo.objects.create(
+                    produto=produto,
+                    ong=ong_vinculo,
+                    percentual=percentual_doacao,
+                    ativo=vinculo_ativo
+                )
+                messages.success(request, f"Produto vinculado à ONG {ong_vinculo.nome_fantasia} com {percentual_doacao}% de doação!")
+            
             messages.success(request, "Produto cadastrado com sucesso!")
             return redirect(produto.get_absolute_url())
 

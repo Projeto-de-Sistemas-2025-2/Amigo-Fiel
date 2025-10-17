@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 import re
-from .models import ProdutoEmpresa, Pet
+from .models import ProdutoEmpresa, Pet, UsuarioOng
 
 
 TIPOS = (##tipos de usuários
@@ -67,6 +67,36 @@ class CadastroForm(UserCreationForm): ##formulário de cadastro de usuários
         return data
 
 class ProdutoForm(forms.ModelForm): ##formulário para produtos de empresas
+    # Campos adicionais para vínculo com ONG
+    ong_vinculo = forms.ModelChoiceField(
+        queryset=UsuarioOng.objects.all(),
+        required=False,
+        label="Vincular a uma ONG",
+        help_text="Selecione uma ONG para apoiar com este produto",
+        widget=forms.Select(attrs={"class": "input"})
+    )
+    percentual_doacao = forms.DecimalField(
+        required=False,
+        min_value=0,
+        max_value=100,
+        decimal_places=2,
+        label="Percentual de Doação (%)",
+        help_text="Percentual do valor que será destinado à ONG (0-100)",
+        widget=forms.NumberInput(attrs={
+            "step": "0.01", 
+            "min": "0", 
+            "max": "100", 
+            "placeholder": "0.00",
+            "class": "input"
+        })
+    )
+    vinculo_ativo = forms.BooleanField(
+        required=False,
+        initial=True,
+        label="Vínculo Ativo",
+        help_text="Desmarque para desativar temporariamente a doação"
+    )
+    
     class Meta:
         model = ProdutoEmpresa
         fields = [
@@ -100,10 +130,35 @@ class ProdutoForm(forms.ModelForm): ##formulário para produtos de empresas
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        # Carrega vínculo existente se estiver editando
+        if self.instance and self.instance.pk:
+            vinculo = self.instance.vinculos_ong.filter(ativo=True).first()
+            if vinculo:
+                self.fields['ong_vinculo'].initial = vinculo.ong
+                self.fields['percentual_doacao'].initial = vinculo.percentual
+                self.fields['vinculo_ativo'].initial = vinculo.ativo
+        
+        # Aplica classe CSS nos campos
         for name, field in self.fields.items():
-            if name != "ativo":  # checkbox não precisa da classe input
+            if name not in ["ativo", "vinculo_ativo"]:  # checkboxes não precisam da classe input
                 css = field.widget.attrs.get("class", "")
                 field.widget.attrs["class"] = (css + " input").strip()
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        ong = cleaned_data.get('ong_vinculo')
+        percentual = cleaned_data.get('percentual_doacao')
+        
+        # Se escolheu uma ONG, percentual é obrigatório
+        if ong and not percentual:
+            self.add_error('percentual_doacao', 'Informe o percentual de doação para a ONG selecionada.')
+        
+        # Se informou percentual, ONG é obrigatória
+        if percentual and percentual > 0 and not ong:
+            self.add_error('ong_vinculo', 'Selecione uma ONG para receber a doação.')
+        
+        return cleaned_data
 
 class PetForm(forms.ModelForm):     ##formulário para cadastro de pets
     class Meta:

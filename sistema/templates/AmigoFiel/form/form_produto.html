@@ -105,6 +105,63 @@
       {% endif %}
     </fieldset>
 
+    <!-- Vínculo com ONG (Produto Solidário) -->
+    <fieldset style="border:1px solid #e0e0e0;padding:1.5rem;border-radius:8px;background:#f0fdf4">
+      <legend style="font-weight:600;padding:0 0.5rem">💚 Produto Solidário (Opcional)</legend>
+      
+      <div style="margin-bottom:1rem;padding:1rem;background:#fff;border-radius:6px;border:1px solid #86efac">
+        <p class="small" style="margin:0;color:#166534">
+          <strong>🐾 Apoie uma ONG!</strong> Vincule este produto a uma ONG e destine parte do valor das vendas para ajudar animais necessitados.
+        </p>
+      </div>
+
+      <div class="grid grid-1" style="gap:1rem">
+        <div class="input-wrap">
+          <label for="{{ form.ong_vinculo.id_for_label }}">{{ form.ong_vinculo.label }}</label>
+          {{ form.ong_vinculo }}
+          {% if form.ong_vinculo.help_text %}
+            <small class="muted" style="font-size:0.875rem">{{ form.ong_vinculo.help_text }}</small>
+          {% endif %}
+          {% if form.ong_vinculo.errors %}
+            <span class="error-text" style="color:red;font-size:0.875rem">{{ form.ong_vinculo.errors }}</span>
+          {% endif %}
+        </div>
+
+        <div class="grid grid-1 grid-md-2" style="gap:1rem">
+          <div class="input-wrap">
+            <label for="{{ form.percentual_doacao.id_for_label }}">{{ form.percentual_doacao.label }}</label>
+            {{ form.percentual_doacao }}
+            {% if form.percentual_doacao.help_text %}
+              <small class="muted" style="font-size:0.875rem">{{ form.percentual_doacao.help_text }}</small>
+            {% endif %}
+            {% if form.percentual_doacao.errors %}
+              <span class="error-text" style="color:red;font-size:0.875rem">{{ form.percentual_doacao.errors }}</span>
+            {% endif %}
+          </div>
+
+          <div class="input-wrap" style="display:flex;gap:0.75rem;align-items:center;padding:1rem;background:#fff;border-radius:6px">
+            {{ form.vinculo_ativo }}
+            <div>
+              <label for="{{ form.vinculo_ativo.id_for_label }}" style="margin:0;font-weight:500">{{ form.vinculo_ativo.label }}</label>
+              {% if form.vinculo_ativo.help_text %}
+                <p class="small muted" style="margin:0.25rem 0 0 0">{{ form.vinculo_ativo.help_text }}</p>
+              {% endif %}
+            </div>
+            {% if form.vinculo_ativo.errors %}
+              <span class="error-text" style="color:red;font-size:0.875rem">{{ form.vinculo_ativo.errors }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div id="doacao-preview" style="display:none;padding:1rem;background:#fff;border-radius:6px;border:1px solid #86efac">
+          <p class="small" style="margin:0">
+            <strong>Simulação:</strong> Com preço de <span id="preview-preco">R$ 0,00</span> e <span id="preview-percentual">0%</span> de doação, 
+            <strong style="color:#166534"><span id="preview-valor">R$ 0,00</span></strong> será destinado à ONG por venda.
+          </p>
+        </div>
+      </div>
+    </fieldset>
+
     <!-- Imagem e Status -->
     <fieldset style="border:1px solid #e0e0e0;padding:1.5rem;border-radius:8px">
       <legend style="font-weight:600;padding:0 0.5rem">🖼️ Imagem e Visibilidade</legend>
@@ -183,4 +240,44 @@
     margin-top: 0.25rem;
   }
 </style>
+
+<script>
+  // Simulação de doação em tempo real
+  (function() {
+    const precoInput = document.querySelector('input[name="preco"]');
+    const percentualInput = document.querySelector('input[name="percentual_doacao"]');
+    const ongSelect = document.querySelector('select[name="ong_vinculo"]');
+    const previewDiv = document.getElementById('doacao-preview');
+    const previewPreco = document.getElementById('preview-preco');
+    const previewPercentual = document.getElementById('preview-percentual');
+    const previewValor = document.getElementById('preview-valor');
+    
+    if (!precoInput || !percentualInput || !previewDiv) return;
+    
+    function atualizarPreview() {
+      const preco = parseFloat(precoInput.value) || 0;
+      const percentual = parseFloat(percentualInput.value) || 0;
+      const temOng = ongSelect && ongSelect.value;
+      
+      if (preco > 0 && percentual > 0 && temOng) {
+        const valorDoacao = (preco * percentual) / 100;
+        previewPreco.textContent = `R$ ${preco.toFixed(2)}`;
+        previewPercentual.textContent = `${percentual.toFixed(1)}%`;
+        previewValor.textContent = `R$ ${valorDoacao.toFixed(2)}`;
+        previewDiv.style.display = 'block';
+      } else {
+        previewDiv.style.display = 'none';
+      }
+    }
+    
+    precoInput.addEventListener('input', atualizarPreview);
+    percentualInput.addEventListener('input', atualizarPreview);
+    if (ongSelect) {
+      ongSelect.addEventListener('change', atualizarPreview);
+    }
+    
+    // Atualiza no carregamento se houver valores
+    atualizarPreview();
+  })();
+</script>
 {% endblock %}
