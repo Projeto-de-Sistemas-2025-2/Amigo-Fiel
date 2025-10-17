@@ -31,7 +31,21 @@
       </form>
 
       <div class="quick-actions">
-        <span class="small muted">📍 {{ request.GET.cidade|default:"Sua cidade" }}</span>
+        <span class="small muted">📍 
+        {% if user.is_authenticated %}
+          {% if user.perfil_empresa %}
+            {{ user.perfil_empresa.cidade|default:"Sua cidade" }}
+          {% elif user.perfil_ong %}
+            {{ user.perfil_ong.cidade|default:"Sua cidade" }}
+          {% elif user.perfil_comum %}
+            {{ user.perfil_comum.cidade|default:"Sua cidade" }}
+          {% else %}
+            Sua cidade
+          {% endif %}
+        {% else %}
+          {{ request.GET.cidade|default:"Sua cidade" }}
+        {% endif %}
+        </span>
 
       {% if user.is_authenticated %}
       <a href="{% url 'chat:inbox' %}">Mensagens</a>
