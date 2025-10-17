@@ -98,58 +98,6 @@ class ListarAnimais(ListView):
                 Q(raca__icontains=q) |
                 Q(descricao__icontains=q)
             )
-        if especie:
-            qs = qs.filter(especie=especie)
-        if cidade:
-            qs = qs.filter(
-                Q(tutor__cidade__icontains=cidade) |
-                Q(ong__cidade__icontains=cidade)
-            )
-        if not incluir_adotados:
-            qs = qs.filter(adotado=False)
-
-        return qs
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update({
-            "q": self.request.GET.get("q", ""),
-            "especie_sel": self.request.GET.get("especie", ""),
-            "cidade": self.request.GET.get("cidade", ""),
-            "adotados": self.request.GET.get("adotados", ""),
-            "ESPECIES": Pet.ESPECIES,
-        })
-        return ctx
-
-class ListarLojas(ListView):
-    model = UsuarioEmpresarial
-    template_name = "AmigoFiel/lojas.html"
-    context_object_name = "lojas"
-    paginate_by = 12
-
-    def get_queryset(self):
-        qs = (UsuarioEmpresarial.objects
-              .select_related("user")
-              .annotate(
-                  qtd_produtos=Count("produtos"),
-                  qtd_produtos_ativos=Count("produtos", filter=Q(produtos__ativo=True)),
-              )
-              .order_by("razao_social"))
-
-        q = self.request.GET.get("q", "").strip()
-        cidade = self.request.GET.get("cidade", "").strip()
-        com_produtos = self.request.GET.get("com_produtos") == "1"
-
-        if q:
-            qs = qs.filter(
-                Q(razao_social__icontains=q) |
-                Q(user__username__icontains=q)
-            )
-        if cidade:
-            qs = qs.filter(cidade__icontains=cidade)
-        if com_produtos:
-            qs = qs.filter(qtd_produtos_ativos__gt=0)
-
         return qs
 
     def get_context_data(self, **kwargs):
@@ -232,6 +180,45 @@ class SobreView(TemplateView):
 
 class ContatoView(TemplateView):
     template_name = "legal/contato.html"
+
+class ListarLojas(ListView):
+    model = UsuarioEmpresarial
+    template_name = "AmigoFiel/lojas.html"
+    context_object_name = "lojas"
+    paginate_by = 12
+
+    def get_queryset(self):
+        qs = (
+            UsuarioEmpresarial.objects
+            .select_related("user")
+            .annotate(qtd_produtos_ativos=Count("produtos", filter=Q(produtos__ativo=True)))
+            .order_by("-qtd_produtos_ativos", "razao_social")
+        )
+
+        q = (self.request.GET.get("q") or "").strip()
+        cidade = (self.request.GET.get("cidade") or "").strip()
+        com_produtos = (self.request.GET.get("com_produtos") or "").lower() in {"1", "true", "on", "yes"}
+
+        if q:
+            qs = qs.filter(
+                Q(razao_social__icontains=q) |
+                Q(user__username__icontains=q)
+            )
+        if cidade:
+            qs = qs.filter(cidade__icontains=cidade)
+        if com_produtos:
+            qs = qs.filter(produtos__ativo=True).distinct()
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.update({
+            "q": self.request.GET.get("q", ""),
+            "cidade": self.request.GET.get("cidade", ""),
+            "com_produtos": self.request.GET.get("com_produtos", ""),
+        })
+        return ctx
 
 def perfil_usuario(request, handle: str):
     perfil = get_object_or_404(
@@ -533,7 +520,7 @@ def carrinho_adicionar(request, produto_id):
     item.quantidade = max(1, (item.quantidade if not created else 0) + qtd)
     item.save()
     messages.success(request, f"{prod.nome} adicionado ao carrinho.")
-    return redirect("amigofiel:carrinho")
+    return redirect("amigofiel:carrinho-ver")
 
 
 @login_required
@@ -545,7 +532,7 @@ def carrinho_atualizar(request, item_id):
     ).first()
     if not item:
         messages.error(request, "Item não encontrado.")
-        return redirect("amigofiel:carrinho")
+        return redirect("amigofiel:carrinho-ver")
 
     qtd = int(request.POST.get("qtd", 1))
     if qtd <= 0:
@@ -553,7 +540,7 @@ def carrinho_atualizar(request, item_id):
     else:
         item.quantidade = qtd
         item.save()
-    return redirect("amigofiel:carrinho")
+    return redirect("amigofiel:carrinho-ver")
 
 
 @login_required
@@ -564,7 +551,7 @@ def carrinho_remover(request, item_id):
     if item:
         item.delete()
         messages.success(request, "Item removido.")
-    return redirect("amigofiel:carrinho")
+    return redirect("amigofiel:carrinho-ver")
 
 
 @login_required
@@ -572,17 +559,61 @@ def carrinho_detalhe(request):
     cart = _get_or_create_cart(request.user)
     itens = (cart.itens
              .select_related("produto", "produto__empresa")
+             .prefetch_related("produto__vinculos_ong__ong")
              .order_by("produto__empresa__razao_social", "produto__nome"))
 
-    # agrupa por loja para exibir em seções
-    grupos = {}
+    # agrupa por loja para exibir em seções (lista de tuplas para facilitar no template)
+    grupos_dict = {}
+    total_geral = Decimal("0.00")
+    total_doacao_geral = Decimal("0.00")
+    
     for it in itens:
         emp = it.produto.empresa
-        grupos.setdefault(emp, []).append(it)
+        
+        # Enriquecer item com informações de desconto e doação
+        prod = it.produto
+        
+        # Calcular preços
+        preco_original = prod.preco
+        tem_desconto = prod.tem_desconto
+        desconto_percentual = prod.desconto_percentual if tem_desconto else Decimal("0.00")
+        preco_final = prod.preco_com_desconto if tem_desconto else preco_original
+        valor_desconto_unit = prod.valor_desconto if tem_desconto else Decimal("0.00")
+        
+        # Calcular valores totais do item
+        subtotal_sem_desconto = preco_original * it.quantidade
+        subtotal_com_desconto = preco_final * it.quantidade
+        economia_total = valor_desconto_unit * it.quantidade
+        
+        # Informações de doação para ONG
+        ong, perc_doacao = _produto_doacao_info(prod)
+        valor_doacao = (subtotal_com_desconto * (perc_doacao or Decimal("0.00"))) / Decimal("100")
+        
+        # Adicionar ao item (para usar no template)
+        it.preco_original = preco_original
+        it.tem_desconto = tem_desconto
+        it.desconto_percentual = desconto_percentual
+        it.preco_final = preco_final
+        it.valor_desconto_unit = valor_desconto_unit
+        it.subtotal_sem_desconto = subtotal_sem_desconto
+        it.subtotal_com_desconto = subtotal_com_desconto
+        it.economia_total = economia_total
+        it.ong_beneficiada = ong
+        it.percentual_doacao = perc_doacao
+        it.valor_doacao = valor_doacao
+        
+        total_geral += subtotal_com_desconto
+        total_doacao_geral += valor_doacao
+        
+        grupos_dict.setdefault(emp, []).append(it)
+
+    grupos = [(emp, lst) for emp, lst in grupos_dict.items()]
 
     ctx = {
         "cart": cart,
-        "grupos": grupos,   # dict {empresa: [itens]}
+        "grupos": grupos,   # list of tuples (empresa, [itens])
+        "total_geral": total_geral,
+        "total_doacao_geral": total_doacao_geral,
     }
     return render(request, "AmigoFiel/checkout/carrinho.html", ctx)
 
@@ -593,7 +624,7 @@ def checkout_simulado(request):
     itens = cart.itens.select_related("produto", "produto__empresa")
     if not itens.exists():
         messages.error(request, "Seu carrinho está vazio.")
-        return redirect("amigofiel:carrinho")
+        return redirect("amigofiel:carrinho-ver")
 
     pedido = Pedido.objects.create(user=request.user, status="pago")
     for it in itens:
@@ -616,8 +647,8 @@ def checkout_simulado(request):
 
     pedido.recalcular_totais()
     cart.itens.all().delete()  # limpa carrinho
-    messages.success(request, f"Pedido #{pedido.pk} criado (pagamento simulado).")
-    return redirect("amigofiel:carrinho")
+    messages.success(request, "Pedido criado")
+    return redirect("amigofiel:carrinho-ver")
 
 
 
@@ -773,59 +804,13 @@ def painel_ong(request, handle: str):
 
 
 
-from decimal import Decimal
-from collections import defaultdict
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
-from .models import ProdutoEmpresa
-
-def _get_cart(session):
-    """
-    Carrinho guardado na sessão com o formato:
-    session['cart'] = { "produto_id_str": {"qtd": int} }
-    """
-    return session.setdefault("cart", {})
-
+@login_required
 def carrinho_ver(request):
-    cart = _get_cart(request.session)
-
-    if not cart:
-        return render(request, "AmigoFiel/carrinho/ver.html", {
-            "grupos": [], "total_geral": Decimal("0.00"),
-        })
-
-    ids = [int(pid) for pid in cart.keys()]
-    produtos = ProdutoEmpresa.objects.select_related("empresa", "empresa__user").filter(id__in=ids)
-
-    # agrupar por empresa
-    grupos = []           # lista de dicts: {"empresa": empresa, "itens": [...], "total": Decimal}
-    por_empresa = defaultdict(list)
-    precos = {}
-
-    for p in produtos:
-        por_empresa[p.empresa].append(p)
-        precos[p.id] = p.preco
-
-    total_geral = Decimal("0.00")
-    for empresa, prods in por_empresa.items():
-        itens = []
-        total = Decimal("0.00")
-        for p in prods:
-            qtd = int(cart.get(str(p.id), {}).get("qtd", 1))
-            subtotal = (p.preco or Decimal("0")) * qtd
-            total += subtotal
-            itens.append({
-                "produto": p,
-                "qtd": qtd,
-                "subtotal": subtotal,
-            })
-        grupos.append({"empresa": empresa, "itens": itens, "total": total})
-        total_geral += total
-
-    return render(request, "AmigoFiel/carrinho/ver.html", {
-        "grupos": grupos,
-        "total_geral": total_geral,
-    })
+    """
+    Unificação: usar a versão baseada em banco de dados,
+    que é compatível com as ações de adicionar/atualizar/remover.
+    """
+    return carrinho_detalhe(request)
 
 
 # ==================== VIEWS DE EDIÇÃO ====================

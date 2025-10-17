@@ -40,19 +40,19 @@ urlpatterns = [
     path("pet/<slug:handle>/editar/", views.pet_editar, name="pet-editar"),
     path("pet/<slug:handle>/adotado/", views.pet_marcar_adotado, name="pet-marcar-adotado"),
 
+    # Carrinho / checkout (DEVE vir antes das rotas genéricas)
+    path("carrinho/", views.carrinho_ver, name="carrinho-ver"),
+    path("carrinho/adicionar/<int:produto_id>/", views.carrinho_adicionar, name="carrinho-add"),
+    path("carrinho/atualizar/<int:item_id>/", views.carrinho_atualizar, name="carrinho-update"),
+    path("carrinho/remover/<int:item_id>/", views.carrinho_remover, name="carrinho-remove"),
+    path("checkout/simulado/", views.checkout_simulado, name="checkout-simulado"),
+
     # Produto: /amigofiel/<empresa_handle>/<produto_slug>/
     path("<str:empresa_handle>/<slug:produto_slug>/", views.produto_detalhe, name="produto-detalhe"),
     
     # Edição de produto (depois da rota de detalhe)
     path("<str:empresa_handle>/<slug:produto_slug>/editar/", views.produto_editar, name="produto-editar"),
     path("<str:empresa_handle>/<slug:produto_slug>/deletar/", views.produto_deletar, name="produto-deletar"),
-
-    # Carrinho / checkout
-    path("carrinho/", views.carrinho_ver, name="carrinho-ver"),
-    path("carrinho/adicionar/<int:produto_id>/", views.carrinho_adicionar, name="carrinho-add"),
-    path("carrinho/atualizar/<int:item_id>/", views.carrinho_atualizar, name="carrinho-update"),
-    path("carrinho/remover/<int:item_id>/", views.carrinho_remover, name="carrinho-remove"),
-    path("checkout/simulado/", views.checkout_simulado, name="checkout-simulado"),
 
     # Painéis
     path("ONG/<str:handle>/painel/", views.painel_ong, name="painel-ong"),

@@ -13,7 +13,7 @@
       <a class="btn btn-primary" href="{% url 'amigofiel:listar-produtos' %}">Ir aos produtos</a>
     </section>
   {% else %}
-    {% for loja, itens in grupos.items %}
+    {% for loja, itens in grupos %}
       <section class="card" style="margin-bottom:12px">
         <h2 class="h4" style="margin:0 0 8px">{{ loja.razao_social }}</h2>
         <table class="table">
@@ -24,16 +24,54 @@
             {% for it in itens %}
             <tr>
               <td>
-                <strong>{{ it.produto.nome }}</strong><br>
-                <small class="muted">{% if it.produto.vinculos_ong.first %}Beneficia: {{ it.produto.vinculos_ong.first.ong.nome_fantasia }} ({{ it.produto.vinculos_ong.first.percentual }}%){% endif %}</small>
+                <strong>{{ it.produto.nome }}</strong>
+                
+                {% if it.tem_desconto %}
+                  <div style="margin-top:4px;">
+                    <span class="badge" style="background:#dc2626;color:#fff;padding:2px 6px;border-radius:4px;font-size:0.75rem;">
+                      -{{ it.desconto_percentual }}% OFF
+                    </span>
+                  </div>
+                {% endif %}
+                
+                {% if it.ong_beneficiada %}
+                  <div style="margin-top:4px;">
+                    <small class="muted">
+                      🐾 Beneficia: <strong>{{ it.ong_beneficiada.nome_fantasia }}</strong> ({{ it.percentual_doacao }}%)
+                    </small>
+                  </div>
+                {% endif %}
               </td>
               <td>
-                <form method="post" action="{% url 'amigofiel:carrinho-update' item_id=it.id %}">{% csrf_token %}
-                  <input name="qtd" type="number" min="0" value="{{ it.quantidade }}" class="input" style="width:90px">
+                <form method="post" action="{% url 'amigofiel:carrinho-update' item_id=it.id %}" style="display:inline;">{% csrf_token %}
+                  <input name="qtd" type="number" min="0" value="{{ it.quantidade }}" class="input" style="width:90px" onchange="this.form.submit()">
                 </form>
               </td>
-              <td>R$ {{ it.preco_unitario }}</td>
-              <td><strong>R$ {{ it.subtotal }}</strong></td>
+              <td>
+                {% if it.tem_desconto %}
+                  <div style="text-decoration:line-through;color:#999;font-size:0.85rem;">R$ {{ it.preco_original|floatformat:2 }}</div>
+                  <strong style="color:#16a34a;">R$ {{ it.preco_final|floatformat:2 }}</strong>
+                {% else %}
+                  <strong>R$ {{ it.preco_final|floatformat:2 }}</strong>
+                {% endif %}
+              </td>
+              <td>
+                {% if it.tem_desconto %}
+                  <div style="text-decoration:line-through;color:#999;font-size:0.85rem;">R$ {{ it.subtotal_sem_desconto|floatformat:2 }}</div>
+                  <strong style="color:#16a34a;">R$ {{ it.subtotal_com_desconto|floatformat:2 }}</strong>
+                  <div style="font-size:0.75rem;color:#16a34a;margin-top:2px;">
+                    Economize R$ {{ it.economia_total|floatformat:2 }}
+                  </div>
+                {% else %}
+                  <strong>R$ {{ it.subtotal_com_desconto|floatformat:2 }}</strong>
+                {% endif %}
+                
+                {% if it.valor_doacao > 0 %}
+                  <div style="font-size:0.75rem;color:#15803d;margin-top:4px;">
+                    💚 R$ {{ it.valor_doacao|floatformat:2 }} para ONG
+                  </div>
+                {% endif %}
+              </td>
               <td class="right">
                 <form method="post" action="{% url 'amigofiel:carrinho-remove' item_id=it.id %}">{% csrf_token %}
                   <button class="btn btn-secondary" type="submit">Remover</button>
@@ -46,12 +84,49 @@
       </section>
     {% endfor %}
 
-    <div class="actions">
+    <section class="card" style="margin-top:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span class="muted">Total do pedido</span>
+        <strong class="h3" style="margin:0;">R$ {{ total_geral|floatformat:2 }}</strong>
+      </div>
+      
+      {% if total_doacao_geral > 0 %}
+        <div style="padding:12px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;margin-top:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:1.5rem;">🐾</span>
+            <div>
+              <strong style="color:#15803d;">R$ {{ total_doacao_geral|floatformat:2 }}</strong>
+              <span class="muted" style="display:block;font-size:0.875rem;">
+                Será doado para ONGs parceiras
+              </span>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </section>
+
+    <div class="actions" style="margin-top:12px;">
       <a class="btn btn-secondary" href="{% url 'amigofiel:listar-produtos' %}">Continuar comprando</a>
       <form method="post" action="{% url 'amigofiel:checkout-simulado' %}">{% csrf_token %}
         <button class="btn btn-primary" type="submit">Finalizar pedido (simulado)</button>
       </form>
     </div>
+  {% endif %}
+
+  {% if messages %}
+    <div id="alertas-mensagens" style="margin-bottom:16px;">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}" style="padding:12px 18px;border-radius:6px;background:#dcfce7;color:#166534;font-weight:500;font-size:1.1rem;box-shadow:0 2px 8px #0001;">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+    <script>
+      setTimeout(function(){
+        var el = document.getElementById('alertas-mensagens');
+        if(el) el.style.display = 'none';
+      }, 4000);
+    </script>
   {% endif %}
 </div>
 {% endblock %}
