@@ -268,8 +268,39 @@ def perfil_ong(request, handle: str):
         UsuarioOng.objects.select_related("user"),
         user__username=handle
     )
-    pets = ong.pets.order_by("-criado_em")[:12]
-    ctx = {"perfil": ong, "pets": pets}
+    
+    # Buscar produtos vinculados à ONG
+    vinculos = ProdutoOngVinculo.objects.filter(
+        ong=ong,
+        ativo=True
+    ).select_related("produto", "produto__empresa", "produto__empresa__user")
+    
+    # Criar lista de produtos com informações de vínculo
+    produtos_com_vinculo = []
+    empresas_parceiras = set()
+    
+    for vinculo in vinculos:
+        produto = vinculo.produto
+        produto.percentual_doacao = vinculo.percentual  # Adicionar percentual ao produto
+        produtos_com_vinculo.append(produto)
+        empresas_parceiras.add(produto.empresa)
+    
+    # Limitar produtos na home
+    tab = request.GET.get("tab", "home")
+    if tab == "home":
+        produtos_display = produtos_com_vinculo[:8]
+    else:
+        produtos_display = produtos_com_vinculo
+    
+    pets = ong.pets.order_by("-criado_em")[:12] if tab == "home" else ong.pets.order_by("-criado_em")
+    
+    ctx = {
+        "perfil": ong,
+        "pets": pets,
+        "produtos": produtos_display,
+        "empresas": list(empresas_parceiras),
+        "aba": tab,
+    }
     return render(request, "AmigoFiel/perfil/perfil_ong.html", ctx)
 
 def perfil_pet(request, handle: str):
@@ -345,7 +376,17 @@ def produto_detalhe(request, empresa_handle, produto_slug):
         empresa__user__username=empresa_handle,
         slug=produto_slug,
     )
-    ctx = {"produto": produto}
+    
+    # Buscar vínculo com ONG (se existir)
+    vinculo_ong = ProdutoOngVinculo.objects.filter(
+        produto=produto,
+        ativo=True
+    ).select_related("ong", "ong__user").first()
+    
+    ctx = {
+        "produto": produto,
+        "vinculo_ong": vinculo_ong,
+    }
     return render(request, "AmigoFiel/perfil/perfil_produto.html", ctx)
 
 def tabelas_bruto(request):
