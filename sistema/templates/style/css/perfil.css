@@ -49,21 +49,8 @@ body { margin: 0; font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Ro
 .btn-accent{ background: var(--af-accent); color:#1f2937; }
 .btn-secondary{ background: #fff; border-color: var(--af-border); }
 
-/* --- Topbar (igual espírito do base_public, mas local) --- */
-.topbar{
-  position: sticky; top: 0; z-index: 40;
-  background: #0B2A3D; color: #E6F1F4;
-  box-shadow: 0 2px 12px rgba(0,0,0,.06);
-}
-.topbar-inner{
-  height: 64px; display:flex; align-items:center; justify-content:space-between; gap:16px;
-}
-.topbar .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit; }
-.topbar .brand img{ width:40px; height:40px; border-radius:10px; }
-.topbar nav a{
-  color:#E6F1F4; text-decoration:none; padding:8px 10px; border-radius:8px; font-weight:600;
-}
-.topbar nav a:hover{ background: rgba(255,255,255,.08); }
+
+/* --- Topbar: agora herda do site.css --- */
 
 /* --- Rodapé --- */
 .site-footer{
@@ -99,18 +86,16 @@ body { margin: 0; font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Ro
 .perfil-actions{ display:flex; gap: 8px; flex-wrap: wrap; }
 
 /* --- Grid e cartões --- */
-.grid{
-  display: grid; gap: 14px;
-  grid-template-columns: repeat(12, 1fr);
-}
-.grid > *{ grid-column: span 12; }
-@media (min-width: 720px){
-  .grid-2 > *{ grid-column: span 6; }
-}
-@media (min-width: 980px){
-  .grid-3 > *{ grid-column: span 4; }
-  .grid-4 > *{ grid-column: span 3; }
-}
+
+.grid { display: grid; gap: 14px; }
+.grid-1 { grid-template-columns: 1fr; }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 1200px) { .grid-4 { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 800px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .grid-4 { grid-template-columns: 1fr; } }
+
 
 .mini-card, .panel{
   background: var(--af-surface); border:1px solid var(--af-border);
@@ -119,9 +104,18 @@ body { margin: 0; font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Ro
 .panel h2, .mini-card h2{ margin: 0 0 8px; }
 .card-link{ text-decoration: none; color: inherit; }
 
-.thumb{
-  width: 100%; aspect-ratio: 1/1; object-fit: cover;
-  border-radius: 12px; background:#EEF2F7;
+
+.thumb {
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  border-radius: 14px;
+  background: #EEF2F7;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+  max-width: 180px;
+  max-height: 180px;
+  margin-inline:auto;
+  display:block;
 }
 
 /* --- Listas de info --- */

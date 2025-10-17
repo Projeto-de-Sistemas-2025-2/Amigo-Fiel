@@ -4,42 +4,145 @@
 {% block title %}Painel — {{ perfil.razao_social }}{% endblock %}
 
 {% block body %}
-<section class="hero">
-  <div>
-    <h1>Painel da Empresa</h1>
-    <p class="muted">
-      {{ perfil.razao_social }} · @{{ perfil.user.username }}
-      {% if perfil.cidade %} · 🏙️ {{ perfil.cidade }}{% endif %}
-    </p>
-    <div class="actions" style="margin-top:8px">
-      <a class="btn btn-secondary" href="{% url 'amigofiel:perfil-empresa' handle=perfil.user.username %}">Ver perfil público</a>
+<section class="hero-empresa">
+  <div class="empresa-header">
+    <img class="empresa-avatar" 
+         src="{% if perfil.foto %}{{ perfil.foto.url }}{% else %}{% static 'img/defaults/avatar_empresa.png' %}{% endif %}"
+         alt="{{ perfil.razao_social }}">
+    <div class="empresa-info">
+      <h1>Painel da Empresa</h1>
+      <p class="muted">
+        <strong>{{ perfil.razao_social }}</strong> · @{{ perfil.user.username }}
+        {% if perfil.cidade %} · 🏙️ {{ perfil.cidade }}{% endif %}
+      </p>
+      {% if perfil.slogan %}
+        <p class="slogan">{{ perfil.slogan }}</p>
+      {% endif %}
     </div>
+  </div>
+  <div class="actions" style="margin-top:12px">
+    <a class="btn btn-primary" href="{% url 'amigofiel:produto-novo' %}">➕ Cadastrar produto</a>
+    <a class="btn btn-secondary" href="{% url 'amigofiel:perfil-empresa' handle=perfil.user.username %}">Ver perfil público</a>
   </div>
 </section>
 
-<section class="grid" style="margin-top:10px">
-  <article class="mini-card">
-    <h3>Produtos</h3>
-    <p class="muted">Ativos: <strong>{{ met.ativos }}</strong></p>
-    <p class="muted">Total: <strong>{{ met.total_produtos }}</strong></p>
+<section class="metrics-grid">
+  <article class="metric-card">
+    <div class="metric-icon" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
+      📦
+    </div>
+    <div class="metric-content">
+      <h3>Produtos</h3>
+      <p class="muted">Ativos: <strong>{{ met.ativos }}</strong></p>
+      <p class="muted">Total: <strong>{{ met.total_produtos }}</strong></p>
+    </div>
   </article>
 
-  <article class="mini-card">
-    <h3>Vendas</h3>
-    <p class="muted">Itens vendidos: <strong>{{ met.itens_vendidos|default:"—" }}</strong></p>
-    <p class="muted">Total vendido: <strong>R$ {{ met.total_vendas|default:"—" }}</strong></p>
-    <p class="muted">Total doado a ONGs: <strong>R$ {{ met.total_doacao|default:"—" }}</strong></p>
+  <article class="metric-card">
+    <div class="metric-icon" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+      💰
+    </div>
+    <div class="metric-content">
+      <h3>Vendas</h3>
+      <p class="muted">Itens vendidos: <strong>{{ met.itens_vendidos|default:"—" }}</strong></p>
+      <p class="muted">Total vendido: <strong>R$ {{ met.total_vendas|default:"—" }}</strong></p>
+      <p class="muted">Total doado: <strong style="color:#16a34a;">R$ {{ met.total_doacao|default:"—" }}</strong></p>
+    </div>
+  </article>
+  
+  <article class="metric-card">
+    <div class="metric-icon" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);">
+      💚
+    </div>
+    <div class="metric-content">
+    <div class="metric-content">
+      <h3>💚 Parcerias Solidárias</h3>
+      <p class="muted">ONGs parceiras: <strong>{{ total_ongs|default:0 }}</strong></p>
+      <p class="muted">Produtos solidários: <strong>{{ total_vinculos|default:0 }}</strong></p>
+    </div>
   </article>
 </section>
+
+{# SEÇÃO DE ONGs PARCEIRAS #}
+{% if ongs_parceiras %}
+<section class="card" style="margin-top:14px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 2px solid #86efac;">
+  <div style="display:flex;align-items:center;justify-content:space-between; margin-bottom: 12px;">
+    <div style="flex:1;">
+      <h2 style="margin:0; display:flex; align-items:center; gap:8px;">
+        💚 ONGs Parceiras
+        <span style="background:#16a34a; color:white; padding:4px 10px; border-radius:999px; font-size:14px; font-weight:800;">
+          {{ total_ongs }}
+        </span>
+      </h2>
+      <p class="muted" style="margin:4px 0 0;">Você está ajudando {{ total_ongs }} ONG{{ total_ongs|pluralize }} com {{ total_vinculos }} produto{{ total_vinculos|pluralize }} solidário{{ total_vinculos|pluralize }}!</p>
+    </div>
+    <button onclick="toggleOngsParceiras()" class="btn-toggle-ongs" id="btnToggleOngs" type="button">
+      <span id="toggleIcon">▼</span> <span id="toggleText">Retrair</span>
+    </button>
+  </div>
+
+  <div id="ongsParceirasContent" class="ongs-content">
+  {% for parceria in ongs_parceiras %}
+    <article class="ong-parceria-card">
+      <div class="ong-header">
+        <img class="ong-avatar" 
+             src="{% if parceria.ong.foto %}{{ parceria.ong.foto.url }}{% else %}{% static 'img/defaults/avatar_ong.png' %}{% endif %}"
+             alt="{{ parceria.ong.nome_fantasia }}">
+        <div class="ong-info">
+          <h3 style="margin:0;">
+            <a href="{% url 'amigofiel:perfil-ong' handle=parceria.ong.user.username %}" 
+               style="color:#15803d; text-decoration:none;">
+              {{ parceria.ong.nome_fantasia }}
+            </a>
+          </h3>
+          <p class="muted" style="margin:2px 0 0; font-size:13px;">
+            @{{ parceria.ong.user.username }}
+            {% if parceria.ong.cidade %} · 📍 {{ parceria.ong.cidade }}{% endif %}
+          </p>
+        </div>
+        <span class="produtos-count">{{ parceria.produtos|length }} produto{{ parceria.produtos|length|pluralize }}</span>
+      </div>
+
+      <div class="produtos-vinculados">
+        {% for prod in parceria.produtos %}
+          <div class="produto-vinculo-item">
+            <img src="{% if prod.imagem %}{{ prod.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}"
+                 alt="{{ prod.nome }}"
+                 class="produto-thumb">
+            <div class="produto-info">
+              <a href="{% url 'amigofiel:produto-detalhe' empresa_handle=perfil.user.username produto_slug=prod.slug %}"
+                 style="font-weight:600; color:#0f172a; text-decoration:none;">
+                {{ prod.nome }}
+              </a>
+              <div style="display:flex; align-items:center; gap:8px; margin-top:2px;">
+                <span style="font-size:13px; color:#64748b;">R$ {{ prod.preco|floatformat:2 }}</span>
+                <span class="badge-solidario">{{ prod.percentual_doacao }}% solidário</span>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </article>
+  {% endfor %}
+  </div>
+</section>
+{% endif %}
 
 <section class="card" style="margin-top:14px">
   <div style="display:flex;align-items:center;justify-content:space-between">
     <h2>Produtos recentes</h2>
-    <a class="btn btn-secondary" href="{% url 'amigofiel:listar-produtos' %}?q=@{{ perfil.user.username }}">Ver listagem</a>
+    <div class="actions" style="display:flex; gap:8px; align-items:center">
+      <button onclick="toggleProdutos()" class="btn-toggle-section" id="btnToggleProdutos" type="button">
+        <span id="toggleIconProdutos">▼</span>
+      </button>
+      <a class="btn btn-secondary" href="{% url 'amigofiel:listar-produtos' %}?q=@{{ perfil.user.username }}">Ver listagem</a>
+      <a class="btn btn-primary" href="{% url 'amigofiel:produto-novo' %}">Novo produto</a>
+    </div>
   </div>
 
+  <div id="produtosContent" class="produtos-content">
   {% if produtos %}
-    <div class="grid grid-1 grid-md-2 grid-lg-4" style="margin-top:10px">
+    <div class="products-grid">
       {% for prod in produtos %}
         <article class="mini-card">
           <img class="thumb" src="{% if prod.imagem %}{{ prod.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}" alt="{{ prod.nome }}">
@@ -57,5 +160,392 @@
   {% else %}
     <p class="muted">Nenhum produto cadastrado.</p>
   {% endif %}
+  </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+  /* Hero da Empresa com Avatar */
+  .hero-empresa {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .empresa-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+  .empresa-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 16px;
+    object-fit: cover;
+    border: 3px solid white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  .empresa-info {
+    flex: 1;
+  }
+  .empresa-info h1 {
+    margin: 0 0 4px;
+    font-size: clamp(20px, 3vw, 28px);
+  }
+  .empresa-info .muted {
+    margin: 0;
+    font-size: 14px;
+  }
+  .empresa-info .slogan {
+    margin: 4px 0 0;
+    font-style: italic;
+    color: #64748b;
+    font-size: 13px;
+  }
+  
+  /* Grid de Métricas - 3 colunas */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 14px;
+    margin-top: 16px;
+  }
+  @media (min-width: 768px) {
+    .metrics-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  .metric-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    transition: all 0.2s;
+  }
+  .metric-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+  }
+  .metric-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+  .metric-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .metric-content h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    color: #0f172a;
+  }
+  .metric-content p {
+    margin: 4px 0;
+    font-size: 13px;
+  }
+  .metric-content p strong {
+    color: #0f172a;
+    font-size: 15px;
+  }
+
+  /* Responsive 4-column grid for products */
+  .products-grid {
+    display: grid;
+    gap: 12px;
+    margin-top: 10px;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  @media (min-width: 640px) { /* ~sm */
+    .products-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (min-width: 900px) { /* ~md */
+    .products-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (min-width: 1200px) { /* ~lg */
+    .products-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  /* Consistent card layout */
+  .products-grid .mini-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .products-grid .mini-card .thumb {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #eee;
+  }
+  .products-grid .mini-card h3 {
+    margin: 8px 0 4px;
+    font-size: 1rem;
+  }
+  .products-grid .mini-card p.muted {
+    margin: 0 0 8px;
+  }
+  .products-grid .mini-card .actions {
+    margin-top: auto;
+  }
+
+  /* ONGs Parceiras */
+  .ongs-content {
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+    max-height: 5000px;
+    opacity: 1;
+    overflow: hidden;
+  }
+  .ongs-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0 !important;
+  }
+  
+  /* Produtos */
+  .produtos-content {
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+    max-height: 5000px;
+    opacity: 1;
+    overflow: hidden;
+    margin-top: 10px;
+  }
+  .produtos-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0 !important;
+  }
+  
+  .btn-toggle-ongs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: white;
+    border: 2px solid #86efac;
+    color: #15803d;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn-toggle-ongs:hover {
+    background: #f0fdf4;
+    border-color: #4ade80;
+    transform: translateY(-1px);
+  }
+  .btn-toggle-ongs #toggleIcon {
+    font-size: 12px;
+    transition: transform 0.3s ease;
+  }
+  .btn-toggle-ongs.collapsed #toggleIcon {
+    transform: rotate(-90deg);
+  }
+  
+  .btn-toggle-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    padding: 0;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-toggle-section:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+  }
+  .btn-toggle-section #toggleIconProdutos {
+    font-size: 12px;
+    transition: transform 0.3s ease;
+  }
+  .btn-toggle-section.collapsed #toggleIconProdutos {
+    transform: rotate(-90deg);
+  }
+  
+  .ong-parceria-card {
+    background: white;
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .ong-parceria-card:last-child {
+    margin-bottom: 0;
+  }
+  .ong-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #dcfce7;
+  }
+  .ong-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 2px solid #86efac;
+  }
+  .ong-info {
+    flex: 1;
+  }
+  .produtos-count {
+    background: #dcfce7;
+    color: #15803d;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .produtos-vinculados {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+  .produto-vinculo-item {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px;
+    transition: all 0.2s;
+  }
+  .produto-vinculo-item:hover {
+    border-color: #86efac;
+    box-shadow: 0 2px 8px rgba(134, 239, 172, 0.3);
+  }
+  .produto-thumb {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+  }
+  .produto-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .produto-info a {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .produto-info a:hover {
+    color: #16a34a;
+  }
+  .badge-solidario {
+    background: #dcfce7;
+    color: #15803d;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+</style>
+
+<script>
+  function toggleOngsParceiras() {
+    const content = document.getElementById('ongsParceirasContent');
+    const btn = document.getElementById('btnToggleOngs');
+    const icon = document.getElementById('toggleIcon');
+    const text = document.getElementById('toggleText');
+    
+    if (content.classList.contains('collapsed')) {
+      // Expandir
+      content.classList.remove('collapsed');
+      btn.classList.remove('collapsed');
+      icon.textContent = '▼';
+      text.textContent = 'Retrair';
+      localStorage.setItem('ongsParceirasExpanded', 'true');
+    } else {
+      // Retrair
+      content.classList.add('collapsed');
+      btn.classList.add('collapsed');
+      icon.textContent = '▶';
+      text.textContent = 'Expandir';
+      localStorage.setItem('ongsParceirasExpanded', 'false');
+    }
+  }
+  
+  function toggleProdutos() {
+    const content = document.getElementById('produtosContent');
+    const btn = document.getElementById('btnToggleProdutos');
+    const icon = document.getElementById('toggleIconProdutos');
+    
+    if (content.classList.contains('collapsed')) {
+      // Expandir
+      content.classList.remove('collapsed');
+      btn.classList.remove('collapsed');
+      icon.textContent = '▼';
+      localStorage.setItem('produtosExpanded', 'true');
+    } else {
+      // Retrair
+      content.classList.add('collapsed');
+      btn.classList.add('collapsed');
+      icon.textContent = '▶';
+      localStorage.setItem('produtosExpanded', 'false');
+    }
+  }
+  
+  // Restaurar estado ao carregar a página
+  document.addEventListener('DOMContentLoaded', function() {
+    // ONGs Parceiras
+    const ongsExpanded = localStorage.getItem('ongsParceirasExpanded');
+    if (ongsExpanded === 'false') {
+      const content = document.getElementById('ongsParceirasContent');
+      const btn = document.getElementById('btnToggleOngs');
+      const icon = document.getElementById('toggleIcon');
+      const text = document.getElementById('toggleText');
+      
+      if (content && btn) {
+        content.classList.add('collapsed');
+        btn.classList.add('collapsed');
+        icon.textContent = '▶';
+        text.textContent = 'Expandir';
+      }
+    }
+    
+    // Produtos
+    const produtosExpanded = localStorage.getItem('produtosExpanded');
+    if (produtosExpanded === 'false') {
+      const content = document.getElementById('produtosContent');
+      const btn = document.getElementById('btnToggleProdutos');
+      const icon = document.getElementById('toggleIconProdutos');
+      
+      if (content && btn) {
+        content.classList.add('collapsed');
+        btn.classList.add('collapsed');
+        icon.textContent = '▶';
+      }
+    }
+  });
+</script>
 {% endblock %}

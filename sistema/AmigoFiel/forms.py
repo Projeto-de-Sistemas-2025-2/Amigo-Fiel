@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 import re
-from .models import ProdutoEmpresa, Pet
+from .models import ProdutoEmpresa, Pet, UsuarioOng
 
 
 TIPOS = (##tipos de usuários
@@ -67,12 +67,98 @@ class CadastroForm(UserCreationForm): ##formulário de cadastro de usuários
         return data
 
 class ProdutoForm(forms.ModelForm): ##formulário para produtos de empresas
+    # Campos adicionais para vínculo com ONG
+    ong_vinculo = forms.ModelChoiceField(
+        queryset=UsuarioOng.objects.all(),
+        required=False,
+        label="Vincular a uma ONG",
+        help_text="Selecione uma ONG para apoiar com este produto",
+        widget=forms.Select(attrs={"class": "input"})
+    )
+    percentual_doacao = forms.DecimalField(
+        required=False,
+        min_value=0,
+        max_value=100,
+        decimal_places=2,
+        label="Percentual de Doação (%)",
+        help_text="Percentual do valor que será destinado à ONG (0-100)",
+        widget=forms.NumberInput(attrs={
+            "step": "0.01", 
+            "min": "0", 
+            "max": "100", 
+            "placeholder": "0.00",
+            "class": "input"
+        })
+    )
+    vinculo_ativo = forms.BooleanField(
+        required=False,
+        initial=True,
+        label="Vínculo Ativo",
+        help_text="Desmarque para desativar temporariamente a doação"
+    )
+    
     class Meta:
         model = ProdutoEmpresa
-        fields = ["nome", "descricao", "preco", "estoque", "ativo", "imagem"]
+        fields = [
+            "nome", "categoria", "descricao_curta", "descricao", 
+            "preco", "desconto_percentual", "estoque", "ativo", "imagem"
+        ]
         widgets = {
-            "descricao": forms.Textarea(attrs={"rows": 4}),
+            "descricao": forms.Textarea(attrs={"rows": 5, "placeholder": "Descrição detalhada do produto..."}),
+            "descricao_curta": forms.TextInput(attrs={"placeholder": "Breve descrição (máx. 200 caracteres)"}),
+            "nome": forms.TextInput(attrs={"placeholder": "Nome do produto"}),
+            "preco": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "0.00"}),
+            "desconto_percentual": forms.NumberInput(attrs={"step": "0.01", "min": "0", "max": "100", "placeholder": "0.00"}),
+            "estoque": forms.NumberInput(attrs={"min": "0", "placeholder": "0"}),
         }
+        labels = {
+            "nome": "Nome do Produto",
+            "categoria": "Categoria",
+            "descricao_curta": "Descrição Curta",
+            "descricao": "Descrição Completa",
+            "preco": "Preço (R$)",
+            "desconto_percentual": "Desconto (%)",
+            "estoque": "Quantidade em Estoque",
+            "ativo": "Produto Ativo",
+            "imagem": "Imagem do Produto",
+        }
+        help_texts = {
+            "descricao_curta": "Resumo que aparecerá nas listagens de produtos",
+            "desconto_percentual": "Percentual de desconto sobre o preço (0-100)",
+            "ativo": "Desmarque para ocultar o produto da loja",
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Carrega vínculo existente se estiver editando
+        if self.instance and self.instance.pk:
+            vinculo = self.instance.vinculos_ong.filter(ativo=True).first()
+            if vinculo:
+                self.fields['ong_vinculo'].initial = vinculo.ong
+                self.fields['percentual_doacao'].initial = vinculo.percentual
+                self.fields['vinculo_ativo'].initial = vinculo.ativo
+        
+        # Aplica classe CSS nos campos
+        for name, field in self.fields.items():
+            if name not in ["ativo", "vinculo_ativo"]:  # checkboxes não precisam da classe input
+                css = field.widget.attrs.get("class", "")
+                field.widget.attrs["class"] = (css + " input").strip()
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        ong = cleaned_data.get('ong_vinculo')
+        percentual = cleaned_data.get('percentual_doacao')
+        
+        # Se escolheu uma ONG, percentual é obrigatório
+        if ong and not percentual:
+            self.add_error('percentual_doacao', 'Informe o percentual de doação para a ONG selecionada.')
+        
+        # Se informou percentual, ONG é obrigatória
+        if percentual and percentual > 0 and not ong:
+            self.add_error('ong_vinculo', 'Selecione uma ONG para receber a doação.')
+        
+        return cleaned_data
 
 class PetForm(forms.ModelForm):     ##formulário para cadastro de pets
     class Meta:
@@ -82,5 +168,37 @@ class PetForm(forms.ModelForm):     ##formulário para cadastro de pets
             "castrado", "vacinado", "descricao", "imagem",
         ]
         widgets = {
-            "descricao": forms.Textarea(attrs={"rows": 4}),
+            "nome": forms.TextInput(attrs={"placeholder": "Ex: Luna, Thor, Mimi..."}),
+            "raca": forms.TextInput(attrs={"placeholder": "Ex: Vira-lata, SRD, Golden Retriever..."}),
+            "idade_anos": forms.NumberInput(attrs={"min": "0", "max": "30", "placeholder": "0"}),
+            "descricao": forms.Textarea(attrs={
+                "rows": 5, 
+                "placeholder": "Conte sobre o comportamento, personalidade, necessidades especiais, história do pet..."
+            }),
         }
+        labels = {
+            "nome": "Nome do Pet",
+            "especie": "Espécie",
+            "raca": "Raça",
+            "idade_anos": "Idade (anos)",
+            "sexo": "Sexo",
+            "castrado": "Pet Castrado",
+            "vacinado": "Pet Vacinado",
+            "descricao": "Sobre o Pet",
+            "imagem": "Foto do Pet",
+        }
+        help_texts = {
+            "nome": "Como o pet é conhecido",
+            "raca": "Deixe em branco se for SRD (Sem Raça Definida)",
+            "idade_anos": "Idade aproximada em anos (0 para filhotes com menos de 1 ano)",
+            "descricao": "Informações importantes sobre comportamento, saúde e personalidade",
+            "castrado": "Marque se o pet já foi castrado",
+            "vacinado": "Marque se o pet está com vacinas em dia",
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            if name not in ["castrado", "vacinado"]:  # checkboxes não precisam da classe input
+                css = field.widget.attrs.get("class", "")
+                field.widget.attrs["class"] = (css + " input").strip()

@@ -268,8 +268,39 @@ def perfil_ong(request, handle: str):
         UsuarioOng.objects.select_related("user"),
         user__username=handle
     )
-    pets = ong.pets.order_by("-criado_em")[:12]
-    ctx = {"perfil": ong, "pets": pets}
+    
+    # Buscar produtos vinculados à ONG
+    vinculos = ProdutoOngVinculo.objects.filter(
+        ong=ong,
+        ativo=True
+    ).select_related("produto", "produto__empresa", "produto__empresa__user")
+    
+    # Criar lista de produtos com informações de vínculo
+    produtos_com_vinculo = []
+    empresas_parceiras = set()
+    
+    for vinculo in vinculos:
+        produto = vinculo.produto
+        produto.percentual_doacao = vinculo.percentual  # Adicionar percentual ao produto
+        produtos_com_vinculo.append(produto)
+        empresas_parceiras.add(produto.empresa)
+    
+    # Limitar produtos na home
+    tab = request.GET.get("tab", "home")
+    if tab == "home":
+        produtos_display = produtos_com_vinculo[:8]
+    else:
+        produtos_display = produtos_com_vinculo
+    
+    pets = ong.pets.order_by("-criado_em")[:12] if tab == "home" else ong.pets.order_by("-criado_em")
+    
+    ctx = {
+        "perfil": ong,
+        "pets": pets,
+        "produtos": produtos_display,
+        "empresas": list(empresas_parceiras),
+        "aba": tab,
+    }
     return render(request, "AmigoFiel/perfil/perfil_ong.html", ctx)
 
 def perfil_pet(request, handle: str):
@@ -345,7 +376,17 @@ def produto_detalhe(request, empresa_handle, produto_slug):
         empresa__user__username=empresa_handle,
         slug=produto_slug,
     )
-    ctx = {"produto": produto}
+    
+    # Buscar vínculo com ONG (se existir)
+    vinculo_ong = ProdutoOngVinculo.objects.filter(
+        produto=produto,
+        ativo=True
+    ).select_related("ong", "ong__user").first()
+    
+    ctx = {
+        "produto": produto,
+        "vinculo_ong": vinculo_ong,
+    }
     return render(request, "AmigoFiel/perfil/perfil_produto.html", ctx)
 
 def tabelas_bruto(request):
@@ -400,6 +441,25 @@ class ProdutoCreateView(LoginRequiredMixin, TemplateView): ##view para cadastro 
                 produto.empresa = empresa
 
             produto.save()
+            
+            # Processa vínculo com ONG
+            ong_vinculo = form.cleaned_data.get('ong_vinculo')
+            percentual_doacao = form.cleaned_data.get('percentual_doacao')
+            vinculo_ativo = form.cleaned_data.get('vinculo_ativo', True)
+            
+            if ong_vinculo and percentual_doacao:
+                # Remove vínculos antigos (garantir unique_together)
+                ProdutoOngVinculo.objects.filter(produto=produto).delete()
+                
+                # Cria novo vínculo
+                ProdutoOngVinculo.objects.create(
+                    produto=produto,
+                    ong=ong_vinculo,
+                    percentual=percentual_doacao,
+                    ativo=vinculo_ativo
+                )
+                messages.success(request, f"Produto vinculado à ONG {ong_vinculo.nome_fantasia} com {percentual_doacao}% de doação!")
+            
             messages.success(request, "Produto cadastrado com sucesso!")
             return redirect(produto.get_absolute_url())
 
@@ -616,10 +676,33 @@ def painel_empresa(request, handle: str):
         .all()
         .order_by("-criado_em")[:24]
     )
+    
+    # Buscar ONGs parceiras e produtos vinculados
+    vinculos = ProdutoOngVinculo.objects.filter(
+        produto__empresa=empresa,
+        ativo=True
+    ).select_related("ong", "ong__user", "produto").order_by("ong__nome_fantasia", "produto__nome")
+    
+    # Organizar por ONG
+    ongs_dict = {}
+    for vinculo in vinculos:
+        ong_id = vinculo.ong.id
+        if ong_id not in ongs_dict:
+            ongs_dict[ong_id] = {
+                'ong': vinculo.ong,
+                'produtos': []
+            }
+        vinculo.produto.percentual_doacao = vinculo.percentual
+        ongs_dict[ong_id]['produtos'].append(vinculo.produto)
+    
+    ongs_parceiras = list(ongs_dict.values())
 
     ctx = {
         "perfil": empresa,
         "produtos": produtos,
+        "ongs_parceiras": ongs_parceiras,
+        "total_ongs": len(ongs_parceiras),
+        "total_vinculos": vinculos.count(),
         "met": {
             "total_produtos": empresa.total_produtos,
             "ativos": empresa.ativos,
@@ -648,16 +731,37 @@ def painel_ong(request, handle: str):
         from .models import ProdutoOngVinculo, ItemPedido
         produtos_vinc = (
             ProdutoOngVinculo.objects
-            .select_related("produto", "produto__empresa")
+            .select_related("produto", "produto__empresa", "produto__empresa__user")
             .filter(ong=ong, ativo=True)
         )
         total_doado = ItemPedido.objects.filter(ong=ong).aggregate(s=Sum("valor_doacao"))["s"] or 0
     except Exception:
         pass
+    
+    # Organizar por empresa
+    empresas_dict = {}
+    for vinculo in produtos_vinc:
+        empresa_id = vinculo.produto.empresa.id
+        if empresa_id not in empresas_dict:
+            empresas_dict[empresa_id] = {
+                'empresa': vinculo.produto.empresa,
+                'produtos': []
+            }
+        vinculo.produto.percentual_doacao = vinculo.percentual
+        empresas_dict[empresa_id]['produtos'].append(vinculo.produto)
+    
+    empresas_parceiras = list(empresas_dict.values())
+    
+    # Buscar pets da ONG
+    pets = ong.pets.order_by("-criado_em")[:24]
 
     ctx = {
         "perfil": ong,
         "produtos_vinc": produtos_vinc,
+        "empresas_parceiras": empresas_parceiras,
+        "total_empresas": len(empresas_parceiras),
+        "total_produtos_vinculados": produtos_vinc.count(),
+        "pets": pets,
         "qtd_pets": ong.qtd_pets,
         "total_doado": total_doado,
     }

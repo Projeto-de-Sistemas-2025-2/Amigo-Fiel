@@ -34,6 +34,9 @@
 .h1{font-size:clamp(22px,2.6vw,30px); line-height:1.2; margin:0 0 6px; color:var(--af-text);}
 .meta{color:var(--af-muted);}
 .price{font-size:clamp(24px,2.8vw,32px); font-weight:800; margin:6px 0;}
+.old-price{color:var(--af-muted); text-decoration: line-through; font-weight:600;}
+.savings{color:#067647; font-weight:600;}
+.deal{background:#fff1e6; color:#9a3412;}
 
 /* media (uma única foto) */
 .media-wrap{
@@ -99,6 +102,10 @@
 
     <h1 class="h1">{{ produto.nome }}</h1>
 
+    {% if produto.descricao_curta %}
+      <p class="meta" style="margin:0 0 8px;">{{ produto.descricao_curta }}</p>
+    {% endif %}
+
     <div class="kv">
       <span class="meta">
         Loja:
@@ -110,6 +117,8 @@
       {% if produto.empresa.cidade %}
         <span class="tag">🏙️ {{ produto.empresa.cidade }}</span>
       {% endif %}
+
+      <span class="tag">🏷️ {{ produto.get_categoria_display }}</span>
 
       {% if produto.estoque|default:0 > 0 %}
         <span class="pill">Em estoque</span>
@@ -132,7 +141,16 @@
     {% endif %}
 
     <div class="pd-hr"></div>
-    <div class="price">R$ {{ produto.preco }}</div>
+    {% if produto.tem_desconto %}
+      <div class="kv" style="margin-bottom:6px">
+        <span class="tag deal">-{{ produto.desconto_percentual|floatformat:0 }}% OFF</span>
+      </div>
+      <div class="old-price">De R$ {{ produto.preco|floatformat:2 }}</div>
+      <div class="price">Por R$ {{ produto.preco_com_desconto|floatformat:2 }}</div>
+      <div class="savings">Você economiza R$ {{ produto.valor_desconto|floatformat:2 }}</div>
+    {% else %}
+      <div class="price">R$ {{ produto.preco|floatformat:2 }}</div>
+    {% endif %}
 
     <div class="pd-hr"></div>
     <h3 style="margin:0 0 6px;">Descrição</h3>
@@ -144,6 +162,69 @@
       <p class="meta" style="margin:0;">Sem descrição informada pela loja.</p>
     {% endif %}
 
+    {% if vinculo_ong %}
+      <div class="pd-hr"></div>
+      <div style="background:linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border:2px solid #86efac; border-radius:12px; padding:1.5rem; margin:1rem 0;">
+        <div style="display:flex; align-items:start; gap:1rem;">
+          <div style="font-size:3rem; line-height:1;">💚</div>
+          <div style="flex:1;">
+            <h3 style="margin:0 0 0.5rem; color:#166534; font-size:1.25rem;">Produto Solidário</h3>
+            <p style="margin:0 0 1rem; color:#166534; line-height:1.6;">
+              <strong>{{ vinculo_ong.percentual|floatformat:1 }}%</strong> do valor deste produto será destinado para 
+              <strong>{{ vinculo_ong.ong.nome_fantasia }}</strong>, ajudando animais que precisam de cuidados e amor.
+            </p>
+            <div style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center;">
+              <a class="btn" href="{% url 'amigofiel:perfil-ong' handle=vinculo_ong.ong.user.username %}" 
+                 style="background:#16a34a; color:#fff; border-color:#16a34a;">
+                🐾 Conhecer a ONG
+              </a>
+              <span style="font-size:0.875rem; color:#15803d;">
+                Ao comprar, você faz a diferença!
+              </span>
+            </div>
+          </div>
+        </div>
+        {% if vinculo_ong.percentual > 0 %}
+          <div style="margin-top:1rem; padding:0.75rem; background:#fff; border-radius:8px; border:1px solid #bbf7d0;">
+            <div style="font-size:0.875rem; color:#166534; margin-bottom:0.25rem;">
+              <strong>💰 Simulação de impacto:</strong>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:0.75rem; margin-top:0.5rem;">
+              <div>
+                <div style="font-size:0.75rem; color:#15803d;">1 unidade</div>
+                <div style="font-weight:700; color:#166534;">
+                  {% if produto.tem_desconto %}
+                    R$ {{ produto.preco_com_desconto|floatformat:2 }}
+                  {% else %}
+                    R$ {{ produto.preco|floatformat:2 }}
+                  {% endif %}
+                  × {{ vinculo_ong.percentual|floatformat:0 }}% = 
+                  {% widthratio produto.preco 100 vinculo_ong.percentual as doacao_valor %}
+                  R$ {{ doacao_valor|floatformat:2 }}
+                </div>
+              </div>
+              <div>
+                <div style="font-size:0.75rem; color:#15803d;">5 unidades</div>
+                <div style="font-weight:700; color:#166534;">
+                  {% widthratio produto.preco 100 vinculo_ong.percentual as doacao_valor %}
+                  {% widthratio doacao_valor 1 5 as doacao_5x %}
+                  R$ {{ doacao_5x|floatformat:2 }} doados
+                </div>
+              </div>
+              <div>
+                <div style="font-size:0.75rem; color:#15803d;">10 unidades</div>
+                <div style="font-weight:700; color:#166534;">
+                  {% widthratio produto.preco 100 vinculo_ong.percentual as doacao_valor %}
+                  {% widthratio doacao_valor 1 10 as doacao_10x %}
+                  R$ {{ doacao_10x|floatformat:2 }} doados
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+
     <div class="pd-hr"></div>
     <div class="inline-actions">
       <a class="btn" href="{% url 'chat:thread-by-username' username=produto.empresa.user.username %}">
@@ -153,8 +234,8 @@
         🏪 Ver perfil da loja
       </a>
       {% if vinculo_ong %}
-        <a class="btn-ghost btn" href="{% url 'amigofiel:perfil-ong' handle=vinculo_ong.ong.user.username %}">
-          🐾 Conhecer a ONG
+        <a class="btn" href="{% url 'amigofiel:listar-ongs' %}">
+          � Ver outras ONGs
         </a>
       {% endif %}
     </div>
@@ -162,10 +243,25 @@
 
   {# ===== COLUNA LATERAL (BUYBOX) ===== #}
   <aside class="pd-card buybox" aria-label="Comprar">
-    <div class="row">
-      <span class="muted">Preço</span>
-      <strong>R$ {{ produto.preco }}</strong>
-    </div>
+    {% if produto.tem_desconto %}
+      <div class="row">
+        <span class="muted">De</span>
+        <span class="old-price">R$ {{ produto.preco|floatformat:2 }}</span>
+      </div>
+      <div class="row">
+        <span class="muted">Por</span>
+        <strong>R$ {{ produto.preco_com_desconto|floatformat:2 }}</strong>
+      </div>
+      <div class="row">
+        <span class="muted">Economia</span>
+        <span class="savings">R$ {{ produto.valor_desconto|floatformat:2 }} ({{ produto.desconto_percentual|floatformat:0 }}%)</span>
+      </div>
+    {% else %}
+      <div class="row">
+        <span class="muted">Preço</span>
+        <strong>R$ {{ produto.preco|floatformat:2 }}</strong>
+      </div>
+    {% endif %}
     <div class="row">
       <span class="muted">Disponibilidade</span>
       <strong>
@@ -174,13 +270,31 @@
     </div>
 
     {% if vinculo_ong %}
-      <div class="row">
-        <span class="muted">Doação</span>
-        <strong>{{ vinculo_ong.percentual }}%</strong>
+      <div class="pd-hr"></div>
+      <div style="background:linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border:2px solid #86efac; border-radius:8px; padding:1rem;">
+        <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
+          <span style="font-size:1.5rem;">💚</span>
+          <strong style="color:#166534;">Produto Solidário</strong>
+        </div>
+        <div class="row" style="margin:0.25rem 0;">
+          <span style="color:#15803d; font-size:0.875rem;">Doação para ONG</span>
+          <strong style="color:#166534;">{{ vinculo_ong.percentual|floatformat:1 }}%</strong>
+        </div>
+        <div class="row" style="margin:0.25rem 0;">
+          <span style="color:#15803d; font-size:0.875rem;">Valor por unidade</span>
+          <strong style="color:#166534;">
+            {% widthratio produto.preco 100 vinculo_ong.percentual as doacao_unitaria %}
+            R$ {{ doacao_unitaria|floatformat:2 }}
+          </strong>
+        </div>
+        <p style="margin:0.75rem 0 0; font-size:0.75rem; color:#15803d; line-height:1.4;">
+          Sua compra apoia <strong>{{ vinculo_ong.ong.nome_fantasia }}</strong> 🐾
+        </p>
+        <a href="{% url 'amigofiel:perfil-ong' handle=vinculo_ong.ong.user.username %}" 
+           style="display:block; margin-top:0.5rem; text-align:center; padding:0.5rem; background:#16a34a; color:#fff; border-radius:6px; text-decoration:none; font-size:0.875rem; font-weight:600;">
+          Ver ONG →
+        </a>
       </div>
-      <p class="note" style="margin:6px 0 0;">
-        Sua compra apoia <strong>{{ vinculo_ong.ong.nome_fantasia }}</strong>.
-      </p>
     {% endif %}
 
     <div class="pd-hr"></div>

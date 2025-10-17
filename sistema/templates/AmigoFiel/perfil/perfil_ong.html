@@ -167,16 +167,42 @@
                      src="{% if prod.imagem %}{{ prod.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}"
                      alt="{{ prod.nome }}">
                 <h3 style="margin:8px 0 2px;">{{ prod.nome }}</h3>
-                <strong>R$ {{ prod.preco }}</strong>
-                {% if prod.percentual_doacao %}<span class="badge-pct">{{ prod.percentual_doacao }}% para a ONG</span>{% endif %}
+                <strong>R$ {{ prod.preco|floatformat:2 }}</strong>
+                {% if prod.percentual_doacao %}<span class="badge-pct">{{ prod.percentual_doacao }}% solidário</span>{% endif %}
               </a>
             </article>
           {% endfor %}
         </div>
       {% else %}
-        <p class="muted">Nenhum produto vinculado por enquanto.</p>
+        <p class="muted" style="margin-top:8px;">Nenhum produto vinculado por enquanto.</p>
       {% endif %}
     </section>
+
+    {# EMPRESAS PARCEIRAS #}
+    {% if empresas %}
+    <section class="panel" style="margin-top:12px;">
+      <h2 style="margin:0 0 10px;">🤝 Empresas que apoiam essa causa</h2>
+      <div class="grid grid-4">
+        {% for empresa in empresas %}
+          <article class="mini-card">
+            <a class="card-link" href="{% url 'amigofiel:perfil-empresa' handle=empresa.user.username %}">
+              <img class="thumb"
+                   src="{% if empresa.foto %}{{ empresa.foto.url }}{% else %}{% static 'img/defaults/avatar_empresa.png' %}{% endif %}"
+                   alt="{{ empresa.razao_social }}"
+                   style="aspect-ratio: 1/1; object-fit: cover;">
+              <h3 style="margin:8px 0 4px;">{{ empresa.razao_social }}</h3>
+              {% if empresa.slogan %}
+                <p class="muted small" style="margin:0;">{{ empresa.slogan|truncatewords:10 }}</p>
+              {% endif %}
+              {% if empresa.cidade %}
+                <p class="muted small" style="margin:4px 0 0;">📍 {{ empresa.cidade }}</p>
+              {% endif %}
+            </a>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
 
   {# PETS (lista/paginação) #}
   {% elif current == "pets" %}
@@ -218,7 +244,10 @@
   {# PRODUTOS PARCEIROS (lista/paginação) #}
   {% elif current == "produtos" %}
     <section class="panel" style="margin-top:12px;">
-      <h2 style="margin:0 0 8px;">Produtos de empresas que apoiam esta ONG</h2>
+      <h2 style="margin:0 0 8px;">💚 Produtos de empresas que apoiam esta ONG</h2>
+      <p class="muted" style="margin-bottom:12px;">
+        Ao comprar estes produtos, um percentual do valor é revertido para apoiar o trabalho da {{ perfil.nome_fantasia }}.
+      </p>
       {% if produtos %}
         <div class="grid grid-4">
           {% for prod in produtos %}
@@ -229,29 +258,32 @@
                      src="{% if prod.imagem %}{{ prod.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}"
                      alt="{{ prod.nome }}">
                 <h3 style="margin:8px 0 2px;">{{ prod.nome }}</h3>
-                <strong>R$ {{ prod.preco }}</strong>
-                {% if prod.percentual_doacao %}<span class="badge-pct">{{ prod.percentual_doacao }}% para a ONG</span>{% endif %}
+                <p class="muted small" style="margin:2px 0;">
+                  Loja: <a href="{% url 'amigofiel:perfil-empresa' handle=prod.empresa.user.username %}">{{ prod.empresa.razao_social }}</a>
+                </p>
+                {% if prod.tem_desconto %}
+                  <div style="margin:4px 0;">
+                    <span style="text-decoration:line-through;color:#999;font-size:13px;">R$ {{ prod.preco|floatformat:2 }}</span>
+                    <strong style="color:#067647;font-size:16px;">R$ {{ prod.preco_com_desconto|floatformat:2 }}</strong>
+                  </div>
+                {% else %}
+                  <strong style="display:block;margin:4px 0;font-size:16px;">R$ {{ prod.preco|floatformat:2 }}</strong>
+                {% endif %}
+                {% if prod.percentual_doacao %}
+                  <span class="badge-pct">✨ {{ prod.percentual_doacao }}% solidário</span>
+                {% endif %}
               </a>
               <div class="actions" style="margin-top:8px;">
-                <a class="btn btn-primary" href="{% url 'amigofiel:carrinho-add' produto_id=prod.id %}">Adicionar ao carrinho</a>
+                <a class="btn btn-primary" style="width:100%;justify-content:center;" 
+                   href="{% url 'amigofiel:produto-detalhe' empresa_handle=prod.empresa.user.username produto_slug=prod.slug %}">
+                  Ver produto
+                </a>
               </div>
             </article>
           {% endfor %}
         </div>
-
-        {% if is_paginated %}
-          <nav class="actions" aria-label="Paginação" style="margin-top:12px;">
-            {% if page_obj.has_previous %}
-              <a class="btn btn-secondary" href="?tab=produtos&page={{ page_obj.previous_page_number }}">Anterior</a>
-            {% endif %}
-            <span class="muted">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
-            {% if page_obj.has_next %}
-              <a class="btn btn-secondary" href="?tab=produtos&page={{ page_obj.next_page_number }}">Próxima</a>
-            {% endif %}
-          </nav>
-        {% endif %}
       {% else %}
-        <p class="muted">Nenhum produto parceiro no momento.</p>
+        <p class="muted">Nenhum produto parceiro no momento. Incentive empresas a apoiarem essa causa!</p>
       {% endif %}
     </section>
 
