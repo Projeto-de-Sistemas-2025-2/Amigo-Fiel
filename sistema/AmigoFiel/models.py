@@ -253,6 +253,23 @@ class ProdutoEmpresa(TimeStampedModel):
                 "produto_slug": self.slug,
             },
         )
+    
+    @property
+    def valor_desconto(self):
+        """Retorna o valor do desconto em reais"""
+        if self.desconto_percentual > 0:
+            return self.preco * (self.desconto_percentual / Decimal("100"))
+        return Decimal("0.00")
+    
+    @property
+    def preco_com_desconto(self):
+        """Retorna o preço final com desconto aplicado"""
+        return self.preco - self.valor_desconto
+    
+    @property
+    def tem_desconto(self):
+        """Verifica se o produto tem desconto ativo"""
+        return self.desconto_percentual > 0
 
 
 

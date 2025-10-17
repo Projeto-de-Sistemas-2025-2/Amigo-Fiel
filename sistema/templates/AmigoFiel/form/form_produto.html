@@ -1,54 +1,186 @@
 {% extends "style/base_public.html" %}
 {% load static %}
 
-{% block title %}Cadastrar produto{% endblock %}
+{% block title %}{% if form.instance.pk %}Editar{% else %}Cadastrar{% endif %} Produto - Amigo Fiel{% endblock %}
 
 {% block body %}
-<section class="card" style="max-width:720px;margin:auto">
-  <h1 style="margin-bottom:10px">Cadastrar produto</h1>
+<section class="card" style="max-width:900px;margin:2rem auto">
+  <div style="margin-bottom:2rem">
+    <h1 style="margin-bottom:0.5rem">
+      {% if form.instance.pk %}
+        ✏️ Editar Produto
+      {% else %}
+        ➕ Cadastrar Novo Produto
+      {% endif %}
+    </h1>
+    <p class="muted">Preencha as informações do produto que será vendido em sua loja</p>
+  </div>
 
-  <form method="post" enctype="multipart/form-data" class="grid grid-1">
+  <form method="post" enctype="multipart/form-data" class="grid grid-1" style="gap:1.5rem">
     {% csrf_token %}
 
-    <div class="input-wrap">
-      <label>Nome</label>
-      {{ form.nome }}
-      {{ form.nome.errors }}
-    </div>
+    <!-- Informações Básicas -->
+    <fieldset style="border:1px solid #e0e0e0;padding:1.5rem;border-radius:8px">
+      <legend style="font-weight:600;padding:0 0.5rem">📦 Informações Básicas</legend>
+      
+      <div class="grid grid-1" style="gap:1rem">
+        <div class="input-wrap">
+          <label for="{{ form.nome.id_for_label }}">{{ form.nome.label }} <span style="color:red">*</span></label>
+          {{ form.nome }}
+          {% if form.nome.errors %}
+            <span class="error-text" style="color:red;font-size:0.875rem">{{ form.nome.errors }}</span>
+          {% endif %}
+        </div>
 
-    <div class="input-wrap">
-      <label>Descrição</label>
-      {{ form.descricao }}
-      {{ form.descricao.errors }}
-    </div>
+        <div class="input-wrap">
+          <label for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }} <span style="color:red">*</span></label>
+          {{ form.categoria }}
+          {% if form.categoria.errors %}
+            <span class="error-text" style="color:red;font-size:0.875rem">{{ form.categoria.errors }}</span>
+          {% endif %}
+        </div>
 
-    <div class="grid grid-1 grid-md-3">
-      <div class="input-wrap">
-        <label>Preço (R$)</label>
-        {{ form.preco }}
-        {{ form.preco.errors }}
+        <div class="input-wrap">
+          <label for="{{ form.descricao_curta.id_for_label }}">{{ form.descricao_curta.label }}</label>
+          {{ form.descricao_curta }}
+          {% if form.descricao_curta.help_text %}
+            <small class="muted" style="font-size:0.875rem">{{ form.descricao_curta.help_text }}</small>
+          {% endif %}
+          {% if form.descricao_curta.errors %}
+            <span class="error-text" style="color:red;font-size:0.875rem">{{ form.descricao_curta.errors }}</span>
+          {% endif %}
+        </div>
+
+        <div class="input-wrap">
+          <label for="{{ form.descricao.id_for_label }}">{{ form.descricao.label }}</label>
+          {{ form.descricao }}
+          {% if form.descricao.errors %}
+            <span class="error-text" style="color:red;font-size:0.875rem">{{ form.descricao.errors }}</span>
+          {% endif %}
+        </div>
       </div>
-      <div class="input-wrap">
-        <label>Estoque</label>
-        {{ form.estoque }}
-        {{ form.estoque.errors }}
-      </div>
-      <div class="input-wrap" style="display:flex;gap:8px;align-items:center">
-        {{ form.ativo }} <label style="margin:0">Ativo</label>
-        {{ form.ativo.errors }}
-      </div>
-    </div>
+    </fieldset>
 
-    <div class="input-wrap">
-      <label>Imagem</label>
-      {{ form.imagem }}
-      {{ form.imagem.errors }}
-    </div>
+    <!-- Preço e Estoque -->
+    <fieldset style="border:1px solid #e0e0e0;padding:1.5rem;border-radius:8px">
+      <legend style="font-weight:600;padding:0 0.5rem">💰 Preço e Estoque</legend>
+      
+      <div class="grid grid-1 grid-md-3" style="gap:1rem">
+        <div class="input-wrap">
+          <label for="{{ form.preco.id_for_label }}">{{ form.preco.label }} <span style="color:red">*</span></label>
+          {{ form.preco }}
+          {% if form.preco.errors %}
+            <span class="error-text" style="color:red;font-size:0.875rem">{{ form.preco.errors }}</span>
+          {% endif %}
+        </div>
 
-    <div class="actions">
-      <button class="btn btn-primary" type="submit">Salvar</button>
-      <a class="btn btn-secondary" href="{% url 'amigofiel:listar-produtos' %}">Cancelar</a>
+        <div class="input-wrap">
+          <label for="{{ form.desconto_percentual.id_for_label }}">{{ form.desconto_percentual.label }}</label>
+          {{ form.desconto_percentual }}
+          {% if form.desconto_percentual.help_text %}
+            <small class="muted" style="font-size:0.875rem">{{ form.desconto_percentual.help_text }}</small>
+          {% endif %}
+          {% if form.desconto_percentual.errors %}
+            <span class="error-text" style="color:red;font-size:0.875rem">{{ form.desconto_percentual.errors }}</span>
+          {% endif %}
+        </div>
+
+        <div class="input-wrap">
+          <label for="{{ form.estoque.id_for_label }}">{{ form.estoque.label }} <span style="color:red">*</span></label>
+          {{ form.estoque }}
+          {% if form.estoque.errors %}
+            <span class="error-text" style="color:red;font-size:0.875rem">{{ form.estoque.errors }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if form.instance.preco and form.instance.desconto_percentual > 0 %}
+        <div style="margin-top:1rem;padding:1rem;background:#f0f9ff;border-radius:6px">
+          <p class="small">
+            💡 <strong>Preço com desconto:</strong> 
+            R$ {{ form.instance.preco_com_desconto|floatformat:2 }}
+            <span class="muted">(economia de R$ {{ form.instance.valor_desconto|floatformat:2 }})</span>
+          </p>
+        </div>
+      {% endif %}
+    </fieldset>
+
+    <!-- Imagem e Status -->
+    <fieldset style="border:1px solid #e0e0e0;padding:1.5rem;border-radius:8px">
+      <legend style="font-weight:600;padding:0 0.5rem">🖼️ Imagem e Visibilidade</legend>
+      
+      <div class="grid grid-1" style="gap:1rem">
+        <div class="input-wrap">
+          <label for="{{ form.imagem.id_for_label }}">{{ form.imagem.label }}</label>
+          {% if form.instance.imagem %}
+            <div style="margin-bottom:0.5rem">
+              <img src="{{ form.instance.imagem.url }}" alt="Imagem atual" 
+                   style="max-width:200px;border-radius:8px;border:1px solid #e0e0e0">
+              <p class="small muted" style="margin-top:0.5rem">Imagem atual</p>
+            </div>
+          {% endif %}
+          {{ form.imagem }}
+          <small class="muted" style="font-size:0.875rem">Formatos aceitos: JPG, PNG, GIF (máx. 5MB)</small>
+          {% if form.imagem.errors %}
+            <span class="error-text" style="color:red;font-size:0.875rem">{{ form.imagem.errors }}</span>
+          {% endif %}
+        </div>
+
+        <div class="input-wrap" style="display:flex;gap:0.75rem;align-items:center;padding:1rem;background:#f9fafb;border-radius:6px">
+          {{ form.ativo }}
+          <div>
+            <label for="{{ form.ativo.id_for_label }}" style="margin:0;font-weight:500">{{ form.ativo.label }}</label>
+            {% if form.ativo.help_text %}
+              <p class="small muted" style="margin:0.25rem 0 0 0">{{ form.ativo.help_text }}</p>
+            {% endif %}
+          </div>
+          {% if form.ativo.errors %}
+            <span class="error-text" style="color:red;font-size:0.875rem">{{ form.ativo.errors }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Botões de Ação -->
+    <div class="actions" style="display:flex;gap:1rem;justify-content:flex-end;padding-top:1rem;border-top:1px solid #e0e0e0">
+      <a class="btn btn-ghost" href="{% if user.perfil_empresa %}{% url 'amigofiel:painel-empresa' handle=user.username %}{% else %}{% url 'amigofiel:listar-produtos' %}{% endif %}">
+        ← Cancelar
+      </a>
+      <button class="btn btn-primary" type="submit">
+        {% if form.instance.pk %}
+          💾 Salvar Alterações
+        {% else %}
+          ➕ Cadastrar Produto
+        {% endif %}
+      </button>
     </div>
   </form>
 </section>
+
+<style>
+  fieldset {
+    margin: 0;
+  }
+  
+  legend {
+    font-size: 1rem;
+    color: #333;
+  }
+  
+  .input-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .input-wrap label {
+    font-weight: 500;
+    color: #333;
+  }
+  
+  .error-text {
+    display: block;
+    margin-top: 0.25rem;
+  }
+</style>
 {% endblock %}

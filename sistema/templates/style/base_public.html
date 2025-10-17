@@ -41,7 +41,15 @@
           <details class="icon-btn" style="position:relative;">
             <summary class="semibold">👤 {{ user.username }}</summary>
             <div class="card" style="position:absolute; right:0; top:120%; min-width:220px;">
-              <a class="btn btn-ghost" href="{% url 'amigofiel:perfil-usuario' handle=user.username %}">Meu perfil</a>
+              {% if user.perfil_empresa %}
+                <a class="btn btn-ghost" href="{% url 'amigofiel:perfil-empresa' handle=user.username %}">Meu perfil</a>
+                <a class="btn btn-ghost" href="{% url 'amigofiel:painel-empresa' handle=user.username %}">📊 Dashboard</a>
+              {% elif user.perfil_ong %}
+                <a class="btn btn-ghost" href="{% url 'amigofiel:perfil-ong' handle=user.username %}">Meu perfil</a>
+                <a class="btn btn-ghost" href="{% url 'amigofiel:painel-ong' handle=user.username %}">📊 Dashboard</a>
+              {% else %}
+                <a class="btn btn-ghost" href="{% url 'amigofiel:perfil-usuario' handle=user.username %}">Meu perfil</a>
+              {% endif %}
               <a class="btn btn-ghost" href="{% url 'logout' %}">Sair</a>
             </div>
           </details>
