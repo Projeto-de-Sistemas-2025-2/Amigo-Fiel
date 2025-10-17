@@ -27,15 +27,25 @@ urlpatterns = [
     path("produtos/novo/", views.ProdutoCreateView.as_view(), name="produto-novo"),
     path("pets/novo/", views.PetCreateView.as_view(), name="pet-novo"),
 
+    # Edição de perfil (DEVE vir antes das rotas genéricas)
+    path("perfil/editar/", views.perfil_editar, name="perfil-editar"),
 
     # Perfis
     path("@<str:handle>/", views.perfil_usuario, name="perfil-usuario"),
     path("Co./<str:handle>/", views.perfil_empresa, name="perfil-empresa"),
     path("ONG/<str:handle>/", views.perfil_ong,     name="perfil-ong"),
     path("pet/<slug:handle>/", views.perfil_pet,     name="perfil-pet"),
+    
+    # Edição de pet (antes da rota genérica de produto)
+    path("pet/<slug:handle>/editar/", views.pet_editar, name="pet-editar"),
+    path("pet/<slug:handle>/adotado/", views.pet_marcar_adotado, name="pet-marcar-adotado"),
 
     # Produto: /amigofiel/<empresa_handle>/<produto_slug>/
     path("<str:empresa_handle>/<slug:produto_slug>/", views.produto_detalhe, name="produto-detalhe"),
+    
+    # Edição de produto (depois da rota de detalhe)
+    path("<str:empresa_handle>/<slug:produto_slug>/editar/", views.produto_editar, name="produto-editar"),
+    path("<str:empresa_handle>/<slug:produto_slug>/deletar/", views.produto_deletar, name="produto-deletar"),
 
     # Carrinho / checkout
     path("carrinho/", views.carrinho_ver, name="carrinho-ver"),
@@ -44,22 +54,9 @@ urlpatterns = [
     path("carrinho/remover/<int:item_id>/", views.carrinho_remover, name="carrinho-remove"),
     path("checkout/simulado/", views.checkout_simulado, name="checkout-simulado"),
 
-    
-
     # Painéis
     path("ONG/<str:handle>/painel/", views.painel_ong, name="painel-ong"),
     path("Co./<str:handle>/painel/", views.painel_empresa, name="painel-empresa"),
-
-    # Edição de perfil
-    path("perfil/editar/", views.perfil_editar, name="perfil-editar"),
-    
-    # Edição de produto
-    path("<str:empresa_handle>/<slug:produto_slug>/editar/", views.produto_editar, name="produto-editar"),
-    path("<str:empresa_handle>/<slug:produto_slug>/deletar/", views.produto_deletar, name="produto-deletar"),
-    
-    # Edição de pet
-    path("pet/<slug:handle>/editar/", views.pet_editar, name="pet-editar"),
-    path("pet/<slug:handle>/adotado/", views.pet_marcar_adotado, name="pet-marcar-adotado"),
 
     path("tabelas/", views.tabelas_bruto, name="tabelas-bruto"),
     
