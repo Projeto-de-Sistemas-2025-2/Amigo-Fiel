@@ -153,6 +153,7 @@
           <div class="actions">
             {% if prod.slug %}
               <a class="btn btn-primary" href="{% url 'amigofiel:produto-detalhe' empresa_handle=perfil.user.username produto_slug=prod.slug %}">Abrir</a>
+              <a class="btn btn-warning" style="margin-left:6px; color:#fff; background:#f59e0b; border-color:#f59e0b;" href="{% url 'amigofiel:produto-editar' empresa_handle=perfil.user.username produto_slug=prod.slug %}">✏️ Editar</a>
             {% endif %}
           </div>
         </article>
