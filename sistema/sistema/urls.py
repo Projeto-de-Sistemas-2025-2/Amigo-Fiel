@@ -20,7 +20,7 @@ urlpatterns = [
 
     # App principal (uma vez só!)
     path('amigofiel/', include(('AmigoFiel.urls', 'amigofiel'), namespace='amigofiel')),
-    path('AmigoFiel/', RedirectView.as_view(url='/amigofiel/', permanent=False)),
+    path('AmigoFiel/', RedirectView.as_view(url='/login/', permanent=False)),
 
 
     # Chat
