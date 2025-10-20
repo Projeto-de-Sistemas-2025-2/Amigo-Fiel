@@ -227,7 +227,7 @@
 
     <div class="pd-hr"></div>
     <div class="inline-actions">
-      <a class="btn" href="{% url 'chat:thread-by-username' username=produto.empresa.user.username %}">
+  <a class="btn" href="{% url 'chat:thread' username=produto.empresa.user.username %}">
         💬 Falar com a loja
       </a>
       <a class="btn" href="{% url 'amigofiel:perfil-empresa' handle=produto.empresa.user.username %}">
@@ -235,10 +235,23 @@
       </a>
       {% if vinculo_ong %}
         <a class="btn" href="{% url 'amigofiel:listar-ongs' %}">
-          � Ver outras ONGs
+          🐾 Ver outras ONGs
         </a>
       {% endif %}
     </div>
+
+    {% if user.is_authenticated and user == produto.empresa.user or user.is_superuser %}
+      <div class="pd-hr"></div>
+      <div class="inline-actions">
+        <a class="btn btn-primary" href="{% url 'amigofiel:produto-editar' produto.empresa.user.username produto.slug %}">
+          ✏️ Editar Produto
+        </a>
+        <a class="btn" href="{% url 'amigofiel:produto-deletar' produto.empresa.user.username produto.slug %}" 
+           onclick="return confirm('Tem certeza que deseja desativar este produto?')">
+          🗑️ Desativar
+        </a>
+      </div>
+    {% endif %}
   </section>
 
   {# ===== COLUNA LATERAL (BUYBOX) ===== #}

@@ -40,11 +40,15 @@
 {% block perfil_actions %}
   {% if is_owner %}
     <a class="btn btn-accent" href="{% url 'amigofiel:produto-novo' %}">Cadastrar produto</a>
-    <a class="btn btn-secondary" href="{% url 'amigofiel:listar-produtos' %}?loja={{ perfil.user.username|urlencode }}">Ver na vitrine</a>
-  {% else %}
-    {% url 'chat:thread-by-username' username=perfil.user.username as chat_url %}
-    <a class="btn btn-primary" href="{{ chat_url|default:'#' }}">Mensagem</a>
-    {% if perfil.user.email %}<a class="btn btn-secondary" href="mailto:{{ perfil.user.email }}">Contato</a>{% endif %}
+    <a class="btn btn-primary" href="{% url 'amigofiel:perfil-editar' %}">✏️ Editar perfil</a>
+    <a class="btn btn-secondary" href="{% url 'amigofiel:painel-empresa' handle=perfil.user.username %}">📊 Painel</a>
+  {% elif request.user.is_authenticated %}
+    <a class="btn btn-primary" href="{% url 'chat:thread' username=perfil.user.username %}" style="display:flex;align-items:center;gap:6px;">
+      <span>💬</span> Enviar mensagem
+    </a>
+    {% if perfil.user.email %}
+      <a class="btn btn-secondary" href="mailto:{{ perfil.user.email }}">📧 Contato</a>
+    {% endif %}
   {% endif %}
 {% endblock %}
 
@@ -124,8 +128,11 @@
                 <div class="muted small">Estoque: {{ prod.estoque }}</div>
               </a>
               <div class="actions" style="margin-top:8px;">
-                <a class="btn btn-primary"
-                   href="{% url 'amigofiel:carrinho-add' produto_id=prod.id %}">Adicionar ao carrinho</a>
+                <form method="post" action="{% url 'amigofiel:carrinho-add' produto_id=prod.id %}" style="display:inline;">
+                  {% csrf_token %}
+                  <input type="hidden" name="qtd" value="1">
+                  <button type="submit" class="btn btn-primary">Adicionar ao carrinho</button>
+                </form>
               </div>
             </article>
           {% endfor %}
@@ -174,8 +181,11 @@
                 <div class="muted small">Estoque: {{ prod.estoque }}</div>
               </a>
               <div class="actions" style="margin-top:8px;">
-                <a class="btn btn-primary"
-                   href="{% url 'amigofiel:carrinho-add' produto_id=prod.id %}">Adicionar ao carrinho</a>
+                <form method="post" action="{% url 'amigofiel:carrinho-add' produto_id=prod.id %}" style="display:inline;">
+                  {% csrf_token %}
+                  <input type="hidden" name="qtd" value="1">
+                  <button type="submit" class="btn btn-primary">Adicionar ao carrinho</button>
+                </form>
               </div>
             </article>
           {% endfor %}

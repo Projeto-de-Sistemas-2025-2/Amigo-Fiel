@@ -22,6 +22,7 @@
   </div>
   <div class="actions" style="margin-top:12px">
     <a class="btn btn-primary" href="{% url 'amigofiel:produto-novo' %}">➕ Cadastrar produto</a>
+    <a class="btn" href="{% url 'amigofiel:perfil-editar' %}" style="background:#f59e0b;color:white;border-color:#f59e0b;">✏️ Editar Perfil</a>
     <a class="btn btn-secondary" href="{% url 'amigofiel:perfil-empresa' handle=perfil.user.username %}">Ver perfil público</a>
   </div>
 </section>
@@ -152,6 +153,7 @@
           <div class="actions">
             {% if prod.slug %}
               <a class="btn btn-primary" href="{% url 'amigofiel:produto-detalhe' empresa_handle=perfil.user.username produto_slug=prod.slug %}">Abrir</a>
+              <a class="btn btn-warning" style="margin-left:6px; color:#fff; background:#f59e0b; border-color:#f59e0b;" href="{% url 'amigofiel:produto-editar' empresa_handle=perfil.user.username produto_slug=prod.slug %}">✏️ Editar</a>
             {% endif %}
           </div>
         </article>

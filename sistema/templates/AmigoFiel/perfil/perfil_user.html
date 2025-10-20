@@ -19,15 +19,13 @@
 {% block perfil_actions %}
   {% if request.user.is_authenticated and request.user.pk == perfil.user.pk %}
     <a class="btn btn-accent" href="{% url 'amigofiel:pet-novo' %}">Cadastrar pet</a>
-    {# ajuste esta URL para sua view de edição de perfil #}
-    <a class="btn btn-primary" href="{% url 'amigofiel:perfil-usuario' handle=perfil.user.username %}?edit=1">Editar perfil</a>
-  {% else %}
-    {% url 'chat:thread-by-username' username=perfil.user.username as chat_url %}
-    {% if chat_url %}
-      <a class="btn btn-primary" href="{{ chat_url }}">Conversar</a>
-    {% endif %}
+    <a class="btn btn-primary" href="{% url 'amigofiel:perfil-editar' %}">✏️ Editar perfil</a>
+  {% elif request.user.is_authenticated %}
+    <a class="btn btn-primary" href="{% url 'chat:thread' username=perfil.user.username %}" style="display:flex;align-items:center;gap:6px;">
+      <span>💬</span> Enviar mensagem
+    </a>
     {% if perfil.user.email %}
-      <a class="btn btn-secondary" href="mailto:{{ perfil.user.email }}?subject=Contato%20-%20Amigo%20Fiel">Contato</a>
+      <a class="btn btn-secondary" href="mailto:{{ perfil.user.email }}?subject=Contato%20-%20Amigo%20Fiel">📧 Contato</a>
     {% endif %}
   {% endif %}
 {% endblock %}
