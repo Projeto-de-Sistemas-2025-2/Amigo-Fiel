@@ -1,4 +1,5 @@
 # AmigoFiel/views.py
+from functools import cache
 from django.views.generic import TemplateView, ListView
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db import transaction
@@ -43,38 +44,52 @@ from django.core.paginator import Paginator
 
 class HomeView(TemplateView):
     template_name = "AmigoFiel/home.html"
-
+    cache_timeout = 300  # Cache de 5 minutos
+    
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        cache_key = "home_data"
 
+        if cache_key in cache:
+            ctx.update(cache.get(cache_key))
+        else:
+            ctx.update({
+                "pets_destaque": Pet.objects.order_by("-criado_em")[:8],
+                "destaques": Pet.objects.order_by("-criado_em")[:8],  # Manter compatibilidade
+                "produtos_destaque": ProdutoEmpresa.objects.filter(ativo=True).order_by("-criado_em")[:8],
+                "lojas_destaque": UsuarioEmpresarial.objects.annotate(
+                    qtd_produtos_ativos=Count("produtos", filter=Q(produtos__ativo=True))
+                ).order_by("-qtd_produtos_ativos", "razao_social")[:8],
+                "ongs_destaque": UsuarioOng.objects.annotate(qtd_pets=Count("pets")).order_by("-qtd_pets", "nome_fantasia")[:8],
+                "categorias_produto": [{"slug": k, "nome": v} for k, v in PRODUTO_CATEGORIAS_CHOICES],
+            })
+        cache.set(cache_key, ctx, self.cache_timeout)
+        
         # Pets em destaque (mantém compat com 'destaques' antigo)
-        pets = Pet.objects.order_by("-criado_em")[:8]
-        ctx["pets_destaque"] = pets
-        ctx["destaques"] = pets  # legado usado em outras páginas
+        #pets = Pet.objects.order_by("-criado_em")[:8]
+        #ctx["pets_destaque"] = pets
+        #ctx["destaques"] = pets  # legado usado em outras páginas
 
         # Produtos / Lojas / ONGs em destaque
-        ctx["produtos_destaque"] = (
-            ProdutoEmpresa.objects.filter(ativo=True)
-            .order_by("-criado_em")[:8]
-        )
-        ctx["lojas_destaque"] = (
-            UsuarioEmpresarial.objects
-            .annotate(qtd_produtos_ativos=Count("produtos", filter=Q(produtos__ativo=True)))
-            .order_by("-qtd_produtos_ativos", "razao_social")[:8]
-        )
-        ctx["ongs_destaque"] = (
-            UsuarioOng.objects
-            .annotate(qtd_pets=Count("pets"))
-            .order_by("-qtd_pets", "nome_fantasia")[:8]
-        )
+        #ctx["produtos_destaque"] = (
+        #    ProdutoEmpresa.objects.filter(ativo=True)
+        #    .order_by("-criado_em")[:8]
+        #)
+        #ctx["lojas_destaque"] = (
+        #    UsuarioEmpresarial.objects
+        #    .annotate(qtd_produtos_ativos=Count("produtos", filter=Q(produtos__ativo=True)))
+        #    .order_by("-qtd_produtos_ativos", "razao_social")[:8]
+        #)
+        #ctx["ongs_destaque"] = (
+        #    UsuarioOng.objects
+        #    .annotate(qtd_pets=Count("pets"))
+        #    .order_by("-qtd_pets", "nome_fantasia")[:8]
+        #)
 
         # Categorias para a faixa de chips
-        ctx["categorias_produto"] = [{"slug": k, "nome": v} for k, v in PRODUTO_CATEGORIAS_CHOICES]
+        #ctx["categorias_produto"] = [{"slug": k, "nome": v} for k, v in PRODUTO_CATEGORIAS_CHOICES]
 
         return ctx
-
-
-
 
 class ListarAnimais(ListView):
     model = Pet
