@@ -23,7 +23,7 @@
   @media (max-width:820px){ .grid{grid-template-columns:repeat(2,1fr)} }
   @media (max-width:540px){ .grid{grid-template-columns:1fr} }
 
-  .card{display:flex;flex-direction:column;gap:6px}
+  .card{display:flex;flex-direction:column;gap:6px;position:relative}
   .thumb{
     width:100%;aspect-ratio:1/1;border-radius:12px;object-fit:cover;border:1px solid #e5e7eb;background:#fff;
   }
@@ -37,7 +37,50 @@
     border-radius: 999px;
     padding: 2px 8px;
     font-size: 12px;
-  }  .pagination{display:flex;justify-content:center;gap:8px;margin:16px 0 4px}
+  }
+
+  .card .fav-btn{
+    position:absolute;
+    top:10px;
+    right:10px;
+    width:40px;
+    height:40px;
+    padding:0;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:18px;
+    background:#fff;
+    border:1px solid #ddd;
+    box-shadow:0 4px 12px rgba(0,0,0,0.08);
+    cursor:pointer;
+    transition:all 0.2s ease;
+    z-index:2;
+  }
+
+  .card .fav-btn:hover{
+    background:#fff3f3;
+    border-color:#ff6b9d;
+    transform:translateY(-1px);
+  }
+
+  .card .fav-btn.is-favoritado{
+    background:#ffe0e6;
+    border-color:#ff6b9d;
+    box-shadow:0 6px 16px rgba(255,107,157,0.28);
+  }
+
+  .card .fav-btn.is-favoritado:hover{
+    background:#ffd2dc;
+  }
+
+  .card .fav-btn:focus-visible{
+    outline:2px solid #ff6b9d;
+    outline-offset:2px;
+  }
+
+  .pagination{display:flex;justify-content:center;gap:8px;margin:16px 0 4px}
   .pagination a{padding:8px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;text-decoration:none}
   .pagination .muted{padding:8px 0}
 </style>
@@ -144,6 +187,17 @@
         {% for prod in produtos %}
           {% with handle=prod.empresa.user.username slug=prod.slug %}
           <article class="card">
+            {% if user.is_authenticated and user.perfil_comum %}
+        <button type="button"
+          class="fav-btn favoritar-produto-btn{% if prod.id in favoritos_produto_ids %} is-favoritado{% endif %}"
+          data-url="{% url 'amigofiel:favoritar-produto' empresa_handle=handle produto_slug=slug %}"
+          data-produto-nome="{{ prod.nome|escape }}"
+                      data-favoritado="{% if prod.id in favoritos_produto_ids %}true{% else %}false{% endif %}"
+                      aria-pressed="{% if prod.id in favoritos_produto_ids %}true{% else %}false{% endif %}"
+                      title="{% if prod.id in favoritos_produto_ids %}Remover dos favoritos{% else %}Adicionar aos favoritos{% endif %}">
+                {% if prod.id in favoritos_produto_ids %}❤️{% else %}🤍{% endif %}
+              </button>
+            {% endif %}
             <a
               {% if slug %}
                 href="{% url 'amigofiel:produto-detalhe' empresa_handle=handle produto_slug=slug %}"
@@ -186,4 +240,116 @@
 
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const getCookie = (name) => {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  };
+
+  const ensureToastStyle = () => {
+    if (document.getElementById('favoritos-toast-style')) {
+      return;
+    }
+    const style = document.createElement('style');
+    style.id = 'favoritos-toast-style';
+    style.textContent = `
+      @keyframes favoritoFadeInOut {
+        0% { opacity: 0; transform: translate(-50%, -10px); }
+        10% { opacity: 1; transform: translate(-50%, 0); }
+        90% { opacity: 1; transform: translate(-50%, 0); }
+        100% { opacity: 0; transform: translate(-50%, -10px); }
+      }
+      .favoritos-toast {
+        animation: favoritoFadeInOut 3.2s ease-in-out;
+      }
+    `;
+    document.head.appendChild(style);
+  };
+
+  const showNotification = (message, type = 'info') => {
+    ensureToastStyle();
+    const alertClass = type === 'success'
+      ? 'alert-success'
+      : type === 'error'
+        ? 'alert-danger'
+        : 'alert-info';
+
+    const toast = document.createElement('div');
+    toast.className = `alert ${alertClass} favoritos-toast position-fixed top-0 start-50 translate-middle-x mt-3 shadow`;
+    toast.style.zIndex = '1055';
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3200);
+  };
+
+  const aplicarEstado = (btn, favoritado) => {
+    btn.dataset.favoritado = favoritado ? 'true' : 'false';
+    btn.textContent = favoritado ? '❤️' : '🤍';
+    btn.classList.toggle('is-favoritado', favoritado);
+    btn.setAttribute('aria-pressed', favoritado ? 'true' : 'false');
+    btn.title = favoritado ? 'Remover dos favoritos' : 'Adicionar aos favoritos';
+  };
+
+  const csrftoken = getCookie('csrftoken');
+
+  document.querySelectorAll('.favoritar-produto-btn').forEach((btn) => {
+    aplicarEstado(btn, btn.dataset.favoritado === 'true');
+
+    btn.addEventListener('click', async (event) => {
+      event.preventDefault();
+      if (btn.dataset.loading === 'true') {
+        return;
+      }
+
+      btn.dataset.loading = 'true';
+
+      try {
+        const response = await fetch(btn.dataset.url, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrftoken,
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.sucesso) {
+          aplicarEstado(btn, data.favoritado);
+          const mensagem = data.favoritado
+            ? `${btn.dataset.produtoNome} adicionado aos favoritos!`
+            : `${btn.dataset.produtoNome} removido dos favoritos!`;
+          showNotification(mensagem, data.favoritado ? 'success' : 'info');
+        } else {
+          showNotification(data.mensagem || 'Não foi possível atualizar o favorito.', 'error');
+        }
+      } catch (error) {
+        console.error('Erro ao favoritar produto:', error);
+        showNotification('Erro ao favoritar produto. Tente novamente.', 'error');
+      } finally {
+        btn.dataset.loading = 'false';
+      }
+    });
+  });
+});
+</script>
 {% endblock %}

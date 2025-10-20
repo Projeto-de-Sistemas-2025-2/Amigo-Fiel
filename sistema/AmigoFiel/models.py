@@ -392,3 +392,58 @@ class ItemPedido(TimeStampedModel):
 def ong_beneficiada(self):
     v = self.vinculos_ong.filter(ativo=True).order_by("-percentual").first()
     return v.ong if v else None, (v.percentual if v else None)
+
+
+# =============================================================================
+# Favoritos
+# =============================================================================
+class Favorito(TimeStampedModel):
+    """
+    Permite que usuários comuns adicionem pets e produtos aos favoritos.
+    Um usuário pode favoritar um pet ou um produto, mas não ambos no mesmo registro.
+    """
+    usuario = models.ForeignKey(
+        UsuarioComum, on_delete=models.CASCADE, related_name="favoritos"
+    )
+    pet = models.ForeignKey(
+        Pet, on_delete=models.CASCADE, null=True, blank=True, related_name="favoritos"
+    )
+    produto = models.ForeignKey(
+        ProdutoEmpresa, on_delete=models.CASCADE, null=True, blank=True, related_name="favoritos"
+    )
+
+    class Meta:
+        ordering = ("-criado_em",)
+        indexes = [
+            models.Index(fields=["usuario"]),
+            models.Index(fields=["pet"]),
+            models.Index(fields=["produto"]),
+        ]
+        # Garante que um usuário não pode favoritar o mesmo pet/produto mais de uma vez
+        constraints = [
+            models.UniqueConstraint(
+                fields=["usuario", "pet"],
+                condition=models.Q(pet__isnull=False),
+                name="unique_favorito_pet_por_usuario"
+            ),
+            models.UniqueConstraint(
+                fields=["usuario", "produto"],
+                condition=models.Q(produto__isnull=False),
+                name="unique_favorito_produto_por_usuario"
+            ),
+        ]
+
+    def __str__(self):
+        if self.pet:
+            return f"{self.usuario.user.username} ♡ {self.pet.nome}"
+        elif self.produto:
+            return f"{self.usuario.user.username} ♡ {self.produto.nome}"
+        return f"Favorito #{self.pk}"
+
+    def clean(self):
+        """Valida que o favorito é de um pet OU produto, mas não ambos."""
+        from django.core.exceptions import ValidationError
+        tem_pet = self.pet_id is not None
+        tem_produto = self.produto_id is not None
+        if tem_pet == tem_produto:  # XOR: True == True ou False == False = inválido
+            raise ValidationError("Um favorito deve ser de um PET ou um PRODUTO, não ambos ou nenhum.")

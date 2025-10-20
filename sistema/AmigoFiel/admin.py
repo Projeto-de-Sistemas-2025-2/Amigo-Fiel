@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from .models import (
     UsuarioComum, UsuarioEmpresarial, UsuarioOng,
-    Pet, ProdutoEmpresa
+    Pet, ProdutoEmpresa, Favorito
 )
 from django.contrib import admin
 from .models import ParceriaOngEmpresa, ProdutoOngVinculo, Carrinho, ItemCarrinho, Pedido, ItemPedido
@@ -133,3 +133,32 @@ class ItemPedidoInline(admin.TabularInline):
 class PedidoAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "status", "total_bruto", "total_doacao", "criado_em")
     inlines = [ItemPedidoInline]
+
+
+@admin.register(Favorito)
+class FavoritoAdmin(admin.ModelAdmin):
+    list_display = ("usuario_username", "tipo_favorito", "nome_favorito", "criado_em")
+    list_filter = ("criado_em", "usuario")
+    search_fields = ("usuario__user__username", "pet__nome", "produto__nome")
+    readonly_fields = ("criado_em", "atualizado_em")
+    ordering = ("-criado_em",)
+    
+    def usuario_username(self, obj):
+        return obj.usuario.user.username
+    usuario_username.short_description = "Usuário"
+    
+    def tipo_favorito(self, obj):
+        if obj.pet:
+            return "🐾 Pet"
+        elif obj.produto:
+            return "🛍️ Produto"
+        return "—"
+    tipo_favorito.short_description = "Tipo"
+    
+    def nome_favorito(self, obj):
+        if obj.pet:
+            return obj.pet.nome
+        elif obj.produto:
+            return obj.produto.nome
+        return "—"
+    nome_favorito.short_description = "Nome"

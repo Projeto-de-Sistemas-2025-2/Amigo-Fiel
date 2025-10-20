@@ -102,11 +102,29 @@ class ListarAnimais(ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        request = self.request
         ctx.update({
-            "q": self.request.GET.get("q", ""),
-            "cidade": self.request.GET.get("cidade", ""),
-            "com_produtos": self.request.GET.get("com_produtos", ""),
+            "q": request.GET.get("q", ""),
+            "cidade": request.GET.get("cidade", ""),
+            "com_produtos": request.GET.get("com_produtos", ""),
         })
+
+        favoritos_pet_ids = []
+        user = request.user
+        if user.is_authenticated:
+            try:
+                perfil_comum = user.perfil_comum
+            except UsuarioComum.DoesNotExist:
+                perfil_comum = None
+
+            if perfil_comum:
+                favoritos_pet_ids = list(
+                    perfil_comum.favoritos
+                    .filter(pet__isnull=False)
+                    .values_list("pet_id", flat=True)
+                )
+
+        ctx["favoritos_pet_ids"] = favoritos_pet_ids
         return ctx
 
 def cadastro(request):
@@ -351,14 +369,32 @@ class ListarProdutos(ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        request = self.request
         ctx.update({
-            "q": self.request.GET.get("q", ""),
-            "cidade": self.request.GET.get("cidade", ""),
-            "preco_min": self.request.GET.get("preco_min", ""),
-            "preco_max": self.request.GET.get("preco_max", ""),
-            "com_estoque": self.request.GET.get("com_estoque", ""),
-            "ativos": self.request.GET.get("ativos", "1"),
+            "q": request.GET.get("q", ""),
+            "cidade": request.GET.get("cidade", ""),
+            "preco_min": request.GET.get("preco_min", ""),
+            "preco_max": request.GET.get("preco_max", ""),
+            "com_estoque": request.GET.get("com_estoque", ""),
+            "ativos": request.GET.get("ativos", "1"),
         })
+
+        favoritos_produto_ids = []
+        user = request.user
+        if user.is_authenticated:
+            try:
+                perfil_comum = user.perfil_comum
+            except UsuarioComum.DoesNotExist:
+                perfil_comum = None
+
+            if perfil_comum:
+                favoritos_produto_ids = list(
+                    perfil_comum.favoritos
+                    .filter(produto__isnull=False)
+                    .values_list("produto_id", flat=True)
+                )
+
+        ctx["favoritos_produto_ids"] = favoritos_produto_ids
         return ctx
 
 def produto_detalhe(request, empresa_handle, produto_slug):
@@ -1001,3 +1037,163 @@ def pet_marcar_adotado(request, handle):
     return render(request, "AmigoFiel/form/confirmar_adocao.html", {
         "pet": pet,
     })
+
+
+# =============================================================================
+# FAVORITOS
+# =============================================================================
+
+@login_required
+def favorito_toggle_pet(request, pet_slug):
+    """
+    Adiciona ou remove um pet dos favoritos.
+    Retorna JSON com o novo estado.
+    """
+    from django.http import JsonResponse
+    from .models import Favorito
+    
+    pet = get_object_or_404(Pet, slug=pet_slug)
+    
+    # Obter ou criar o perfil comum do usuário
+    try:
+        usuario_comum = request.user.perfil_comum
+    except UsuarioComum.DoesNotExist:
+        return JsonResponse({
+            "sucesso": False,
+            "mensagem": "Apenas usuários comuns podem favoritar pets.",
+            "tipo": "erro"
+        }, status=400)
+    
+    # Verificar se já existe o favorito
+    favorito = Favorito.objects.filter(usuario=usuario_comum, pet=pet).first()
+    
+    if favorito:
+        # Remover favorito
+        favorito.delete()
+        favoritado = False
+        mensagem = f"Pet '{pet.nome}' removido dos favoritos!"
+    else:
+        # Adicionar favorito
+        Favorito.objects.create(usuario=usuario_comum, pet=pet)
+        favoritado = True
+        mensagem = f"Pet '{pet.nome}' adicionado aos favoritos!"
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # Requisição AJAX
+        return JsonResponse({
+            "sucesso": True,
+            "favoritado": favoritado,
+            "mensagem": mensagem,
+            "total_favoritos": usuario_comum.favoritos.count()
+        })
+    
+    # Fallback para requisição convencional (sem AJAX)
+    messages.success(request, mensagem)
+    return redirect('amigofiel:meus-favoritos')
+
+
+@login_required
+def favorito_toggle_produto(request, empresa_handle, produto_slug):
+    """
+    Adiciona ou remove um produto dos favoritos.
+    Retorna JSON com o novo estado.
+    """
+    from django.http import JsonResponse
+    from .models import Favorito
+    
+    produto = get_object_or_404(
+        ProdutoEmpresa.objects.select_related("empresa", "empresa__user"),
+        empresa__user__username=empresa_handle,
+        slug=produto_slug,
+    )
+    
+    # Obter ou criar o perfil comum do usuário
+    try:
+        usuario_comum = request.user.perfil_comum
+    except UsuarioComum.DoesNotExist:
+        return JsonResponse({
+            "sucesso": False,
+            "mensagem": "Apenas usuários comuns podem favoritar produtos.",
+            "tipo": "erro"
+        }, status=400)
+    
+    # Verificar se já existe o favorito
+    favorito = Favorito.objects.filter(usuario=usuario_comum, produto=produto).first()
+    
+    if favorito:
+        # Remover favorito
+        favorito.delete()
+        favoritado = False
+        mensagem = f"Produto '{produto.nome}' removido dos favoritos!"
+    else:
+        # Adicionar favorito
+        Favorito.objects.create(usuario=usuario_comum, produto=produto)
+        favoritado = True
+        mensagem = f"Produto '{produto.nome}' adicionado aos favoritos!"
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # Requisição AJAX
+        return JsonResponse({
+            "sucesso": True,
+            "favoritado": favoritado,
+            "mensagem": mensagem,
+            "total_favoritos": usuario_comum.favoritos.count()
+        })
+    
+    # Fallback para requisição convencional (sem AJAX)
+    messages.success(request, mensagem)
+    return redirect('amigofiel:meus-favoritos')
+
+
+@login_required
+def meus_favoritos(request):
+    """
+    Exibe a página de favoritos do usuário logado.
+    Mostra pets e produtos separadamente.
+    """
+    from .models import Favorito
+    
+    # Obter o perfil comum do usuário
+    try:
+        usuario_comum = request.user.perfil_comum
+    except UsuarioComum.DoesNotExist:
+        messages.warning(request, "Você precisa ter um perfil comum para ver favoritos.")
+        return redirect("amigofiel:home")
+    
+    # Buscar todos os favoritos do usuário com as relações necessárias
+    favoritos_pets_list = list(
+        Favorito.objects
+        .filter(usuario=usuario_comum, pet__isnull=False)
+        .select_related('pet', 'pet__tutor', 'pet__ong')
+        .order_by('-criado_em')
+    )
+    
+    favoritos_produtos_list = list(
+        Favorito.objects
+        .filter(usuario=usuario_comum, produto__isnull=False)
+        .select_related('produto', 'produto__empresa', 'produto__empresa__user')
+        .order_by('-criado_em')
+    )
+    
+    # Debug
+    print(f"\n=== DEBUG FAVORITOS ===")
+    print(f"Usuário: {request.user.username}")
+    print(f"Pets favoritados: {len(favoritos_pets_list)}")
+    print(f"Produtos favoritados: {len(favoritos_produtos_list)}")
+    for fav in favoritos_pets_list:
+        print(f"  - Pet: {fav.pet.nome}")
+    for fav in favoritos_produtos_list:
+        print(f"  - Produto: {fav.produto.nome}")
+    print(f"=== FIM DEBUG ===\n")
+    
+    # Contexto simplificado - sem paginação por enquanto
+    context = {
+        "usuario_comum": usuario_comum,
+        "favoritos_pets": favoritos_pets_list,
+        "favoritos_produtos": favoritos_produtos_list,
+        "total_favoritos": len(favoritos_pets_list) + len(favoritos_produtos_list),
+        "total_pets_favoritos": len(favoritos_pets_list),
+        "total_produtos_favoritos": len(favoritos_produtos_list),
+    }
+    
+    return render(request, "AmigoFiel/favoritos.html", context)

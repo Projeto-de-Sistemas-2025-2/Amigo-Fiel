@@ -1,0 +1,456 @@
+{% extends 'style/base_public.html' %}
+{% load static %}
+
+{% block title %}Meus Favoritos - Amigo Fiel{% endblock %}
+
+{% block body %}
+    <!-- Header -->
+    <section class="mb-5">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <h1 class="display-5 fw-bold">❤️ Meus Favoritos</h1>
+                <p class="text-muted">Total: <strong>{{ total_favoritos }}</strong> items favoritados</p>
+            </div>
+        </div>
+    </section>
+
+    {% if total_favoritos == 0 %}
+        <!-- Empty State -->
+        <div class="alert alert-info text-center py-5">
+            <h4>Nenhum favorito ainda</h4>
+            <p class="mb-3">Você não tem nenhum pet ou produto favoritado.</p>
+            <div class="btn-group" role="group">
+                <a href="{% url 'amigofiel:listar-animais' %}" class="btn btn-primary">
+                    🐾 Explorar Pets
+                </a>
+                <a href="{% url 'amigofiel:listar-produtos' %}" class="btn btn-outline-primary">
+                    🛍️ Explorar Produtos
+                </a>
+            </div>
+        </div>
+    {% else %}
+        <!-- Tabs -->
+    <ul class="nav nav-tabs mb-3" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="pets-tab" data-bs-toggle="tab" data-bs-target="#pets-content" 
+                        type="button" role="tab" aria-controls="pets-content" aria-selected="true">
+                    🐾 Pets Favoritos
+                    <span class="badge bg-primary ms-2">{{ total_pets_favoritos }}</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="produtos-tab" data-bs-toggle="tab" data-bs-target="#produtos-content" 
+                        type="button" role="tab" aria-controls="produtos-content" aria-selected="false">
+                    🛍️ Produtos Favoritos
+                    <span class="badge bg-success ms-2">{{ total_produtos_favoritos }}</span>
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- Pets Favoritos -->
+            <div class="tab-pane fade show active" id="pets-content" role="tabpanel" aria-labelledby="pets-tab">
+                
+                {% if total_pets_favoritos == 0 %}
+                    <div class="alert alert-secondary text-center py-4">
+                        <p class="mb-2">Nenhum pet favoritado</p>
+                        <a href="{% url 'amigofiel:listar-animais' %}" class="btn btn-sm btn-primary">
+                            Explorar Pets
+                        </a>
+                    </div>
+                {% else %}
+                    <section class="favoritos-pets-grid" aria-label="Pets favoritados">
+                        {% for favorito in favoritos_pets %}
+                            <article class="mini-card" style="display:flex;flex-direction:column;position:relative;">
+                                <button type="button"
+                                        class="favoritar-btn favoritos-remover-btn is-favoritado"
+                                        data-favoritar-url="{% if favorito.pet.slug %}{% url 'amigofiel:favoritar-pet' favorito.pet.slug %}{% endif %}"
+                                        data-tipo="pet"
+                                        aria-label="Remover {{ favorito.pet.nome }} dos favoritos"
+                                        aria-pressed="true">
+                                    ❤️
+                                </button>
+
+                                <a
+                                    {% if favorito.pet.slug %}
+                                        href="{% url 'amigofiel:perfil-pet' handle=favorito.pet.slug %}"
+                                    {% else %}
+                                        href="{% url 'amigofiel:listar-animais' %}?q={{ favorito.pet.nome|urlencode }}"
+                                    {% endif %}
+                                    style="text-decoration:none;color:inherit;display:block"
+                                    aria-label="Abrir perfil de {{ favorito.pet.nome }}"
+                                >
+                                    <img class="thumb"
+                                         src="{% if favorito.pet.imagem %}{{ favorito.pet.imagem.url }}{% else %}{% static 'img/defaults/pet.png' %}{% endif %}"
+                                         alt="{{ favorito.pet.nome }}"
+                                         loading="lazy"
+                                         decoding="async">
+
+                                    <h3 style="margin:8px 0 4px">{{ favorito.pet.nome }}</h3>
+
+                                    <p class="muted" style="margin:0 0 6px">
+                                        {{ favorito.pet.get_especie_display }}
+                                        {% if favorito.pet.raca %} • {{ favorito.pet.raca }}{% endif %}
+                                        {% if favorito.pet.idade_anos %} • {{ favorito.pet.idade_anos }} ano{{ favorito.pet.idade_anos|pluralize }}{% endif %}
+                                    </p>
+
+                                    <p class="muted" style="margin:0 0 6px">
+                                        {% if favorito.pet.tutor and favorito.pet.tutor.cidade %}🏙️ {{ favorito.pet.tutor.cidade }}
+                                        {% elif favorito.pet.ong and favorito.pet.ong.cidade %}🏙️ {{ favorito.pet.ong.cidade }}
+                                        {% endif %}
+                                        {% if favorito.pet.adotado %} • ✅ Adotado{% else %} • 💛 Disponível{% endif %}
+                                    </p>
+
+                                    <p class="muted small" style="margin:0 0 10px">
+                                        {% if favorito.pet.castrado %}✂️ Castrado{% endif %}
+                                        {% if favorito.pet.castrado and favorito.pet.vacinado %} • {% endif %}
+                                        {% if favorito.pet.vacinado %}💉 Vacinado{% endif %}
+                                    </p>
+                                </a>
+
+                                <div class="actions" style="margin-top:auto;display:flex;gap:8px;flex-wrap:wrap;">
+                                    {% if favorito.pet.slug %}
+                                        <a class="btn btn-primary" href="{% url 'amigofiel:perfil-pet' handle=favorito.pet.slug %}">Ver pet</a>
+                                    {% else %}
+                                        <a class="btn btn-primary" href="{% url 'amigofiel:listar-animais' %}?q={{ favorito.pet.nome|urlencode }}">Ver pet</a>
+                                    {% endif %}
+
+                                    {% if favorito.pet.tutor and favorito.pet.tutor.cidade %}
+                                        <a class="btn btn-secondary" href="{% url 'amigofiel:listar-animais' %}?cidade={{ favorito.pet.tutor.cidade|urlencode }}">
+                                            {{ favorito.pet.tutor.cidade }}
+                                        </a>
+                                    {% elif favorito.pet.ong and favorito.pet.ong.cidade %}
+                                        <a class="btn btn-secondary" href="{% url 'amigofiel:listar-animais' %}?cidade={{ favorito.pet.ong.cidade|urlencode }}">
+                                            {{ favorito.pet.ong.cidade }}
+                                        </a>
+                                    {% endif %}
+                                </div>
+
+                                <small class="muted">
+                                    Adicionado em {{ favorito.criado_em|date:"d/m/Y" }}
+                                </small>
+                            </article>
+                        {% endfor %}
+                    </section>
+                {% endif %}
+            </div>
+
+            <!-- Produtos Favoritos -->
+            <div class="tab-pane fade" id="produtos-content" role="tabpanel" aria-labelledby="produtos-tab">
+                {% if total_produtos_favoritos == 0 %}
+                    <div class="alert alert-secondary text-center py-4">
+                        <p class="mb-2">Nenhum produto favoritado</p>
+                        <a href="{% url 'amigofiel:listar-produtos' %}" class="btn btn-sm btn-primary">
+                            Explorar Produtos
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="favoritos-produtos-grid" aria-label="Produtos favoritados">
+                        {% for favorito in favoritos_produtos %}
+                            {% with produto=favorito.produto handle=favorito.produto.empresa.user.username slug=favorito.produto.slug %}
+                                <article class="card" style="display:flex;flex-direction:column;gap:6px;position:relative;">
+                                    <button type="button"
+                                            class="favoritar-btn fav-btn favoritos-remover-btn is-favoritado"
+                                            data-favoritar-url="{% if slug %}{% url 'amigofiel:favoritar-produto' empresa_handle=handle produto_slug=slug %}{% endif %}"
+                                            data-tipo="produto"
+                                            aria-label="Remover {{ produto.nome }} dos favoritos"
+                                            aria-pressed="true">
+                                        ❤️
+                                    </button>
+
+                                    <a
+                                        {% if slug %}
+                                            href="{% url 'amigofiel:produto-detalhe' empresa_handle=handle produto_slug=slug %}"
+                                        {% else %}
+                                            href="#"
+                                        {% endif %}
+                                        style="text-decoration:none;color:inherit"
+                                    >
+                                        <img class="thumb"
+                                             src="{% if produto.imagem %}{{ produto.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}"
+                                             alt="{{ produto.nome }}"
+                                             loading="lazy"
+                                             decoding="async">
+                                        <div class="title">{{ produto.nome }}</div>
+                                    </a>
+
+                                    <div class="row">
+                                        <div class="price">
+                                            {% if produto.tem_desconto %}
+                                                <span style="text-decoration:line-through;color:#6b7280;font-size:12px;margin-right:6px;">R$ {{ produto.preco|floatformat:2 }}</span>
+                                                R$ {{ produto.preco_com_desconto|floatformat:2 }}
+                                            {% else %}
+                                                R$ {{ produto.preco|floatformat:2 }}
+                                            {% endif %}
+                                        </div>
+                                        <a class="pill" href="{% url 'amigofiel:perfil-empresa' handle=handle %}">{{ produto.empresa.razao_social }}</a>
+                                    </div>
+
+                                    {% if produto.descricao_curta %}
+                                        <p class="muted" style="margin:0;">{{ produto.descricao_curta|truncatewords:18 }}</p>
+                                    {% endif %}
+
+                                    <p class="muted small" style="margin:0;">
+                                        {% if produto.estoque > 0 %}
+                                            ✓ {{ produto.estoque }} em estoque
+                                        {% else %}
+                                            ✗ Fora de estoque
+                                        {% endif %}
+                                    </p>
+
+                                    <div class="actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;">
+                                        {% if slug %}
+                                            <a class="btn btn-primary btn-sm" href="{% url 'amigofiel:produto-detalhe' empresa_handle=handle produto_slug=slug %}">Ver detalhes</a>
+                                        {% else %}
+                                            <a class="btn btn-primary btn-sm" href="#">Ver detalhes</a>
+                                        {% endif %}
+                                        {% if produto.estoque > 0 %}
+                                            <a class="btn btn-success btn-sm" href="{% url 'amigofiel:carrinho-add' produto.id %}">🛒 Adicionar ao carrinho</a>
+                                        {% endif %}
+                                    </div>
+
+                                    <small class="muted">Adicionado em {{ favorito.criado_em|date:"d/m/Y" }}</small>
+                                </article>
+                            {% endwith %}
+                        {% endfor %}
+                    </div>
+
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const getCookie = (name) => {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    };
+
+    const csrfToken = getCookie('csrftoken');
+    const favoritarBtns = document.querySelectorAll('.favoritar-btn');
+
+    favoritarBtns.forEach(btn => {
+        btn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const url = this.dataset.favoritarUrl;
+            if (!url || this.dataset.loading === 'true') {
+                return;
+            }
+
+            this.dataset.loading = 'true';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.sucesso) {
+                    window.location.reload();
+                } else {
+                    alert(data.mensagem || 'Erro ao atualizar favorito');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao processar sua solicitação');
+            } finally {
+                this.dataset.loading = 'false';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .favoritos-pets-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        align-items: stretch;
+    }
+
+    @media (max-width: 1200px) {
+        .favoritos-pets-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 800px) {
+        .favoritos-pets-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 520px) {
+        .favoritos-pets-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .favoritos-pets-grid .favoritar-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        background: #fff;
+        border: 1px solid #ddd;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        z-index: 10;
+    }
+
+    .favoritos-pets-grid .favoritar-btn:hover {
+        background: #fff3f3;
+        border-color: #ff6b9d;
+        transform: translateY(-1px);
+    }
+
+    .favoritos-pets-grid .favoritar-btn.is-favoritado {
+        background: #ffe0e6;
+        border-color: #ff6b9d;
+        box-shadow: 0 6px 16px rgba(255, 107, 157, 0.25);
+    }
+
+    .favoritos-pets-grid .favoritar-btn.is-favoritado:hover {
+        background: #ffd2dc;
+    }
+
+    .favoritos-pets-grid .favoritar-btn:focus-visible {
+        outline: 2px solid #ff6b9d;
+        outline-offset: 2px;
+    }
+
+    .favoritos-produtos-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+    }
+
+    @media (max-width: 1200px) {
+        .favoritos-produtos-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 820px) {
+        .favoritos-produtos-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 540px) {
+        .favoritos-produtos-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .favoritos-produtos-grid .card {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        position: relative;
+    }
+
+    .favoritos-produtos-grid .card .fav-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        background: #fff;
+        border: 1px solid #ddd;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        z-index: 2;
+    }
+
+    .favoritos-produtos-grid .card .fav-btn:hover {
+        background: #fff3f3;
+        border-color: #ff6b9d;
+        transform: translateY(-1px);
+    }
+
+    .favoritos-produtos-grid .card .fav-btn.is-favoritado {
+        background: #ffe0e6;
+        border-color: #ff6b9d;
+        box-shadow: 0 6px 16px rgba(255, 107, 157, 0.28);
+    }
+
+    .favoritos-produtos-grid .card .fav-btn.is-favoritado:hover {
+        background: #ffd2dc;
+    }
+
+    .favoritos-produtos-grid .card .fav-btn:focus-visible {
+        outline: 2px solid #ff6b9d;
+        outline-offset: 2px;
+    }
+
+    .favoritos-produtos-grid .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .favoritos-produtos-grid .title {
+        font-weight: 600;
+        margin: 2px 0;
+    }
+
+    .favoritos-produtos-grid .price {
+        font-weight: 700;
+    }
+
+    .favoritos-produtos-grid .pill {
+        background: rgb(255, 237, 2);
+        color: #0F172A;
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 12px;
+    }
+
+    .favoritos-produtos-grid article small {
+        margin-top: auto;
+    }
+
+    .favoritos-pets-grid article small {
+        margin-top: 12px;
+        display: block;
+    }
+</style>
+{% endblock %}
