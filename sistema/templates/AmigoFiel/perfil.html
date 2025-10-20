@@ -156,8 +156,84 @@
           </a>
         {% endif %}
       </div>
+
+      <!-- Botão de Favoritar -->
+      {% if user.is_authenticated %}
+        {% if user.perfil_comum %}
+          <div style="margin-top:15px">
+            <button type="button"
+                    class="favoritar-btn-detail"
+                    data-url="{% url 'amigofiel:favoritar-pet' pet.slug %}"
+                    style="background:#fff;border:1px solid #dc3545;color:#dc3545;padding:8px 16px;border-radius:4px;cursor:pointer;transition:all 0.2s;font-weight:500;">
+              🤍 Adicionar aos Favoritos
+            </button>
+          </div>
+        {% endif %}
+      {% else %}
+        <div style="margin-top:15px">
+          <a href="{% url 'django:login' %}" class="btn btn-outline-primary">
+            Login para Favoritar
+          </a>
+        </div>
+      {% endif %}
     </section>
   {% endif %}
 
 </div>
+
+<script>
+// Sistema de Favoritar com AJAX - Página de Detalhe
+const botaoDetail = document.querySelector('.favoritar-btn-detail');
+if (botaoDetail) {
+  botaoDetail.addEventListener('click', async function(e) {
+    e.preventDefault();
+    const url = this.dataset.url;
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (data.sucesso) {
+        if (data.favoritado) {
+          this.textContent = '❤️ Remover dos Favoritos';
+          this.style.background = '#ffe0e6';
+          this.style.borderColor = '#ff6b9d';
+          this.style.color = '#ff6b9d';
+        } else {
+          this.textContent = '🤍 Adicionar aos Favoritos';
+          this.style.background = '#fff';
+          this.style.borderColor = '#dc3545';
+          this.style.color = '#dc3545';
+        }
+        console.log(data.mensagem);
+      }
+    } catch (error) {
+      console.error('Erro ao favoritar:', error);
+    }
+  });
+}
+
+// Função para obter CSRF token
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+</script>
 {% endblock %}

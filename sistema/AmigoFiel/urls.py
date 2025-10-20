@@ -39,6 +39,11 @@ urlpatterns = [
     # Edição de pet (antes da rota genérica de produto)
     path("pet/<slug:handle>/editar/", views.pet_editar, name="pet-editar"),
     path("pet/<slug:handle>/adotado/", views.pet_marcar_adotado, name="pet-marcar-adotado"),
+    
+    # Favoritos
+    path("favoritos/", views.meus_favoritos, name="meus-favoritos"),
+    path("pet/<slug:pet_slug>/favoritar/", views.favorito_toggle_pet, name="favoritar-pet"),
+    path("<str:empresa_handle>/<slug:produto_slug>/favoritar/", views.favorito_toggle_produto, name="favoritar-produto"),
 
     # Carrinho / checkout (DEVE vir antes das rotas genéricas)
     path("carrinho/", views.carrinho_ver, name="carrinho-ver"),

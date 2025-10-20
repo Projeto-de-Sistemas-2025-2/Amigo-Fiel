@@ -114,9 +114,24 @@
     </header>
 
     {% if pets %}
-      <section class="grid-4" style="align-items:stretch;">
+  <section class="grid-4 pets-grid" style="align-items:stretch;">
         {% for p in pets %}
-          <article class="mini-card" style="display:flex;flex-direction:column;">
+          <article class="mini-card" style="display:flex;flex-direction:column;position:relative;">
+            <!-- Botão de Favoritar Flutuante -->
+            {% if user.is_authenticated and user.perfil_comum %}
+        <button type="button" 
+          class="favoritar-btn{% if p.id in favoritos_pet_ids %} is-favoritado{% endif %}"
+          data-pet-slug="{{ p.slug }}"
+          data-pet-nome="{{ p.nome }}"
+          data-url="{% url 'amigofiel:favoritar-pet' p.slug %}"
+          data-favoritado="{% if p.id in favoritos_pet_ids %}true{% else %}false{% endif %}"
+          style="position:absolute;top:8px;right:8px;z-index:10;width:40px;height:40px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transition:all 0.2s;"
+          title="{% if p.id in favoritos_pet_ids %}Remover dos favoritos{% else %}Adicionar aos favoritos{% endif %}"
+          aria-pressed="{% if p.id in favoritos_pet_ids %}true{% else %}false{% endif %}">
+                {% if p.id in favoritos_pet_ids %}❤️{% else %}🤍{% endif %}
+              </button>
+            {% endif %}
+
             <a
               {% if p.slug %}
                 href="{% url 'amigofiel:perfil-pet' handle=p.slug %}"
@@ -189,4 +204,120 @@
     {% endif %}
   </main>
 </div>
+
+<script>
+// Sistema de Favoritar com AJAX
+document.querySelectorAll('.favoritar-btn').forEach(btn => {
+  const aplicarEstado = (elemento, favoritado) => {
+    elemento.dataset.favoritado = favoritado ? 'true' : 'false';
+    elemento.textContent = favoritado ? '❤️' : '🤍';
+    elemento.setAttribute('aria-pressed', favoritado ? 'true' : 'false');
+    elemento.classList.toggle('is-favoritado', favoritado);
+    elemento.title = favoritado ? 'Remover dos favoritos' : 'Adicionar aos favoritos';
+  };
+
+  aplicarEstado(btn, btn.dataset.favoritado === 'true');
+
+  btn.addEventListener('click', async function(e) {
+    e.preventDefault();
+    const url = this.dataset.url;
+    const petNome = this.dataset.petNome || this.dataset.petSlug;
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (data.sucesso) {
+        // Atualizar cor do botão
+        aplicarEstado(this, data.favoritado);
+
+        const mensagem = data.favoritado
+          ? `${petNome} adicionado aos favoritos!`
+          : `${petNome} removido dos favoritos!`;
+
+        showNotification(mensagem, data.favoritado ? 'success' : 'info');
+      }
+    } catch (error) {
+      console.error('Erro ao favoritar:', error);
+      showNotification('Erro ao favoritar. Tente novamente.', 'error');
+    }
+  });
+});
+
+// Função para obter CSRF token
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+// Função para mostrar notificação
+function showNotification(message, type = 'info') {
+  const alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-danger' : 'alert-info';
+  const notification = document.createElement('div');
+  notification.className = `alert ${alertClass} position-fixed top-0 start-50 translate-middle-x mt-3`;
+  notification.style.zIndex = '9999';
+  notification.textContent = message;
+  notification.style.animation = 'fadeInOut 3s ease-in-out';
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => notification.remove(), 3000);
+}
+
+// CSS para animação
+const style = document.createElement('style');
+style.textContent = `
+  .pets-grid .favoritar-btn {
+    background: #fff;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+
+  .pets-grid .favoritar-btn:hover {
+    background: #fff3f3;
+    border-color: #ff6b9d;
+    transform: translateY(-1px);
+  }
+
+  .pets-grid .favoritar-btn.is-favoritado {
+    background: #ffe0e6;
+    border-color: #ff6b9d;
+    box-shadow: 0 6px 16px rgba(255, 107, 157, 0.25);
+  }
+
+  .pets-grid .favoritar-btn.is-favoritado:hover {
+    background: #ffd2dc;
+  }
+
+  .pets-grid .favoritar-btn:focus-visible {
+    outline: 2px solid #ff6b9d;
+    outline-offset: 2px;
+  }
+
+  @keyframes fadeInOut {
+    0% { opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+`;
+document.head.appendChild(style);
+</script>
 {% endblock %}
