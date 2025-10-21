@@ -249,7 +249,7 @@
       current += dir;
       if(current < 0) current = items.length - 1;
       if(current >= items.length) current = 0;
-      items[current].scrollIntoView({behavior:'smooth', inline:'start'});
+      items[current].scrollIntoView({behavior:'smooth', inline:'start', block:'nearest'});
     }
     btnPrev.addEventListener('click', ()=>slide(-1));
     btnNext.addEventListener('click', ()=>slide(1));
