@@ -39,6 +39,20 @@
     font-size: 12px;
   }
 
+  .ong-badge{
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    color: #166534;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 4px rgba(22, 101, 52, 0.15);
+    border: 1px solid #86efac;
+  }
+
   .card .fav-btn{
     position:absolute;
     top:10px;
@@ -216,6 +230,18 @@
               <div class="price">R$ {{ prod.preco }}</div>
               <a class="pill" href="{% url 'amigofiel:perfil-empresa' handle=handle %}">{{ prod.empresa.razao_social }}</a>
             </div>
+
+            {% with vinculo=prod.vinculos_ong.all|first %}
+              {% if vinculo and vinculo.ativo %}
+                <div style="margin-top:6px;">
+                  <a class="ong-badge" 
+                     href="{% url 'amigofiel:perfil-ong' handle=vinculo.ong.user.username %}"
+                     title="Este produto apoia a ONG {{ vinculo.ong.nome_fantasia }} com {{ vinculo.percentual }}% das vendas">
+                    💚 Apoia ONG
+                  </a>
+                </div>
+              {% endif %}
+            {% endwith %}
           </article>
           {% endwith %}
         {% endfor %}

@@ -3,6 +3,25 @@
 
 {% block title %}Lojas — Amigo Fiel{% endblock %}
 
+{% block extra_head %}
+<style>
+  .ong-badge-loja {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    color: #166534;
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 6px rgba(22, 101, 52, 0.2);
+    border: 1px solid #86efac;
+    margin-top: 8px;
+  }
+</style>
+{% endblock %}
+
 {% block body %}
 <div class="container" style="display:grid;grid-template-columns:260px 1fr;gap:16px;">
 
@@ -79,6 +98,12 @@
                   ({{ loja.qtd_produtos }} no total)
                 {% endif %}
               </p>
+
+              {% if loja.qtd_produtos_com_ong > 0 %}
+                <div class="ong-badge-loja" title="Esta loja possui {{ loja.qtd_produtos_com_ong }} produto{{ loja.qtd_produtos_com_ong|pluralize }} vinculado{{ loja.qtd_produtos_com_ong|pluralize }} a ONGs">
+                  💚 Apoia ONGs
+                </div>
+              {% endif %}
             </a>
 
             <div class="actions" style="margin-top:auto;">
