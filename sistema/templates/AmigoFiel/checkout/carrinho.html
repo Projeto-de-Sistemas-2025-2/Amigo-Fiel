@@ -15,7 +15,10 @@
   {% else %}
     {% for loja, itens in grupos %}
       <section class="card" style="margin-bottom:12px">
-        <h2 class="h4" style="margin:0 0 8px">{{ loja.razao_social }}</h2>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <img src="{% if loja.foto %}{{ loja.foto.url }}{% else %}{% static 'img/defaults/avatar_empresa.png' %}{% endif %}" alt="{{ loja.razao_social }}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;">
+          <h2 class="h4" style="margin:0 0 8px">{{ loja.razao_social }}</h2>
+        </div>
         <table class="table">
           <thead>
             <tr><th>Produto</th><th style="width:110px">Qtd</th><th style="width:140px">Preço</th><th style="width:140px">Subtotal</th><th></th></tr>
@@ -23,24 +26,27 @@
           <tbody>
             {% for it in itens %}
             <tr>
-              <td>
-                <strong>{{ it.produto.nome }}</strong>
-                
-                {% if it.tem_desconto %}
-                  <div style="margin-top:4px;">
-                    <span class="badge" style="background:#dc2626;color:#fff;padding:2px 6px;border-radius:4px;font-size:0.75rem;">
-                      -{{ it.desconto_percentual }}% OFF
-                    </span>
-                  </div>
-                {% endif %}
-                
-                {% if it.ong_beneficiada %}
-                  <div style="margin-top:4px;">
-                    <small class="muted">
-                      🐾 Beneficia: <strong>{{ it.ong_beneficiada.nome_fantasia }}</strong> ({{ it.percentual_doacao }}%)
-                    </small>
-                  </div>
-                {% endif %}
+              <td style="display:flex;align-items:center;gap:12px;">
+                <img src="{% if it.produto.imagem %}{{ it.produto.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}" 
+                     alt="{{ it.produto.nome }}" 
+                     style="width:50px;height:50px;border-radius:8px;object-fit:cover;">
+                <div>
+                  <strong>{{ it.produto.nome }}</strong>
+                  {% if it.tem_desconto %}
+                    <div style="margin-top:4px;">
+                      <span class="badge" style="background:#dc2626;color:#fff;padding:2px 6px;border-radius:4px;font-size:0.75rem;">
+                        -{{ it.desconto_percentual }}% OFF
+                      </span>
+                    </div>
+                  {% endif %}
+                  {% if it.ong_beneficiada %}
+                    <div style="margin-top:4px;">
+                      <small class="muted">
+                        🐾 Beneficia: <strong>{{ it.ong_beneficiada.nome_fantasia }}</strong> ({{ it.percentual_doacao }}%)
+                      </small>
+                    </div>
+                  {% endif %}
+                </div>
               </td>
               <td>
                 <form method="post" action="{% url 'amigofiel:carrinho-update' item_id=it.id %}" style="display:inline;">{% csrf_token %}
@@ -65,7 +71,6 @@
                 {% else %}
                   <strong>R$ {{ it.subtotal_com_desconto|floatformat:2 }}</strong>
                 {% endif %}
-                
                 {% if it.valor_doacao > 0 %}
                   <div style="font-size:0.75rem;color:#15803d;margin-top:4px;">
                     💚 R$ {{ it.valor_doacao|floatformat:2 }} para ONG
