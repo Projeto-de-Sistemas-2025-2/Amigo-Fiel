@@ -25,7 +25,24 @@ SECRET_KEY = 'django-insecure-yg#y01+14rh0=__5(h(ds+gk^%5+8)l3zgdn&&scxpv)&p=o*-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'amigofiel.app',
+    '*.amigofiel.app',
+    '*.trycloudflare.com',
+]
+
+# CSRF Configuration for Cloudflare Tunnel
+CSRF_TRUSTED_ORIGINS = [
+    'https://amigofiel.app',
+    'https://*.amigofiel.app',
+    'https://*.trycloudflare.com',
+]
+
+# Security settings for production
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
 
 
 # Application definition
@@ -136,7 +153,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # LOGIN_URL (havia um typo: LOGUIN_URL)
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/amigofiel/'
-LOGOUT_REDIRECT_URL = '/home/'
+LOGOUT_REDIRECT_URL = '/login/'
 
 # MEDIA (uploads de usuários)
 MEDIA_URL = '/media/'

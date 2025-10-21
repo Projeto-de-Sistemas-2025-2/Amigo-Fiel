@@ -1,8 +1,25 @@
 from django.contrib.auth.decorators import login_required
+@login_required
+def iniciar_chat_com_dono(request, pet_id):
+    from AmigoFiel.models import Pet
+    pet = get_object_or_404(Pet, id=pet_id)
+    if pet.tutor:
+        dono = pet.tutor.user
+    elif pet.ong:
+        dono = pet.ong.user
+    else:
+        messages.error(request, "Este pet não possui dono definido.")
+        return redirect(pet.get_absolute_url())
+    if dono == request.user:
+        messages.info(request, "Você é o dono deste pet.")
+        return redirect(pet.get_absolute_url())
+    # Redireciona para o chat com o dono
+    return redirect('chat:thread', username=dono.username)
 from django.contrib.auth import get_user_model
 from django.db.models import Q, Max, Count
 from django.http import JsonResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib import messages
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
 from django.templatetags.static import static
@@ -140,7 +157,7 @@ def thread_by_username(request, username):
             msg = Message.objects.create(conversation=conv, sender=request.user, text=text)
             conv.last_message_at = msg.created_at
             conv.save(update_fields=['last_message_at'])
-        return redirect('chat:thread-by-username', username=other.username)
+        # Não faz redirect - renderiza diretamente para evitar atraso
 
     # marcar mensagens recebidas como lidas
     (conv.messages
