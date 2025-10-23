@@ -43,6 +43,22 @@ promover boas práticas (triagem, termos de responsabilidade, acompanhamento) e,
 
 ## 🚀 Começo rápido
 
+### O que é necessário — execução vs desenvolvimento
+
+- Para rodar o projeto (teste rápido / usuário que quer executar a aplicação):
+  - Python 3.11+.
+  - Ambiente virtual (venv) e instalar dependências: `pip install -r requirements.txt`.
+  - Apontar o projeto para a instância PostgreSQL online (contate o responsável pela instância) ou usar uma instância local se preferir.
+  - Ter um arquivo de configuração `.env` com as variáveis mínimas (SECRET_KEY, DEBUG, ALLOWED_HOSTS e credenciais do DB) — peça o `.env` ou os valores ao responsável se necessário.
+  - Executar `python manage.py runserver`. Execute `python manage.py migrate` somente se a base apontada não tiver as migrations aplicadas.
+
+- Para desenvolver/alterar o projeto (contribuidores, manutenção, novas features):
+  - Tudo o que consta em "Para rodar o projeto", mais:
+  - PostgreSQL local (ou `docker-compose`) para rodar um banco isolado durante desenvolvimento e testes.
+  - Ferramentas de desenvolvimento: editor/IDE (VS Code, PyCharm), Git, e (opcional) Docker.
+  - Rodar testes e validações locais: `python manage.py test` e linters/formatters conforme o fluxo da equipe.
+  - Ao alterar modelos ou migrations: coordene com a equipe e evite rodar `migrate` em bases compartilhadas sem autorização.
+
 ### 1) Pré‑requisitos
 - Python 3.11+ e pip
 - Git
@@ -76,7 +92,9 @@ pip install -r requirements.txt
 
 ### 4) Banco de dados (PostgreSQL)
 
-O projeto usa PostgreSQL. A equipe mantém uma instância PostgreSQL hospedada online para desenvolvimento compartilhado. Você tem três opções ao começar:
+O projeto usa PostgreSQL. A equipe mantém uma instância PostgreSQL hospedada online para desenvolvimento compartilhado. Para solicitar credenciais de acesso a essa instância, contate o responsável pela instância: Eduardo Henrique (HelloKiw1) — https://github.com/HelloKiw1. Não compartilhe credenciais publicamente.
+
+Você tem três opções ao começar:
 
 1) Usar a instância PostgreSQL online (rápido, recomendado para visualização)
 - Atualize o arquivo `.env` em `sistema/` com as credenciais/host fornecidos pela equipe.
@@ -101,29 +119,7 @@ GRANT ALL PRIVILEGES ON DATABASE amigofiel TO amigofiel_user;
 
 Se optar por rodar localmente, aponte o `.env` para `127.0.0.1` e rode as migrations normalmente.
 
-### 5) Variáveis de ambiente
-Crie um arquivo **`.env`** na pasta `sistema/` (ou use `.env.example` como base):
-
-```dotenv
-# Django
-SECRET_KEY=troque-esta-chave
-DEBUG=True
-ALLOWED_HOSTS=127.0.0.1,localhost
-
-# Database
-POSTGRES_DB=amigofiel
-POSTGRES_USER=amigofiel_user
-POSTGRES_PASSWORD=senha_segura
-POSTGRES_HOST=127.0.0.1
-POSTGRES_PORT=5432
-
-# Arquivos estáticos (produção)
-STATIC_ROOT=./staticfiles
-```
-
-> Em produção, defina `DEBUG=False`, configure `ALLOWED_HOSTS` e rode `python manage.py collectstatic`.
-
-### 6) Migrações e superusuário
+### 5) Migrações e superusuário
 
 Antes de rodar `migrate`, verifique o estado das migrations na base que você está apontando:
 
