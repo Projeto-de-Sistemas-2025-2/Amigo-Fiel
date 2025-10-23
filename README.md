@@ -13,7 +13,7 @@
 Plataforma web que conecta **ONGs, protetores e adotantes** de forma ética e transparente. O projeto nasceu para facilitar a **adoção responsável**,
 promover boas práticas (triagem, termos de responsabilidade, acompanhamento) e, como extensão, oferecer um **marketplace pet** (lojas e produtos) que ajuda a sustentar as iniciativas.
 
-> **Status**: em desenvolvimento (pré-1.0).
+**Status:** em desenvolvimento (pré-1.0).
 
 ---
 
@@ -44,17 +44,19 @@ promover boas práticas (triagem, termos de responsabilidade, acompanhamento) e,
 ## 🚀 Começo rápido
 
 ### 1) Pré‑requisitos
-- **Python 3.13** (recomendado) e **pip**
-- **PostgreSQL** 14+ (com utilitário `psql` no PATH)
+- Python 3.11+ e pip
 - Git
 
-> **Windows**: se o comando `psql` não for reconhecido, instale o PostgreSQL pelo instalador oficial e marque a opção *“Add to PATH”* ou adicione manualmente: `C:\Program Files\PostgreSQL\<versão>\bin` ao PATH.
+Observação: PostgreSQL é necessário apenas se você for rodar uma instância local do banco. É possível apontar o projeto para uma instância PostgreSQL online compartilhada (veja seção "Banco de dados" abaixo).
+
+> Windows: se precisar do cliente `psql` e ele não for reconhecido, instale o PostgreSQL e adicione `C:\Program Files\PostgreSQL\<versão>\bin` ao PATH.
 
 ### 2) Clonar o repositório
 ```bash
 git clone https://github.com/Projeto-de-Sistemas-2025-2/Amigo-Fiel.git
-cd Amigo-Fiel/sistema
+cd Amigo-Fiel
 ```
+(o `manage.py` do projeto está em `sistema/manage.py`; para operar diretamente nele execute `cd sistema` quando necessário)
 
 ### 3) Ambiente virtual
 **Windows (PowerShell):**
@@ -71,15 +73,33 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+
 ### 4) Banco de dados (PostgreSQL)
-Crie banco e usuário (substitua credenciais conforme seu `.env`):
+
+O projeto usa PostgreSQL. A equipe mantém uma instância PostgreSQL hospedada online para desenvolvimento compartilhado. Você tem três opções ao começar:
+
+1) Usar a instância PostgreSQL online (rápido, recomendado para visualização)
+- Atualize o arquivo `.env` em `sistema/` com as credenciais/host fornecidos pela equipe.
+- Verifique as migrations sem aplicá-las: `python manage.py showmigrations`.
+- Se *todas* as migrations do projeto já estiverem aplicadas na instância remota, não é necessário executar `migrate` localmente.
+
+Aviso: não execute `python manage.py migrate` em um banco compartilhado sem coordenação com a equipe — isso pode alterar o esquema de todos. Use esta opção principalmente para leitura e testes não destrutivos.
+
+2) Rodar um banco PostgreSQL local (recomendado para desenvolvimento isolado)
+- Instale PostgreSQL localmente ou use `docker-compose` (posso adicionar um exemplo se quiser).
+- Crie o banco e um usuário local (exemplo):
 
 ```sql
--- no psql
+-- no psql local
 CREATE DATABASE amigofiel;
 CREATE USER amigofiel_user WITH ENCRYPTED PASSWORD 'senha_segura';
 GRANT ALL PRIVILEGES ON DATABASE amigofiel TO amigofiel_user;
 ```
+
+3) Usar a instância online apenas para leitura (usuário com permissão somente leitura)
+- Peça à equipe credenciais `readonly` se quiser inspecionar dados sem risco de alteração.
+
+Se optar por rodar localmente, aponte o `.env` para `127.0.0.1` e rode as migrations normalmente.
 
 ### 5) Variáveis de ambiente
 Crie um arquivo **`.env`** na pasta `sistema/` (ou use `.env.example` como base):
@@ -104,7 +124,19 @@ STATIC_ROOT=./staticfiles
 > Em produção, defina `DEBUG=False`, configure `ALLOWED_HOSTS` e rode `python manage.py collectstatic`.
 
 ### 6) Migrações e superusuário
-```bash
+
+Antes de rodar `migrate`, verifique o estado das migrations na base que você está apontando:
+
+```powershell
+# listar migrations e ver quais estão aplicadas
+python manage.py showmigrations
+```
+
+Se a base (local ou remota) já tiver as migrations aplicadas, não há necessidade de rodar `migrate`.
+
+Se estiver em um ambiente local (ou tiver permissão na instância remota) e precisar aplicar migrations:
+
+```powershell
 python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
@@ -154,5 +186,13 @@ Confira `sistema/urls.py` e os `urls.py` dos apps para a versão atual.
 
 ## 👩‍💻 Contato & créditos
 
-Projeto acadêmico colaborativo — UFT (2025/2).  
+Projeto acadêmico colaborativo — UFT (2025/2).
+
+Equipe e contribuições:
+
+ - [Eduardo Henrique](https://github.com/HelloKiw1) — nickname: HelloKiw1
+ - [Henrique Wendler](https://github.com/Henrique-wendler) — nickname: Henrique-wendler
+ - [Mahes vras](https://github.com/vrascode) — nickname: vrascode
+ - [Guilherme da Silva](https://github.com/Guilherme1737) — nickname: Guilherme1737
+
 Coordenação e desenvolvimento: comunidade do **Amigo Fiel** 🐾
