@@ -190,9 +190,9 @@ Projeto acadêmico colaborativo — UFT (2025/2).
 
 Equipe e contribuições:
 
- - [Eduardo Henrique](https://github.com/HelloKiw1) — nickname: HelloKiw1
- - [Henrique Wendler](https://github.com/Henrique-wendler) — nickname: Henrique-wendler
- - [Mahes vras](https://github.com/vrascode) — nickname: vrascode
- - [Guilherme da Silva](https://github.com/Guilherme1737) — nickname: Guilherme1737
+ - [Eduardo Henrique](https://github.com/HelloKiw1)
+ - [Henrique Wendler](https://github.com/Henrique-wendler) 
+ - [Mahes vras](https://github.com/vrascode) 
+ - [Guilherme da Silva](https://github.com/Guilherme1737) 
 
 Coordenação e desenvolvimento: comunidade do **Amigo Fiel** 🐾
