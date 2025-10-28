@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -95,12 +96,14 @@ WSGI_APPLICATION = 'sistema.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',  
-        'NAME': 'amigofiel',
-        'USER': 'amigofiel_user',
-        'PASSWORD': 'vIqY4sHC9xRrNhdcaQyrSP1WXSJhSWnL',   
-        'HOST': 'dpg-d3bdicd6ubrc739lel60-a.oregon-postgres.render.com',     
-        'PORT': '5432',
-        "OPTIONS": { "sslmode": "require" },
+        # Valores padrão (podem ser sobrescritos por variáveis de ambiente)
+        'NAME': os.getenv('POSTGRES_DB', 'amigofiel'),
+        'USER': os.getenv('POSTGRES_USER', 'postgres'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'hU2d1m3L8RdN2wDjZZNYCJU6m3K4wSqDpBSAFsXJhfm7iukpH9tolpc11HhQuo7A'),
+        'HOST': os.getenv('POSTGRES_HOST', '152.67.47.16'),
+        'PORT': os.getenv('POSTGRES_PORT', '5440'),
+        # Controle o comportamento SSL via POSTGRES_SSLMODE (ex: 'require', 'disable', 'prefer')
+        'OPTIONS': { 'sslmode': os.getenv('POSTGRES_SSLMODE', 'require') },
     }
 }
 
