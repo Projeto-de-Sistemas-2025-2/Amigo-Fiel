@@ -1,0 +1,12 @@
+
+
+1. Admin Django
+   URL: http://localhost:8000/admin/
+   Username: admin
+   Password: admin123
+   
+
+    ou
+   
+  Username: joao
+  Password: senha123

@@ -6,114 +6,184 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cadastro - Amigo Fiel</title>
   <link rel="stylesheet" href="{% static 'css/login.css' %}">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
-  <style>
-    /* utilitários mínimos sem conflitar com login.css */
-    .hidden { display: none; }
-  </style>
 </head>
 <body>
-  <!-- Fundo Decorativo seguindo as classes do login.css -->
-  <div class="decor-bg cadastro-bg">
-    <div class="cadastro-yellow"></div>
-    <div class="cadastro-blue"></div>
-    <div class="cadastro-left"></div>
-    <div class="cadastro-right"></div>
-  </div>
-
-  <div class="container">
-    <!-- Marca -->
-    <div class="logo-wrapper">
-      <img src="{% static 'img/amigo-fiel-logo.png' %}" alt="Amigo Fiel Logo" class="logo">
-      <div class="brand">AMIGO FIEL</div>
+  <div class="auth-wrapper">
+    <!-- Painel Esquerdo - Banner -->
+    <div class="auth-left">
+      <img src="{% static 'img/banner-cadastro.png' %}" alt="Banner" class="auth-banner">
     </div>
 
-    <h1 class="title">CADASTRO</h1>
-
-    <!-- Sumário de erros (mantém visual do .error do seu CSS) -->
-    {% if form.errors or form.non_field_errors %}
-      <div class="error" role="alert" aria-live="polite">
-        <strong>Verifique os campos abaixo:</strong>
-        <ul style="margin:8px 0 0 18px; padding:0;">
-          {% for field in form %}
-            {% for error in field.errors %}
-              <li><a href="#{{ field.id_for_label }}" style="color:inherit; text-decoration:underline;">{{ field.label }}:</a> {{ error }}</li>
-            {% endfor %}
-          {% endfor %}
-          {% for error in form.non_field_errors %}
-            <li>{{ error }}</li>
-          {% endfor %}
-        </ul>
-      </div>
-    {% endif %}
-
-    <form method="post" novalidate>
-      {% csrf_token %}
-
-      <!-- Acesso -->
-      <label class="label" for="{{ form.username.id_for_label }}">Usuário</label>
-      {{ form.username }}
-      {% for e in form.username.errors %}<div class="error">{{ e }}</div>{% endfor %}
-
-      <label class="label" for="{{ form.password1.id_for_label }}">Senha</label>
-      {{ form.password1 }}
-      {% for e in form.password1.errors %}<div class="error">{{ e }}</div>{% endfor %}
-
-      <label class="label" for="{{ form.password2.id_for_label }}">Confirmação de senha</label>
-      {{ form.password2 }}
-      {% for e in form.password2.errors %}<div class="error">{{ e }}</div>{% endfor %}
-
-      <!-- Tipo -->
-      <label class="label" for="{{ form.user_type.id_for_label }}">Tipo de conta</label>
-      {{ form.user_type }}
-      {% for e in form.user_type.errors %}<div class="error">{{ e }}</div>{% endfor %}
-
-      <!-- Contato -->
-      <label class="label" for="{{ form.telefone.id_for_label }}">Telefone (opcional)</label>
-      {{ form.telefone }}
-      {% for e in form.telefone.errors %}<div class="error">{{ e }}</div>{% endfor %}
-
-      <label class="label" for="{{ form.cidade.id_for_label }}">Cidade (opcional)</label>
-      {{ form.cidade }}
-      {% for e in form.cidade.errors %}<div class="error">{{ e }}</div>{% endfor %}
-
-      <!-- Empresa -->
-      <div id="grp-empresa" class="hidden">
-        <label class="label" for="{{ form.razao_social.id_for_label }}">Razão social</label>
-        {{ form.razao_social }}
-        {% for e in form.razao_social.errors %}<div class="error">{{ e }}</div>{% endfor %}
-
-        <label class="label" for="{{ form.cnpj_empresa.id_for_label }}">CNPJ</label>
-        {{ form.cnpj_empresa }}
-        {% for e in form.cnpj_empresa.errors %}<div class="error">{{ e }}</div>{% endfor %}
+    <!-- Painel Direito - Formulário -->
+    <div class="auth-right">
+      <div class="auth-brand">
+        <img src="{% static 'img/amigo-fiel-logo-amarelo.png' %}" alt="Amigo Fiel Logo" class="auth-logo">
+        <h1 class="auth-brand-name">AMIGO FIEL</h1>
       </div>
 
-      <!-- ONG -->
-      <div id="grp-ong" class="hidden">
-        <label class="label" for="{{ form.nome_fantasia.id_for_label }}">Nome fantasia</label>
-        {{ form.nome_fantasia }}
-        {% for e in form.nome_fantasia.errors %}<div class="error">{{ e }}</div>{% endfor %}
+      <div class="auth-form-container">
+        <div class="auth-header">
+          <a href="{% url 'amigofiel:home' %}" class="auth-back-link">
+            ← Voltar ao site
+          </a>
+          <h2 class="auth-title">Crie sua conta</h2>
+          <p class="auth-subtitle">
+            Já tem uma conta? <a href="{% url 'login' %}">Entrar</a>
+          </p>
+        </div>
 
-        <label class="label" for="{{ form.cnpj_ong.id_for_label }}">CNPJ</label>
-        {{ form.cnpj_ong }}
-        {% for e in form.cnpj_ong.errors %}<div class="error">{{ e }}</div>{% endfor %}
+        {% if form.errors or form.non_field_errors %}
+          <div class="error-message" role="alert" aria-live="polite">
+            <strong>Verifique os campos abaixo:</strong>
+            <ul>
+              {% for field in form %}
+                {% for error in field.errors %}
+                  <li><a href="#{{ field.id_for_label }}">{{ field.label }}:</a> {{ error }}</li>
+                {% endfor %}
+              {% endfor %}
+              {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
 
-        <label class="label" for="{{ form.site.id_for_label }}">Site</label>
-        {{ form.site }}
-        {% for e in form.site.errors %}<div class="error">{{ e }}</div>{% endfor %}
+        <form method="post" class="auth-form" novalidate>
+          {% csrf_token %}
+
+          <div class="form-group">
+            <label class="form-label" for="{{ form.username.id_for_label }}">Nome de usuário</label>
+            {{ form.username }}
+          </div>
+
+          <div class="form-row">
+            <div class="form-group half">
+              <label class="form-label" for="{{ form.password1.id_for_label }}">Senha</label>
+              <div class="password-toggle">
+                {{ form.password1 }}
+                <button type="button" class="password-toggle-btn" onclick="togglePassword('{{ form.password1.id_for_label }}')">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group half">
+              <label class="form-label" for="{{ form.password2.id_for_label }}">Confirmar senha</label>
+              <div class="password-toggle">
+                {{ form.password2 }}
+                <button type="button" class="password-toggle-btn" onclick="togglePassword('{{ form.password2.id_for_label }}')">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="{{ form.user_type.id_for_label }}">Tipo de conta</label>
+            {{ form.user_type }}
+          </div>
+
+          <div class="form-row">
+            <div class="form-group half">
+              <label class="form-label" for="{{ form.telefone.id_for_label }}">Telefone (opcional)</label>
+              {{ form.telefone }}
+            </div>
+
+            <div class="form-group half">
+              <label class="form-label" for="{{ form.cidade.id_for_label }}">Cidade (opcional)</label>
+              {{ form.cidade }}
+            </div>
+          </div>
+
+          <!-- Campos específicos de Empresa -->
+          <div id="grp-empresa" class="hidden">
+            <div class="form-group">
+              <label class="form-label" for="{{ form.razao_social.id_for_label }}">Razão social</label>
+              {{ form.razao_social }}
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="{{ form.cnpj_empresa.id_for_label }}">CNPJ</label>
+              {{ form.cnpj_empresa }}
+            </div>
+          </div>
+
+          <!-- Campos específicos de ONG -->
+          <div id="grp-ong" class="hidden">
+            <div class="form-group">
+              <label class="form-label" for="{{ form.nome_fantasia.id_for_label }}">Nome fantasia</label>
+              {{ form.nome_fantasia }}
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="{{ form.cnpj_ong.id_for_label }}">CNPJ</label>
+              {{ form.cnpj_ong }}
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="{{ form.site.id_for_label }}">Site (opcional)</label>
+              {{ form.site }}
+            </div>
+          </div>
+
+          <div class="form-checkbox">
+            <input type="checkbox" id="terms" required>
+            <label for="terms">Aceito os <a href="#">Termos & Condições</a></label>
+          </div>
+
+          <button class="auth-button" type="submit">Criar conta</button>
+
+          <div class="auth-divider">Ou cadastre-se com</div>
+
+          <div class="social-buttons">
+            <button type="button" class="social-btn" onclick="alert('Cadastro social em desenvolvimento')">
+              <svg width="20" height="20" viewBox="0 0 20 20"><path fill="#4285F4" d="M19.6 10.23c0-.82-.1-1.42-.25-2.05H10v3.72h5.5c-.15.96-.74 2.31-2.04 3.22v2.45h3.16c1.89-1.73 2.98-4.3 2.98-7.34z"/><path fill="#34A853" d="M13.46 15.13c-.83.59-1.96 1-3.46 1-2.64 0-4.88-1.74-5.68-4.15H1.07v2.52C2.72 17.75 6.09 20 10 20c2.7 0 4.96-.89 6.62-2.42l-3.16-2.45z"/><path fill="#FBBC05" d="M3.99 10c0-.69.12-1.35.32-1.97V5.51H1.07A9.973 9.973 0 000 10c0 1.61.39 3.14 1.07 4.49l3.24-2.52c-.2-.62-.32-1.28-.32-1.97z"/><path fill="#EA4335" d="M10 3.88c1.88 0 3.13.81 3.85 1.48l2.84-2.76C14.96.99 12.7 0 10 0 6.09 0 2.72 2.25 1.07 5.51l3.24 2.52C5.12 5.62 7.36 3.88 10 3.88z"/></svg>
+              Google
+            </button>
+          </div>
+        </form>
       </div>
-
-      <button class="button" type="submit">Cadastrar</button>
-
-      <div class="signupText">
-        Já tem conta? <a href="{% url 'login' %}" class="signupLink">Entrar</a>
-      </div>
-    </form>
+    </div>
   </div>
 
   <script>
-    // Toggle Empresa/ONG com disable para inputs irrelevantes
+    // Aplicar classes do CSS aos campos do formulário
+    document.querySelectorAll('input[type="text"], input[type="password"], input[type="email"], input[type="url"], select').forEach(el => {
+      if (!el.classList.contains('password-toggle-btn')) {
+        if (el.tagName === 'SELECT') {
+          el.classList.add('form-select');
+        } else {
+          el.classList.add('form-input');
+        }
+      }
+    });
+
+    // Toggle de senha
+    function togglePassword(fieldId) {
+      const input = document.getElementById(fieldId);
+      const btn = input.parentElement.querySelector('.password-toggle-btn');
+      const svg = btn.querySelector('svg');
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        // Ícone de olho com linha (ocultar)
+        svg.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+      } else {
+        input.type = 'password';
+        // Ícone de olho normal (mostrar)
+        svg.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+      }
+    }
+
+    // Toggle de grupos Empresa/ONG
     const selectTipo = document.getElementById("id_user_type");
     const grpEmpresa = document.getElementById("grp-empresa");
     const grpOng = document.getElementById("grp-ong");
@@ -127,7 +197,7 @@
       });
     }
 
-    function toggleGroups(){
+    function toggleGroups() {
       const v = selectTipo?.value;
       const isEmp = v === "empresa";
       const isOng = v === "ong";
@@ -142,7 +212,7 @@
       }
     }
 
-    if (selectTipo){
+    if (selectTipo) {
       toggleGroups();
       selectTipo.addEventListener("change", toggleGroups);
     }
