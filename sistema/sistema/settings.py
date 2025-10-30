@@ -102,8 +102,15 @@ DATABASES = {
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'hU2d1m3L8RdN2wDjZZNYCJU6m3K4wSqDpBSAFsXJhfm7iukpH9tolpc11HhQuo7A'),
         'HOST': os.getenv('POSTGRES_HOST', '152.67.47.16'),
         'PORT': os.getenv('POSTGRES_PORT', '5440'),
-        # Controle o comportamento SSL via POSTGRES_SSLMODE (ex: 'require', 'disable', 'prefer')
-        'OPTIONS': { 'sslmode': os.getenv('POSTGRES_SSLMODE', 'require') },
+        # Controle o comportamento SSL via POSTGRES_SSLMODE (ex: 'require', 'disable', 'prefer').
+        # Comportamento seguro: em DEBUG usar 'disable' por padrão (para desenvolvimento),
+        # em produção usar 'require'. A variável de ambiente POSTGRES_SSLMODE sempre tem precedência.
+        # Exemplo de valores: 'disable', 'allow', 'prefer', 'require', 'verify-ca', 'verify-full'
+        # Determina o sslmode efetivo
+        # NOTA: desabilitar SSL transmite credenciais em texto — use apenas em ambiente confiável/dev.
+        'OPTIONS': {
+            'sslmode': os.getenv('POSTGRES_SSLMODE') or ('disable' if DEBUG else 'require')
+        },
     }
 }
 
