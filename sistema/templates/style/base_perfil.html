@@ -27,21 +27,19 @@
       </form>
 
       <div class="quick-actions">
-        <span class="small muted">📍 
         {% if user.is_authenticated %}
-          {% if user.perfil_empresa %}
-            {{ user.perfil_empresa.cidade|default:"Sua cidade" }}
-          {% elif user.perfil_ong %}
-            {{ user.perfil_ong.cidade|default:"Sua cidade" }}
-          {% elif user.perfil_comum %}
-            {{ user.perfil_comum.cidade|default:"Sua cidade" }}
-          {% else %}
-            Sua cidade
-          {% endif %}
-        {% else %}
-          {{ request.GET.cidade|default:"Sua cidade" }}
+          <span class="small muted">📍 
+            {% if user.perfil_empresa %}
+              {{ user.perfil_empresa.cidade|default:"Sua cidade" }}
+            {% elif user.perfil_ong %}
+              {{ user.perfil_ong.cidade|default:"Sua cidade" }}
+            {% elif user.perfil_comum %}
+              {{ user.perfil_comum.cidade|default:"Sua cidade" }}
+            {% else %}
+              Sua cidade
+            {% endif %}
+          </span>
         {% endif %}
-        </span>
 
 
 
@@ -72,7 +70,9 @@
           <a class="btn btn-secondary" href="{% url 'login' %}">Entrar</a>
         {% endif %}
 
-  <a class="icon-btn" href="{% url 'amigofiel:carrinho-ver' %}"><span aria-hidden="true">🛒</span> <span class="small muted">Carrinho</span></a>
+        {% if user.is_authenticated %}
+          <a class="icon-btn" href="{% url 'amigofiel:carrinho-ver' %}"><span aria-hidden="true">🛒</span> <span class="small muted">Carrinho</span></a>
+        {% endif %}
       </div>
     </div>
 
