@@ -45,9 +45,11 @@
           </span>
         {% endif %}
 
-
-
         {% if user.is_authenticated %}
+          <a class="icon-btn" href="{% url 'amigofiel:carrinho-ver' %}"><span aria-hidden="true">🛒</span> <span class="small muted">Carrinho</span></a>
+        {% endif %}
+
+                {% if user.is_authenticated %}
           <details class="icon-btn" style="position:relative;">
             <summary class="semibold">👤 {{ user.username }}</summary>
             <div class="card" style="position:absolute; right:0; top:120%; min-width:220px;">
@@ -73,10 +75,7 @@
         {% else %}
           <a class="btn btn-secondary" href="{% url 'login' %}">Entrar</a>
         {% endif %}
-
-        {% if user.is_authenticated %}
-          <a class="icon-btn" href="{% url 'amigofiel:carrinho-ver' %}"><span aria-hidden="true">🛒</span> <span class="small muted">Carrinho</span></a>
-        {% endif %}
+        
       </div>
     </div>
 

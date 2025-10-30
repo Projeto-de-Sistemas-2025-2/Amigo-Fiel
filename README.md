@@ -165,11 +165,11 @@ Acesse:
 
 - `/` — Home
 - `/login` e `/logout`
-- `/amigofiel/` — módulo principal
-  - `/amigofiel/animais` — lista e filtros
-  - `/amigofiel/ongs`
-  - `/amigofiel/lojas`
-  - `/amigofiel/produtos`
+- `/` — módulo principal (app montado na raiz)
+  - `/animais` — lista e filtros
+  - `/ongs`
+  - `/lojas`
+  - `/produtos`
 
 Confira `sistema/urls.py` e os `urls.py` dos apps para a versão atual.
 

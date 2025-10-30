@@ -52,7 +52,7 @@ urlpatterns = [
     path("carrinho/remover/<int:item_id>/", views.carrinho_remover, name="carrinho-remove"),
     path("checkout/simulado/", views.checkout_simulado, name="checkout-simulado"),
 
-    # Produto: /amigofiel/<empresa_handle>/<produto_slug>/
+    # Produto: /<empresa_handle>/<produto_slug>/
     path("<str:empresa_handle>/<slug:produto_slug>/", views.produto_detalhe, name="produto-detalhe"),
     
     # Edição de produto (depois da rota de detalhe)

@@ -137,7 +137,7 @@ class Pet(TimeStampedModel):
         default="defaults/pet.png",
     )
 
-    # para URL: /amigofiel/pet/@<slug>
+    # para URL: /pet/@<slug>
     slug = models.SlugField(
         max_length=120,
         unique=True,
@@ -245,7 +245,7 @@ class ProdutoEmpresa(TimeStampedModel):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        # /amigofiel/<empresa_handle>/<produto_slug>/
+    # /<empresa_handle>/<produto_slug>/
         return reverse(
             "amigofiel:produto-detalhe",
             kwargs={

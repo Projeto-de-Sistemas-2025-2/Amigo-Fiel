@@ -156,7 +156,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # LOGIN_URL (havia um typo: LOGUIN_URL)
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/amigofiel/'
+# Após montar o app na raiz, redirecionar para '/'
+LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
 
 # MEDIA (uploads de usuários)

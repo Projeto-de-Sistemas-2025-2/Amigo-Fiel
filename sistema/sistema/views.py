@@ -8,7 +8,8 @@ class Login(View):
     def get(self, request):
         contexto={'mensagem': ''}
         if request.user.is_authenticated:
-            return redirect("/AmigoFiel")
+            # redireciona para a home do app (namespace amigofiel)
+            return redirect('amigofiel:home')
         else:
             return render(request, 'autenticacao.html', contexto)   
 
@@ -25,7 +26,7 @@ class Login(View):
         #Verificar se o usuario esta ativo
             if user.is_active:
                 login(request, user)
-                return redirect("/AmigoFiel")
+                return redirect('amigofiel:home')
 
             return render(request, 'autenticacao.html', {'mensagem': ' Usuario inatico'})
     

@@ -17,14 +17,32 @@
     <article class="mini-card center">
       <h3 class="h2">E-mail</h3>
       <p><a href="mailto:contato@amigofiel.org">contato@amigofiel.org</a></p>
+      <p class="muted" style="font-size:13px;">Tempo médio de resposta: 48-72 horas úteis.</p>
     </article>
     <article class="mini-card center">
       <h3 class="h2">WhatsApp</h3>
       <p><a href="https://wa.me/5562982418089" target="_blank" rel="noopener">Abrir conversa</a></p>
+      <p class="muted" style="font-size:13px;">Atendimento via WhatsApp: seg–sex, 09:00–18:00 (horário local).</p>
     </article>
     <article class="mini-card center">
       <h3 class="h2">Redes</h3>
       <p><a href="#" target="_blank" rel="noopener">@amigofiel</a></p>
+      <p class="muted" style="font-size:13px;">Siga-nos para novidades, eventos e campanhas de adoção.</p>
     </article>
+  </section>
+
+  <!-- Sobre o sistema / como contribuir -->
+  <section class="card" style="margin-top:14px;">
+    <h2 class="h2">Sobre o sistema</h2>
+    <p>O Amigo Fiel é desenvolvido como uma aplicação web em camadas, pensada para ser simples de instalar e estender. Abaixo um resumo técnico rápido:</p>
+    <ul>
+      <li><strong>Backend:</strong> Django 5.2.x (Python 3.13)</li>
+      <li><strong>Banco de dados:</strong> PostgreSQL</li>
+      <li><strong>Frontend:</strong> Django Templates, CSS responsivo (padrões simples, sem framework pesado)</li>
+      <li><strong>Uploads e mídia:</strong> armazenados em <code>MEDIA_ROOT</code>, servidos em desenvolvimento via configuração de static/media</li>
+      <li><strong>Autenticação e perfis:</strong> três perfis: Usuário Comum, ONG e Empresa</li>
+    </ul>
+
+    <p class="muted">Quer contribuir ou rodar localmente? Consulte o <a href="https://github.com/Projeto-de-Sistemas-2025-2/Amigo-Fiel" target="_blank" rel="noopener">repositório GitHub</a> e o <code>README.md</code> para instruções.</p>
   </section>
 {% endblock %}
