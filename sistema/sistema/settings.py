@@ -103,7 +103,7 @@ DATABASES = {
         'HOST': os.getenv('POSTGRES_HOST', '152.67.47.16'),
         'PORT': os.getenv('POSTGRES_PORT', '5440'),
         # Controle o comportamento SSL via POSTGRES_SSLMODE (ex: 'require', 'disable', 'prefer')
-        'OPTIONS': { 'sslmode': os.getenv('POSTGRES_SSLMODE', 'require') },
+        'OPTIONS': { 'sslmode': os.getenv('POSTGRES_SSLMODE', 'disable') },
     }
 }
 
