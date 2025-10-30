@@ -50,7 +50,12 @@ promover boas práticas (triagem, termos de responsabilidade, acompanhamento) e,
   - Ambiente virtual (venv) e instalar dependências: `pip install -r requirements.txt`.
   - Apontar o projeto para a instância PostgreSQL online (contate o responsável pela instância) ou usar uma instância local se preferir.
   - Ter um arquivo de configuração `.env` com as variáveis mínimas (SECRET_KEY, DEBUG, ALLOWED_HOSTS e credenciais do DB) — peça o `.env` ou os valores ao responsável se necessário.
-  - Executar `python manage.py runserver`. Execute `python manage.py migrate` somente se a base apontada não tiver as migrations aplicadas.
+  - Se o servidor PostgreSQL remoto não oferecer SSL nesta porta (você pode ver um erro como "server does not support SSL, but SSL was required"), em PowerShell defina temporariamente a variável e rode o servidor:
+    ```powershell
+    $env:POSTGRES_SSLMODE = 'disable'
+    python manage.py runserver
+    ```
+    Execute `python manage.py migrate` somente se a base apontada não tiver as migrations aplicadas.
 
 - Para desenvolver/alterar o projeto (contribuidores, manutenção, novas features):
   - Tudo o que consta em "Para rodar o projeto", mais:
