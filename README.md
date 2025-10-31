@@ -191,6 +191,7 @@ Projeto acadêmico colaborativo — UFT (2025/2).
 
 Equipe e contribuições:
 
+ -.[Eduardo Lopes](https://github.com/EduLps1).
  - [Eduardo Henrique](https://github.com/HelloKiw1)
  - [Henrique Wendler](https://github.com/Henrique-wendler) 
  - [Mahes vras](https://github.com/vrascode) 
