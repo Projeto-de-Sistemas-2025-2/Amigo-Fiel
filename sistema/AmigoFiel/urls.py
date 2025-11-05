@@ -54,6 +54,14 @@ urlpatterns = [
 
     # Produto: /<empresa_handle>/<produto_slug>/
     path("<str:empresa_handle>/<slug:produto_slug>/", views.produto_detalhe, name="produto-detalhe"),
+    # Endpoint AJAX para alternar 'ativo' de um produto (POST)
+    path("produto/toggle-ativo/", views.produto_toggle_ativo, name="produto-toggle-ativo"),
+    # Endpoint para marcar item como retirado (AJAX)
+    path("painel/item/toggle-retirado/", views.item_toggle_retirado, name="item-toggle-retirado"),
+    # Versão imprimível do recibo/nota de retirada
+    path("painel/item/<int:item_id>/recibo/", views.item_recibo, name="item-recibo"),
+    # Página de detalhe / ações para um item específico (imprimir, confirmar retirada)
+    path("painel/item/<int:item_id>/", views.painel_item_detalhe, name="painel-item-detalhe"),
     
     # Edição de produto (depois da rota de detalhe)
     path("<str:empresa_handle>/<slug:produto_slug>/editar/", views.produto_editar, name="produto-editar"),
@@ -63,6 +71,7 @@ urlpatterns = [
     path("ONG/<str:handle>/painel/", views.painel_ong, name="painel-ong"),
     path("Co./<str:handle>/painel/", views.painel_empresa, name="painel-empresa"),
     path("Co./<str:handle>/painel/detalhado/", views.painel_empresa_detalhado, name="painel-empresa-detalhado"),
+    path("Co./<str:handle>/painel/fluxo/", views.painel_empresa_fluxo, name="painel-empresa-fluxo"),
 
     path("tabelas/", views.tabelas_bruto, name="tabelas-bruto"),
     

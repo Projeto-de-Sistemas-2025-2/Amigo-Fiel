@@ -1,0 +1,104 @@
+{% extends "style/base_public.html" %}
+{% load static %}
+
+{% block title %}Fluxo de Vendas — {{ perfil.razao_social }}{% endblock %}
+
+{% block body %}
+<section class="card">
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <h1>Fluxo de vendas — {{ perfil.razao_social }}</h1>
+      <p class="muted">Registros de vendas por item — quem comprou, quando e quanto foi pago.</p>
+    </div>
+    <div class="actions">
+      <a class="btn" href="{% url 'amigofiel:painel-empresa' handle=perfil.user.username %}">← Voltar</a>
+      <a class="btn btn-primary" href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}export=csv">⬇️ Exportar CSV</a>
+    </div>
+  </div>
+
+  {# ações por item removidas da listagem; use a página de detalhe para ações (imprimir/confirmar) #}
+
+  {# filtros #}
+  <form method="get" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+    <input type="text" name="q" placeholder="Cliente / produto..." value="{{ request.GET.q }}" style="padding:8px; border:1px solid #e2e8f0; border-radius:8px;">
+    <input type="text" name="produto" placeholder="ID ou nome do produto" value="{{ request.GET.produto }}" style="padding:8px; border:1px solid #e2e8f0; border-radius:8px;">
+    <input type="text" name="pedido" placeholder="ID do pedido" value="{{ request.GET.pedido }}" style="padding:8px; border:1px solid #e2e8f0; border-radius:8px; width:120px;">
+    <label style="display:inline-flex; gap:6px; align-items:center;"><small>De</small>
+      <input type="date" name="date_from" value="{{ request.GET.date_from }}" style="padding:6px; border:1px solid #e2e8f0; border-radius:8px;"></label>
+    <label style="display:inline-flex; gap:6px; align-items:center;"><small>Até</small>
+      <input type="date" name="date_to" value="{{ request.GET.date_to }}" style="padding:6px; border:1px solid #e2e8f0; border-radius:8px;"></label>
+    <button class="btn btn-primary" type="submit">Filtrar</button>
+    <a class="btn" href="{% url 'amigofiel:painel-empresa-fluxo' handle=perfil.user.username %}">Limpar</a>
+  </form>
+
+  {# agregados e filtros rápidos #}
+  <div style="margin-top:12px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+    <div style="display:flex; gap:8px; align-items:center;">
+      <div style="background:#f8fafc; padding:8px 12px; border-radius:8px; font-weight:700;">Total (itens): R$ {{ total_items_sum|floatformat:2 }}</div>
+      <div style="background:#f8fafc; padding:8px 12px; border-radius:8px;">Total (pedidos): R$ {{ sum_total_bruto|floatformat:2 }}</div>
+      <div style="background:#dcfce7; padding:8px 12px; border-radius:8px; color:#14532d;">Total doação: R$ {{ total_doacao_sum|floatformat:2 }}</div>
+    </div>
+  </div>
+
+  <div style="margin-top:16px; overflow:auto;">
+    <table class="table" style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr style="text-align:left; background:#f8fafc;">
+          <th style="padding:8px;">Entrega</th>
+          <th style="padding:8px;">Pedido</th>
+          <th style="padding:8px;">Data</th>
+          <th style="padding:8px;">Cliente</th>
+          <th style="padding:8px;">Produto</th>
+          <th style="padding:8px;">Total item</th>
+          <th style="padding:8px;">Total pedido</th>
+          <th style="padding:8px;">Detalhes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in rows %}
+  <tr id="item-row-{{ item.pk }}" class="{% if item.retirado %}delivered{% else %}pending{% endif %}" style="border-top:1px solid #eee;">
+          <td style="padding:8px; vertical-align:middle; text-align:center;"><input class="row-delivery-checkbox" type="checkbox" disabled {% if item.retirado %}checked{% endif %}></td>
+          <td style="padding:8px; vertical-align:middle;">#{{ item.pedido.pk }}</td>
+          <td style="padding:8px; vertical-align:middle;">{{ item.pedido.criado_em|date:"Y-m-d H:i" }}</td>
+          <td style="padding:8px; vertical-align:middle;">{{ item.pedido.user.username }}{% if item.pedido.user.email %} · {{ item.pedido.user.email }}{% endif %}</td>
+          <td style="padding:8px; vertical-align:middle;"><a href="{% url 'amigofiel:painel-item-detalhe' item.pk %}">{{ item.produto.nome }}</a></td>
+          <td style="padding:8px; vertical-align:middle;">R$ {{ item.total|floatformat:2 }}</td>
+          <td style="padding:8px; vertical-align:middle;">R$ {{ item.pedido.total_bruto|default:"—" }}</td>
+          <td style="padding:8px; vertical-align:middle;">
+            <a class="btn" href="{% url 'amigofiel:painel-item-detalhe' item.pk %}">Detalhes</a>
+          </td>
+        </tr>
+  {% empty %}
+  <tr><td colspan="8" style="padding:12px;">Nenhuma venda encontrada.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <style>
+    /* Visual indicators for delivery status */
+    tr.pending td { background: #fff5f5; }
+    tr.pending td:first-child { border-left: 4px solid #ef4444; }
+    tr.delivered td { background: #ecfdf5; }
+    tr.delivered td:first-child { border-left: 4px solid #16a34a; }
+    .row-delivery-checkbox { width:16px; height:16px; }
+    /* Use modern accent-color to make the checkbox dark green when checked. */
+    /* Dark green chosen: #064e3b for good contrast. */
+    .row-delivery-checkbox:checked { accent-color: #064e3b; }
+    /* Slight visual hint for disabled, not-checked (pending) on browsers that support accent-color */
+    .row-delivery-checkbox[disabled]:not(:checked) { accent-color: #ef4444; }
+  </style>
+
+  
+
+  <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+    {% if page_obj.has_previous %}
+      <a class="btn" href="?{% if current_query %}{{ current_query }}&{% endif %}page={{ page_obj.previous_page_number }}">← Anterior</a>
+    {% endif %}
+    <div style="width:12px"></div>
+    {% if page_obj.has_next %}
+      <a class="btn btn-primary" href="?{% if current_query %}{{ current_query }}&{% endif %}page={{ page_obj.next_page_number }}">Próxima →</a>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

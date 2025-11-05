@@ -24,6 +24,7 @@
     <a class="btn btn-primary" href="{% url 'amigofiel:produto-novo' %}">➕ Cadastrar produto</a>
     <a class="btn" href="{% url 'amigofiel:perfil-editar' %}" style="background:#f59e0b;color:white;border-color:#f59e0b;">✏️ Editar Perfil</a>
     <a class="btn btn-secondary" href="{% url 'amigofiel:painel-empresa-detalhado' handle=perfil.user.username %}" style="margin-left:6px;">🔍 Ver painel detalhado</a>
+    <a class="btn btn-secondary" href="{% url 'amigofiel:painel-empresa-fluxo' handle=perfil.user.username %}" style="margin-left:6px;">📈 Fluxo de vendas</a>
     <a class="btn btn-secondary" href="{% url 'amigofiel:perfil-empresa' handle=perfil.user.username %}" style="margin-left:6px;">Ver perfil público</a>
   </div>
 </section>

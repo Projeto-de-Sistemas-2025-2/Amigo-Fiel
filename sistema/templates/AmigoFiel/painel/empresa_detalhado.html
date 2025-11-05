@@ -87,11 +87,19 @@
             </td>
             <td style="padding:8px; vertical-align:middle;">{{ row.nome }}</td>
             <td style="padding:8px; vertical-align:middle;">
-              {% if row.ativo %}
-                <span style="color:#16a34a; font-weight:700;">Sim</span>
-              {% else %}
-                <span style="color:#9ca3af;">Não</span>
-              {% endif %}
+              {# Indicador clicável (AJAX) usando SVGs para melhor controle visual e acessibilidade #}
+              <button type="button" class="prod-active-toggle {% if row.ativo %}active{% endif %}" data-produto-id="{{ row.id }}" aria-pressed="{% if row.ativo %}true{% else %}false{% endif %}" title="{% if row.ativo %}Ativo{% else %}Inativo{% endif %}">
+                <!-- SVG: circle + check -->
+                <svg class="icon icon-active" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="12" r="10" fill="currentColor" />
+                  <path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                </svg>
+                <!-- SVG: circle + X for inactive -->
+                <svg class="icon icon-inactive" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="12" r="10" fill="currentColor" />
+                  <path d="M8 8l8 8M16 8l-8 8" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                </svg>
+              </button>
             </td>
             <td style="padding:8px; vertical-align:middle;">R$ {{ row.preco|floatformat:2 }}</td>
             <td style="padding:8px; vertical-align:middle;">{{ row.estoque }}</td>
@@ -128,6 +136,23 @@
     opacity: 0;
     margin-top: 0 !important;
   }
+  /* Toggle button with SVG icons for product active state */
+  .prod-active-toggle {
+    background: none;
+    border: none;
+    padding: 0;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .prod-active-toggle .icon { display: none; }
+  .prod-active-toggle.active .icon-active { display: inline-block; color: #14532d; /* darker green */ }
+  .prod-active-toggle:not(.active) .icon-inactive { display: inline-block; color: #9f1239; /* darker red */ }
+  .prod-active-toggle .icon { width: 20px; height: 20px; }
+  .prod-active-toggle:focus { outline: 2px solid rgba(21,128,61,0.18); outline-offset: 2px; border-radius: 6px; }
 </style>
 
 <script>
@@ -168,6 +193,63 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // AJAX toggle handler for produto active state
+  (function(){
+    function getCookie(name) {
+      const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+      return v ? v.pop() : '';
+    }
+
+    async function toggleProduto(event) {
+      const btn = event.currentTarget;
+      const produtoId = btn.dataset.produtoId;
+      if (!produtoId) return;
+
+      const url = "{% url 'amigofiel:produto-toggle-ativo' %}";
+      const csrftoken = getCookie('csrftoken');
+
+      try {
+        btn.disabled = true;
+        const res = await fetch(url, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: JSON.stringify({ produto_id: produtoId })
+        });
+        if (!res.ok) throw new Error('http ' + res.status);
+        const data = await res.json();
+        if (data.success) {
+          if (data.ativo) {
+            btn.classList.add('active');
+            btn.setAttribute('aria-pressed', 'true');
+            btn.title = 'Ativo';
+          } else {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
+            btn.title = 'Inativo';
+          }
+        } else {
+          console.error('toggle failed', data);
+        }
+      } catch (err) {
+        console.error('toggle error', err);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function(){
+      document.querySelectorAll('.prod-active-toggle').forEach(function(b){
+        b.addEventListener('click', toggleProduto);
+      });
+    });
+  })();
+</script>
 <script>
   (function(){
     try {

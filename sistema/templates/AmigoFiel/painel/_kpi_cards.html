@@ -3,6 +3,37 @@
   /* KPI grid: 1 column on small screens, 4 columns on >=768px */
   .kpi-grid { display:grid; grid-template-columns: repeat(1, 1fr); gap:12px; margin-bottom:12px; }
   @media (min-width: 768px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
+
+  /* Mini-card styling */
+  .kpi-grid .mini-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 64px;
+    justify-content: center;
+  }
+  .kpi-grid .mini-card h4 {
+    margin: 0;
+    font-size: 13px;
+    color: #334155;
+    font-weight: 700;
+  }
+  .kpi-grid .mini-card p { margin: 0; font-size: 14px; color: #0f172a; }
+  .kpi-grid .mini-card p strong { font-size: 16px; }
+
+  /* Highlight the 3rd KPI (Receita) for emphasis on desktop */
+  .kpi-grid .mini-card:nth-child(3) {
+    background: linear-gradient(135deg, #ecfccb 0%, #bbf7d0 100%);
+    border-color: #bbf7d0;
+    box-shadow: 0 6px 18px rgba(16,163,127,0.08);
+  }
+  .kpi-grid .mini-card:nth-child(3) h4 { font-size: 14px; }
+  .kpi-grid .mini-card:nth-child(3) p strong { font-size: 18px; color: #166534; }
+
 </style>
 <div class="kpi-grid">
   {% comment %} Empresa KPIs {% endcomment %}
