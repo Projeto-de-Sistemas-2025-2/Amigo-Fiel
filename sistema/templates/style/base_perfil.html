@@ -16,7 +16,7 @@
   <!-- Topbar -->
   <header class="topbar">
     <div class="container topbar-inner">
-      <a class="brand" href="{% url 'amigofiel:home' %}">
+      <a class="brand" href="{% url 'amigofiel:home' %}" style="text-decoration:none;">
         <img src="{% static 'img/amigo-fiel-logo.png' %}" alt="Amigo Fiel" width="56" height="56" style="border-radius:10px">
         <span>AMIGO FIEL</span>
       </a>
@@ -42,26 +42,40 @@
         {% endif %}
 
         {% if user.is_authenticated %}
-          <a class="icon-btn" href="{% url 'amigofiel:carrinho-ver' %}"><span aria-hidden="true">🛒</span> <span class="small muted">Carrinho</span></a>
+          <a class="icon-btn" href="{% url 'amigofiel:carrinho-ver' %}" style="text-decoration:none;"><span aria-hidden="true">🛒</span> <span class="small muted">Carrinho</span></a>
         {% endif %}
 
                 {% if user.is_authenticated %}
           <details class="icon-btn" style="position:relative;">
-            <summary class="semibold">👤 {{ user.username }}</summary>
+            <summary class="semibold">
+              <span style="display:inline-flex; align-items:center; gap:8px;">
+                {% comment %}Show profile photo if available, otherwise fallback to emoji{% endcomment %}
+                {% if user.perfil_empresa and user.perfil_empresa.foto %}
+                  <img src="{{ user.perfil_empresa.foto.url }}" alt="{{ user.username }}" width="28" height="28" style="border-radius:50%;">
+                {% elif user.perfil_ong and user.perfil_ong.foto %}
+                  <img src="{{ user.perfil_ong.foto.url }}" alt="{{ user.username }}" width="28" height="28" style="border-radius:50%;">
+                {% elif user.perfil_comum and user.perfil_comum.foto %}
+                  <img src="{{ user.perfil_comum.foto.url }}" alt="{{ user.username }}" width="28" height="28" style="border-radius:50%;">
+                {% else %}
+                  <span style="line-height:1; font-size:18px;">👤</span>
+                {% endif %}
+                <span style="white-space:nowrap;">{{ user.username }}</span>
+              </span>
+            </summary>
             <div class="card" style="position:absolute; right:0; top:120%; min-width:220px;">
               {% if user.perfil_empresa %}
                 <a class="btn btn-ghost" href="{% url 'amigofiel:perfil-empresa' handle=user.username %}">Meu perfil</a>
-                <a class="btn btn-ghost" href="{% url 'amigofiel:perfil-empresa' handle=user.username %}?edit=1">Editar perfil</a>
+                <a class="btn btn-ghost" href="{% url 'amigofiel:perfil-editar' %}">Configuração</a>
                 <a class="btn btn-ghost" href="{% url 'amigofiel:meus-favoritos' %}">Meus Favoritos</a>
                 <a class="btn btn-ghost" href="{% url 'amigofiel:painel-empresa' handle=user.username %}">📊 Dashboard</a>
               {% elif user.perfil_ong %}
                 <a class="btn btn-ghost" href="{% url 'amigofiel:perfil-ong' handle=user.username %}">Meu perfil</a>
-                <a class="btn btn-ghost" href="{% url 'amigofiel:perfil-ong' handle=user.username %}?edit=1">Editar perfil</a>
+                <a class="btn btn-ghost" href="{% url 'amigofiel:perfil-editar' %}">Configuração</a>
                 <a class="btn btn-ghost" href="{% url 'amigofiel:meus-favoritos' %}">Meus Favoritos</a>
                 <a class="btn btn-ghost" href="{% url 'amigofiel:painel-ong' handle=user.username %}">📊 Dashboard</a>
               {% else %}
                 <a class="btn btn-ghost" href="{% url 'amigofiel:perfil-usuario' handle=user.username %}">Meu perfil</a>
-                <a class="btn btn-ghost" href="{% url 'amigofiel:perfil-usuario' handle=user.username %}?edit=1">Editar perfil</a>
+                <a class="btn btn-ghost" href="{% url 'amigofiel:perfil-editar' %}">Configuração</a>
                 <a class="btn btn-ghost" href="{% url 'amigofiel:meus-favoritos' %}">Meus Favoritos</a>
               {% endif %}
               <a class="btn btn-ghost" href="{% url 'chat:inbox' %}">Mensagens</a>
@@ -74,10 +88,9 @@
         {% else %}
           <a class="btn btn-secondary" href="{% url 'login' %}">Entrar</a>
         {% endif %}
-
+        
       </div>
     </div>
-
     <!-- Subbar -->
     <div class="subbar">
       <nav class="container">
@@ -94,12 +107,12 @@
     <section class="perfil-hero">
       <div class="container">
         <div class="perfil-row">
-          <div class="perfil-left">
+          <div class="perfil-left" style="display:flex; align-items:center; gap:12px;">
             {% block avatar %}
-              <img class="avatar" src="{% static 'img/defaults/avatar_comum.png' %}" alt="Avatar">
+              <img class="avatar" src="{% static 'img/defaults/avatar_comum.png' %}" alt="Avatar" style="width:96px; height:96px; border-radius:8px; object-fit:cover;">
             {% endblock %}
             <div class="perfil-id">
-              <h1>{% block perfil_name %}Nome do Perfil{% endblock %}</h1>
+              <h1 style="margin:0;">{% block perfil_name %}Nome do Perfil{% endblock %}</h1>
               <div class="handle">@{% block perfil_handle %}handle{% endblock %}</div>
               <div class="meta">{% block perfil_meta %}{% endblock %}</div>
             </div>

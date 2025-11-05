@@ -204,6 +204,15 @@ button{ font-family:inherit; }
   padding: 14px;
   box-shadow: var(--shadow-1);
 }
+
+/* Hide native browser disclosure marker (small triangle) so only our custom dot shows */
+details summary::-webkit-details-marker{ display:none; }
+details summary{ list-style:none; }
+details summary{ cursor:pointer; }
+
+/* Additional cross-browser hiding of native markers */
+details summary::marker{ color: transparent; font-size: 0; }
+details summary::-moz-list-bullet{ display: none; }
 .mini-card{
   background: var(--white);
   border:1px solid var(--slate-200);
