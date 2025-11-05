@@ -384,6 +384,8 @@ class ItemPedido(TimeStampedModel):
 
     percentual_doacao = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
     valor_doacao = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    # Marca se o item já foi retirado/entregue ao cliente (retirada física)
+    retirado = models.BooleanField(default=False, db_index=True)
 
     def __str__(self):
         return f"{self.quantidade}x {self.produto.nome} (Pedido #{self.pedido_id})"

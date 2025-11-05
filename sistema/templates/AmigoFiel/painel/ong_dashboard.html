@@ -27,6 +27,8 @@
   </div>
 </section>
 
+{% include 'AmigoFiel/painel/_kpi_cards.html' with chart_id='chartOng' %}
+
 <section class="metrics-grid">
   <article class="metric-card">
     <div class="metric-icon" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
@@ -550,4 +552,37 @@
     }
   });
 </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    (function(){
+      try {
+        const raw = JSON.parse('{{ chart_data_ong_json|escapejs }}');
+        const labels = raw.labels || [];
+        const totals = raw.totals || [];
+        const canvas = document.getElementById('chartOng');
+        if (canvas) {
+          const ctx = canvas.getContext('2d');
+          new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: 'Doações (R$)',
+                data: totals,
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37,99,235,0.08)',
+                tension: 0.25,
+                fill: true,
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {legend: {display:false}},
+              scales: {y: {beginAtZero:true}}
+            }
+          });
+        }
+      } catch(e) { console.error(e); }
+    })();
+  </script>
 {% endblock %}

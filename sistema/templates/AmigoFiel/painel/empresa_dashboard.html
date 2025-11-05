@@ -23,48 +23,110 @@
   <div class="actions" style="margin-top:12px">
     <a class="btn btn-primary" href="{% url 'amigofiel:produto-novo' %}">➕ Cadastrar produto</a>
     <a class="btn" href="{% url 'amigofiel:perfil-editar' %}" style="background:#f59e0b;color:white;border-color:#f59e0b;">✏️ Editar Perfil</a>
-    <a class="btn btn-secondary" href="{% url 'amigofiel:perfil-empresa' handle=perfil.user.username %}">Ver perfil público</a>
+    <a class="btn btn-secondary" href="{% url 'amigofiel:painel-empresa-detalhado' handle=perfil.user.username %}" style="margin-left:6px;">🔍 Ver painel detalhado</a>
+    <a class="btn btn-secondary" href="{% url 'amigofiel:painel-empresa-fluxo' handle=perfil.user.username %}" style="margin-left:6px;">📈 Fluxo de vendas</a>
+    <a class="btn btn-secondary" href="{% url 'amigofiel:perfil-empresa' handle=perfil.user.username %}" style="margin-left:6px;">Ver perfil público</a>
   </div>
 </section>
 
 <section class="metrics-grid">
   <article class="metric-card">
-    <div class="metric-icon" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
-      📦
-    </div>
+    <div class="metric-icon" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">📦</div>
     <div class="metric-content">
       <h3>Produtos</h3>
-      <p class="muted">Ativos: <strong>{{ met.ativos }}</strong></p>
-      <p class="muted">Total: <strong>{{ met.total_produtos }}</strong></p>
+      <p class="muted">Ativos: <strong>{{ met.ativos|default:0 }}</strong> · Total: <strong>{{ met.total_produtos|default:0 }}</strong></p>
     </div>
   </article>
 
   <article class="metric-card">
-    <div class="metric-icon" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
-      💰
-    </div>
+    <div class="metric-icon" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">💰</div>
     <div class="metric-content">
       <h3>Vendas</h3>
       <p class="muted">Itens vendidos: <strong>{{ met.itens_vendidos|default:"—" }}</strong></p>
       <p class="muted">Total vendido: <strong>R$ {{ met.total_vendas|default:"—" }}</strong></p>
-      <p class="muted">Total doado: <strong style="color:#16a34a;">R$ {{ met.total_doacao|default:"—" }}</strong></p>
+      <p class="muted">Doações: <strong style="color:#16a34a;">R$ {{ met.total_doacao|default:"—" }}</strong></p>
     </div>
   </article>
-  
+
   <article class="metric-card">
-    <div class="metric-icon" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);">
-      💚
+    <div class="metric-icon" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);">⚠️</div>
+    <div class="metric-content">
+      <h3>Estoque</h3>
+      {% if low_stock_count is not None %}
+        <p class="muted">Produtos com estoque baixo: <strong>{{ low_stock_count }}</strong></p>
+      {% else %}
+        <p class="muted">Nenhum alerta de estoque</p>
+      {% endif %}
     </div>
+  </article>
+
+  <article class="metric-card">
+    <div class="metric-icon" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);">💚</div>
     <div class="metric-content">
-    <div class="metric-content">
-      <h3>💚 Parcerias Solidárias</h3>
+      <h3>Parcerias Solidárias</h3>
       <p class="muted">ONGs parceiras: <strong>{{ total_ongs|default:0 }}</strong></p>
       <p class="muted">Produtos solidários: <strong>{{ total_vinculos|default:0 }}</strong></p>
     </div>
   </article>
 </section>
 
-{# SEÇÃO DE ONGs PARCEIRAS #}
+
+<section class="card" style="margin-top:14px">
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <h2>Produtos recentes</h2>
+    <div class="actions" style="display:flex; gap:8px; align-items:center">
+      <button onclick="toggleProdutos()" class="btn-toggle-section" id="btnToggleProdutos" type="button">
+        <span id="toggleIconProdutos">▼</span>
+      </button>
+      <a class="btn btn-secondary" href="{% url 'amigofiel:listar-produtos' %}?q=@{{ perfil.user.username }}">Ver listagem</a>
+      <a class="btn btn-primary" href="{% url 'amigofiel:produto-novo' %}">Novo produto</a>
+    </div>
+  </div>
+
+  <div id="produtosContent" class="produtos-content">
+  {% if produtos %}
+    <div style="overflow:auto;">
+      <table class="table" style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr style="text-align:left; background:#f8fafc;">
+            <th style="padding:8px;">Produto</th>
+            <th style="padding:8px;">Preço</th>
+            <th style="padding:8px;">Estoque</th>
+            <th style="padding:8px;">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for prod in produtos %}
+            <tr style="border-top:1px solid #eee;">
+              <td style="padding:8px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <img src="{% if prod.imagem %}{{ prod.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}" alt="{{ prod.nome }}" style="width:56px; height:56px; object-fit:cover; border-radius:6px; border:1px solid #eee;">
+                  <div>
+                    <div style="font-weight:700; color:#0f172a;">{{ prod.nome }}</div>
+                    <div class="muted" style="font-size:13px;">{{ prod.descricao|default:"Sem descrição"|truncatechars:60 }}</div>
+                  </div>
+                </div>
+              </td>
+              <td style="padding:8px;">R$ {{ prod.preco|floatformat:2 }}</td>
+              <td style="padding:8px;">{{ prod.estoque }}</td>
+              <td style="padding:8px;">
+                <a class="btn btn-primary" href="{% url 'amigofiel:produto-detalhe' empresa_handle=perfil.user.username produto_slug=prod.slug %}">Abrir</a>
+                <a class="btn btn-warning" style="margin-left:6px; color:#fff; background:#f59e0b; border-color:#f59e0b;" href="{% url 'amigofiel:produto-editar' empresa_handle=perfil.user.username produto_slug=prod.slug %}">✏️</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+      <a class="btn btn-primary" href="{% url 'amigofiel:painel-empresa-detalhado' handle=perfil.user.username %}">🔍 Ver painel detalhado</a>
+    </div>
+  {% else %}
+    <p class="muted">Nenhum produto cadastrado.</p>
+  {% endif %}
+  </div>
+
+  {# SEÇÃO DE ONGs PARCEIRAS #}
 {% if ongs_parceiras %}
 <section class="card" style="margin-top:14px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 2px solid #86efac;">
   <div style="display:flex;align-items:center;justify-content:space-between; margin-bottom: 12px;">
@@ -129,42 +191,12 @@
 </section>
 {% endif %}
 
-<section class="card" style="margin-top:14px">
-  <div style="display:flex;align-items:center;justify-content:space-between">
-    <h2>Produtos recentes</h2>
-    <div class="actions" style="display:flex; gap:8px; align-items:center">
-      <button onclick="toggleProdutos()" class="btn-toggle-section" id="btnToggleProdutos" type="button">
-        <span id="toggleIconProdutos">▼</span>
-      </button>
-      <a class="btn btn-secondary" href="{% url 'amigofiel:listar-produtos' %}?q=@{{ perfil.user.username }}">Ver listagem</a>
-      <a class="btn btn-primary" href="{% url 'amigofiel:produto-novo' %}">Novo produto</a>
-    </div>
-  </div>
-
-  <div id="produtosContent" class="produtos-content">
-  {% if produtos %}
-    <div class="products-grid">
-      {% for prod in produtos %}
-        <article class="mini-card">
-          <img class="thumb" src="{% if prod.imagem %}{{ prod.imagem.url }}{% else %}{% static 'img/defaults/produto.png' %}{% endif %}" alt="{{ prod.nome }}">
-          <h3>{{ prod.nome }}</h3>
-          <p class="muted">{{ prod.descricao|default:"Sem descrição" |truncatechars:80 }}</p>
-          <p><strong>R$ {{ prod.preco }}</strong> · Estoque: {{ prod.estoque }}</p>
-          <div class="actions">
-            {% if prod.slug %}
-              <a class="btn btn-primary" href="{% url 'amigofiel:produto-detalhe' empresa_handle=perfil.user.username produto_slug=prod.slug %}">Abrir</a>
-              <a class="btn btn-warning" style="margin-left:6px; color:#fff; background:#f59e0b; border-color:#f59e0b;" href="{% url 'amigofiel:produto-editar' empresa_handle=perfil.user.username produto_slug=prod.slug %}">✏️ Editar</a>
-            {% endif %}
-          </div>
-        </article>
-      {% endfor %}
-    </div>
-  {% else %}
-    <p class="muted">Nenhum produto cadastrado.</p>
-  {% endif %}
-  </div>
 </section>
+
+
 {% endblock %}
+
+
 
 {% block extra_js %}
 <style>
@@ -215,9 +247,10 @@
     gap: 14px;
     margin-top: 16px;
   }
+  /* Desktop: show all 4 KPI cards in a single row when space allows */
   @media (min-width: 768px) {
     .metrics-grid {
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
     }
   }
   
@@ -326,6 +359,20 @@
     margin-top: 10px;
   }
   .produtos-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0 !important;
+  }
+
+  /* KPIs collapsible content (same behavior as produtos/ongs) */
+  .kpis-content {
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+    max-height: 5000px;
+    opacity: 1;
+    overflow: hidden;
+    margin-top: 10px;
+  }
+  .kpis-content.collapsed {
     max-height: 0;
     opacity: 0;
     margin-top: 0 !important;
@@ -516,6 +563,26 @@
       localStorage.setItem('produtosExpanded', 'false');
     }
   }
+
+  function toggleKpis() {
+    const content = document.getElementById('kpisContent');
+    const btn = document.getElementById('btnToggleKpis');
+    const icon = document.getElementById('toggleIconKpis');
+    
+    if (content.classList.contains('collapsed')) {
+      // Expandir
+      content.classList.remove('collapsed');
+      btn.classList.remove('collapsed');
+      icon.textContent = '▼';
+      localStorage.setItem('kpisExpanded', 'true');
+    } else {
+      // Retrair
+      content.classList.add('collapsed');
+      btn.classList.add('collapsed');
+      icon.textContent = '▶';
+      localStorage.setItem('kpisExpanded', 'false');
+    }
+  }
   
   // Restaurar estado ao carregar a página
   document.addEventListener('DOMContentLoaded', function() {
@@ -548,6 +615,53 @@
         icon.textContent = '▶';
       }
     }
+
+    // KPIs
+    const kpisExpanded = localStorage.getItem('kpisExpanded');
+    if (kpisExpanded === 'false') {
+      const content = document.getElementById('kpisContent');
+      const btn = document.getElementById('btnToggleKpis');
+      const icon = document.getElementById('toggleIconKpis');
+      
+      if (content && btn) {
+        content.classList.add('collapsed');
+        btn.classList.add('collapsed');
+        icon.textContent = '▶';
+      }
+    }
   });
 </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    (function(){
+      try {
+  const raw = JSON.parse('{{ chart_data_empresa_json|escapejs }}');
+        const labels = raw.labels || [];
+        const totals = raw.totals || [];
+        const canvas = document.getElementById('chartEmpresa');
+        if (canvas) {
+          const ctx = canvas.getContext('2d');
+          new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: 'Receita (R$)',
+                data: totals,
+                borderColor: '#16a34a',
+                backgroundColor: 'rgba(16,163,127,0.08)',
+                tension: 0.25,
+                fill: true,
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {legend: {display:false}},
+              scales: {y: {beginAtZero:true}}
+            }
+          });
+        }
+      } catch(e) { console.error(e); }
+    })();
+  </script>
 {% endblock %}

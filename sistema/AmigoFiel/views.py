@@ -9,7 +9,7 @@ from .forms import CadastroForm
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.core.exceptions import PermissionDenied
 
 from .forms import (
@@ -24,6 +24,8 @@ from decimal import Decimal
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from django.db.models import Sum, F, Q
 from django.contrib import messages
 from .models import (
@@ -32,6 +34,10 @@ from .models import (
     ProdutoOngVinculo
 )
 from django.core.paginator import Paginator
+from django.db.models.functions import TruncDate, TruncWeek
+import json
+from django.utils import timezone
+from datetime import timedelta
 
 
 # class HomeView(TemplateView):
@@ -387,6 +393,249 @@ def produto_detalhe(request, empresa_handle, produto_slug):
         "vinculo_ong": vinculo_ong,
     }
     return render(request, "AmigoFiel/perfil/perfil_produto.html", ctx)
+
+
+@require_POST
+@login_required
+def produto_toggle_ativo(request):
+    """AJAX endpoint para alternar o campo 'ativo' de um produto.
+
+    Requer que o usuário esteja autenticado e seja o dono da empresa do produto
+    (ou staff). Recebe JSON {"produto_id": <id>} e responde com JSON {"success": True, "ativo": bool}.
+    """
+    try:
+        payload = json.loads(request.body.decode() or '{}')
+        produto_id = int(payload.get('produto_id'))
+    except Exception:
+        return HttpResponseBadRequest('invalid payload')
+
+    produto = get_object_or_404(ProdutoEmpresa, pk=produto_id)
+
+    # Permissão: somente o dono da empresa (ou staff) pode alterar
+    if not (request.user.is_authenticated and (request.user == produto.empresa.user or request.user.is_staff)):
+        return HttpResponseForbidden('not allowed')
+
+    produto.ativo = not produto.ativo
+    produto.save(update_fields=['ativo'])
+
+    return JsonResponse({'success': True, 'ativo': produto.ativo})
+
+
+@require_POST
+@login_required
+def item_toggle_retirado(request):
+    """AJAX endpoint para marcar/desmarcar um ItemPedido como retirado.
+
+    Recebe JSON {"item_id": <id>} e responde {'success': True, 'retirado': bool}.
+    Apenas o dono da empresa ou staff pode alterar.
+    """
+    try:
+        payload = json.loads(request.body.decode() or '{}')
+        item_id = int(payload.get('item_id'))
+    except Exception:
+        return HttpResponseBadRequest('invalid payload')
+
+    item = get_object_or_404(ItemPedido, pk=item_id)
+
+    # Permissão: somente o dono da empresa (ou staff) pode alterar
+    if not (request.user.is_authenticated and (request.user == item.empresa.user or request.user.is_staff)):
+        return HttpResponseForbidden('not allowed')
+
+    item.retirado = not item.retirado
+    item.save(update_fields=['retirado'])
+
+    return JsonResponse({'success': True, 'retirado': item.retirado})
+
+
+def item_recibo(request, item_id):
+    """Renderiza uma versão imprimível do detalhamento de um ItemPedido.
+
+    A página é pensada para ser aberta em nova aba e impressa (ou salva como PDF pelo navegador).
+    Mostra dados da empresa, cliente, produto (com imagem), ONG vinculada (se houver) e linhas para assinatura.
+    """
+    item = get_object_or_404(ItemPedido.objects.select_related('pedido', 'pedido__user', 'produto', 'empresa', 'ong'), pk=item_id)
+
+    # Permissão: apenas a empresa dona do item ou staff pode visualizar essa página
+    if not (request.user.is_authenticated and (request.user == item.empresa.user or request.user.is_staff)):
+        raise PermissionDenied()
+
+    empresa = item.empresa
+    cliente = item.pedido.user
+
+    ctx = {
+        'item': item,
+        'empresa': empresa,
+        'cliente': cliente,
+        'ong': item.ong,
+    }
+    return render(request, 'AmigoFiel/painel/fluxo_venda_recibo.html', ctx)
+
+
+def painel_item_detalhe(request, item_id):
+    """Página de detalhe para um ItemPedido no painel da empresa.
+
+    Aqui ficam as ações (imprimir recibo, confirmar retirada) e detalhes do item.
+    """
+    item = get_object_or_404(ItemPedido.objects.select_related('pedido', 'pedido__user', 'produto', 'empresa', 'ong'), pk=item_id)
+
+    # Permissão: apenas o dono da empresa ou staff pode visualizar/agir
+    if not (request.user.is_authenticated and (request.user == item.empresa.user or request.user.is_staff)):
+        raise PermissionDenied()
+
+    ctx = {
+        'item': item,
+        'empresa': item.empresa,
+        'cliente': item.pedido.user,
+        'ong': item.ong,
+    }
+    return render(request, 'AmigoFiel/painel/fluxo_venda_detalhe.html', ctx)
+
+
+@login_required
+def painel_empresa_fluxo(request, handle):
+    """Página que mostra o fluxo de produtos vendidos pela empresa (itens de pedidos).
+
+    Mostra quem comprou, quando, valor pago e detalhes do item (quantidade, preco unitario, total,
+    doação). Suporta paginação e export CSV via ?export=csv
+    """
+    empresa = get_object_or_404(UsuarioEmpresarial, user__username=handle)
+
+    # Permissão: apenas o dono da conta ou staff pode ver
+    if not (request.user == empresa.user or request.user.is_staff):
+        raise PermissionDenied()
+
+    qs = (
+        ItemPedido.objects
+        .filter(empresa=empresa)
+        .select_related('pedido', 'produto', 'pedido__user')
+        .order_by('-pedido__criado_em')
+    )
+
+    # --- filtros via GET ---
+    q = (request.GET.get('q') or '').strip()
+    produto_q = (request.GET.get('produto') or '').strip()
+    pedido_q = (request.GET.get('pedido') or '').strip()
+    date_from = (request.GET.get('date_from') or '').strip()
+    date_to = (request.GET.get('date_to') or '').strip()
+    retirada_q = (request.GET.get('retirada') or '').strip().lower()
+
+    if pedido_q:
+        try:
+            qs = qs.filter(pedido__pk=int(pedido_q))
+        except Exception:
+            pass
+
+    if q:
+        qs = qs.filter(
+            Q(pedido__user__username__icontains=q) |
+            Q(pedido__user__email__icontains=q) |
+            Q(produto__nome__icontains=q)
+        )
+
+    if produto_q:
+        # se for número, tenta por id, senão por nome
+        try:
+            qs = qs.filter(produto__pk=int(produto_q))
+        except Exception:
+            qs = qs.filter(produto__nome__icontains=produto_q)
+
+    from datetime import datetime
+    if date_from:
+        try:
+            d1 = datetime.strptime(date_from, '%Y-%m-%d').date()
+            qs = qs.filter(pedido__criado_em__date__gte=d1)
+        except Exception:
+            pass
+    if date_to:
+        try:
+            d2 = datetime.strptime(date_to, '%Y-%m-%d').date()
+            qs = qs.filter(pedido__criado_em__date__lte=d2)
+        except Exception:
+            pass
+
+    # filtro por status de retirada: 'pendentes' | 'realizadas'
+    if retirada_q:
+        if retirada_q in {'pendentes', 'nao', 'false', '0'}:
+            qs = qs.filter(retirado=False)
+        elif retirada_q in {'realizadas', 'sim', 'true', '1'}:
+            qs = qs.filter(retirado=True)
+
+    # CSV export
+    if request.GET.get('export') == 'csv':
+        import csv
+        from django.http import HttpResponse
+
+        # include filters in filename for clarity
+        fname = f"fluxo_vendas_{empresa.user.username}.csv"
+        resp = HttpResponse(content_type='text/csv')
+        resp['Content-Disposition'] = f'attachment; filename="{fname}"'
+        writer = csv.writer(resp)
+        writer.writerow([
+            'pedido_id', 'data_pedido', 'cliente_username', 'cliente_email',
+            'produto_id', 'produto_nome', 'quantidade', 'preco_unitario', 'total_item',
+            'pedido_total', 'percentual_doacao', 'valor_doacao', 'retirado'
+        ])
+        for item in qs:
+            pedido = item.pedido
+            cliente = pedido.user
+            writer.writerow([
+                pedido.pk,
+                pedido.criado_em.isoformat() if hasattr(pedido, 'criado_em') else '',
+                getattr(cliente, 'username', ''),
+                getattr(cliente, 'email', ''),
+                item.produto.pk if item.produto else '',
+                item.produto.nome if item.produto else '',
+                item.quantidade,
+                f"{item.preco_unitario:.2f}",
+                f"{item.total:.2f}",
+                f"{getattr(pedido, 'total_bruto', '')}",
+                f"{getattr(item, 'percentual_doacao', '')}",
+                f"{getattr(item, 'valor_doacao', '')}",
+                '1' if getattr(item, 'retirado', False) else '0',
+            ])
+        return resp
+
+    # agregados (soma dos itens filtrados)
+    aggr = qs.aggregate(total_items=Sum('total'), total_doacao=Sum('valor_doacao'))
+    total_items = aggr.get('total_items') or 0
+    total_doacao = aggr.get('total_doacao') or 0
+
+    # soma dos pedidos (total_bruto) para pedidos envolvidos (distinct)
+    pedido_ids = qs.values_list('pedido_id', flat=True).distinct()
+    soma_pedidos = Pedido.objects.filter(pk__in=pedido_ids).aggregate(sum_total_bruto=Sum('total_bruto'))
+    sum_total_bruto = soma_pedidos.get('sum_total_bruto') or 0
+
+    # Paginação
+    paginator = Paginator(qs, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # preserve current querystring without page for links
+    current_q = request.GET.copy()
+    if 'page' in current_q:
+        del current_q['page']
+
+    # date shortcuts
+    from datetime import date, timedelta
+    today = date.today()
+    ctx_dates = {
+        'today': today.isoformat(),
+        'last7': (today - timedelta(days=7)).isoformat(),
+        'last30': (today - timedelta(days=30)).isoformat(),
+    }
+
+    context = {
+        'perfil': empresa,
+        'rows': page_obj,
+        'page_obj': page_obj,
+        'current_query': current_q.urlencode(),
+        'retirada': retirada_q,
+        'total_items_sum': total_items,
+        'total_doacao_sum': total_doacao,
+        'sum_total_bruto': sum_total_bruto,
+        **ctx_dates,
+    }
+    return render(request, 'AmigoFiel/painel/fluxo_vendas.html', context)
 
 def tabelas_bruto(request):
     User = get_user_model()
@@ -754,7 +1003,230 @@ def painel_empresa(request, handle: str):
             "total_doacao": total_doacao,
         }
     }
+    # Série temporal: vendas por dia (últimos 30 dias)
+    try:
+        from .models import ItemPedido
+        end_date = timezone.now().date()
+        start_date = end_date - timedelta(days=29)
+        qs_days = (
+            ItemPedido.objects
+            .filter(empresa=empresa, criado_em__date__gte=start_date)
+            .annotate(dia=TruncDate('criado_em'))
+            .values('dia')
+            .annotate(total=Sum('total'), pedidos=Count('id'))
+            .order_by('dia')
+        )
+        totals_map = {item['dia'].isoformat(): float(item['total'] or 0) for item in qs_days}
+        labels = []
+        totals = []
+        for i in range(30):
+            d = start_date + timedelta(days=i)
+            labels.append(d.strftime('%d/%m'))
+            totals.append(totals_map.get(d.isoformat(), 0.0))
+        chart_payload = {'labels': labels, 'totals': totals}
+        ctx['chart_data_empresa_json'] = json.dumps(chart_payload)
+    except Exception:
+        ctx['chart_data_empresa_json'] = json.dumps({'labels': [], 'totals': []})
+
     return render(request, "AmigoFiel/painel/empresa_dashboard.html", ctx)
+
+
+@login_required
+def painel_empresa_detalhado(request, handle: str):
+    """Página detalhada com métricas por produto para a empresa."""
+    empresa = get_object_or_404(
+        UsuarioEmpresarial.objects.select_related("user"),
+        user__username=handle
+    )
+
+    if request.user != empresa.user and not request.user.is_superuser:
+        return HttpResponseForbidden("Você não tem permissão para ver este painel.")
+
+    # Produtos da empresa (aplica filtros via GET)
+    produtos_qs = ProdutoEmpresa.objects.filter(empresa=empresa)
+
+    # Filtros (GET)
+    q = (request.GET.get('q') or '').strip()
+    categoria = (request.GET.get('categoria') or '').strip()
+    ativo = request.GET.get('ativo')  # '1' ativos, '0' inativos, None/other = todos
+    sort = request.GET.get('sort')  # receita_desc, vendidos_desc, estoque_asc, nome_asc
+
+    if q:
+        produtos_qs = produtos_qs.filter(nome__icontains=q)
+    if categoria:
+        produtos_qs = produtos_qs.filter(categoria=categoria)
+    if ativo == '1':
+        produtos_qs = produtos_qs.filter(ativo=True)
+    elif ativo == '0':
+        produtos_qs = produtos_qs.filter(ativo=False)
+
+    # ordenação inicial neutra (será aplicada depois se for por receita/vendidos)
+    produtos_qs = produtos_qs.order_by('nome')
+
+    product_rows = []
+    total_revenue = 0.0
+    total_sold = 0
+    total_doacao = 0.0
+    try:
+        from .models import ItemPedido
+        # Agregar por produto: quantidade vendida, receita e doação (apenas para produtos no queryset)
+        product_ids = list(produtos_qs.values_list('id', flat=True))
+        vendas_prod = (
+            ItemPedido.objects
+            .filter(empresa=empresa, produto_id__in=product_ids)
+            .values('produto')
+            .annotate(qtd_vendida=Sum('quantidade'), receita=Sum('total'), doacao=Sum('valor_doacao'))
+        )
+        vendas_map = {v['produto']: v for v in vendas_prod}
+
+        for prod in produtos_qs:
+            vid = prod.id
+            agg = vendas_map.get(vid, {})
+            qtd = int(agg.get('qtd_vendida') or 0)
+            receita = float(agg.get('receita') or 0.0)
+            doacao = float(agg.get('doacao') or 0.0)
+            total_revenue += receita
+            total_sold += qtd
+            total_doacao += doacao
+            url_editar = None
+            url_detalhe = None
+            if prod.slug:
+                try:
+                    url_editar = reverse('amigofiel:produto-editar', kwargs={'empresa_handle': empresa.user.username, 'produto_slug': prod.slug})
+                    url_detalhe = reverse('amigofiel:produto-detalhe', kwargs={'empresa_handle': empresa.user.username, 'produto_slug': prod.slug})
+                except Exception:
+                    url_editar = None
+                    url_detalhe = None
+
+            product_rows.append({
+                'id': prod.id,
+                'nome': prod.nome,
+                'slug': prod.slug,
+                'preco': prod.preco,
+                'estoque': prod.estoque,
+                'qtd_vendida': qtd,
+                'receita': receita,
+                'doacao': doacao,
+                'url_editar': url_editar,
+                'url_detalhe': url_detalhe,
+                'imagem': getattr(prod, 'imagem', None),
+                'ativo': getattr(prod, 'ativo', True),
+            })
+    except Exception:
+        # Sem ItemPedido/migração - mostra lista básica de produtos
+        for prod in produtos_qs:
+            url_editar = None
+            url_detalhe = None
+            if prod.slug:
+                try:
+                    url_editar = reverse('amigofiel:produto-editar', kwargs={'empresa_handle': empresa.user.username, 'produto_slug': prod.slug})
+                    url_detalhe = reverse('amigofiel:produto-detalhe', kwargs={'empresa_handle': empresa.user.username, 'produto_slug': prod.slug})
+                except Exception:
+                    url_editar = None
+                    url_detalhe = None
+            product_rows.append({
+                'id': prod.id,
+                'nome': prod.nome,
+                'slug': prod.slug,
+                'preco': prod.preco,
+                'estoque': prod.estoque,
+                'qtd_vendida': 0,
+                'receita': 0.0,
+                'doacao': 0.0,
+                'url_editar': url_editar,
+                'url_detalhe': url_detalhe,
+                'imagem': getattr(prod, 'imagem', None),
+                'ativo': getattr(prod, 'ativo', True),
+            })
+
+    ctx = {
+        'perfil': empresa,
+        'product_rows': product_rows,
+        'total_revenue': total_revenue,
+        'total_sold': total_sold,
+    }
+    # Métricas resumidas (para o partial de KPIs)
+    try:
+        total_produtos = produtos_qs.count()
+        ativos = produtos_qs.filter(ativo=True).count()
+    except Exception:
+        total_produtos = 0
+        ativos = 0
+
+    ctx['met'] = {
+        'total_produtos': total_produtos,
+        'ativos': ativos,
+        'itens_vendidos': total_sold,
+        'total_vendas': total_revenue,
+        'total_doacao': total_doacao,
+    }
+    # Apply sorting requested by user (after product_rows have receita/qtd)
+    if sort:
+        if sort == 'receita_desc':
+            product_rows.sort(key=lambda r: r.get('receita', 0.0), reverse=True)
+        elif sort == 'vendidos_desc':
+            product_rows.sort(key=lambda r: r.get('qtd_vendida', 0), reverse=True)
+        elif sort == 'estoque_asc':
+            product_rows.sort(key=lambda r: r.get('estoque', 0))
+        elif sort == 'nome_asc':
+            product_rows.sort(key=lambda r: (r.get('nome') or '').lower())
+
+    # Provide filter choices to template
+    try:
+        from .consts import PRODUTO_CATEGORIAS_CHOICES
+        categorias_choices = PRODUTO_CATEGORIAS_CHOICES
+    except Exception:
+        categorias_choices = []
+
+    ctx['filter_state'] = {
+        'q': q,
+        'categoria': categoria,
+        'ativo': ativo,
+        'sort': sort,
+        'categorias': categorias_choices,
+    }
+    # Série temporal: receita por semana (últimas 12 semanas)
+    try:
+        from .models import ItemPedido
+        weeks = 12
+        end_date = timezone.now().date()
+        start_date = end_date - timedelta(days=7 * (weeks - 1))
+
+        # Align start_date to the beginning of the week (Monday) to match TruncWeek behaviour
+        start_week = start_date - timedelta(days=start_date.weekday())
+
+        qs_weeks = (
+            ItemPedido.objects
+            .filter(empresa=empresa, criado_em__date__gte=start_date)
+            .annotate(semana=TruncWeek('criado_em'))
+            .values('semana')
+            .annotate(total=Sum('total'))
+            .order_by('semana')
+        )
+
+        totals_map = {}
+        for item in qs_weeks:
+            sem = item.get('semana')
+            # sem can be a datetime; normalize to date
+            if hasattr(sem, 'date'):
+                sem_date = sem.date()
+            else:
+                sem_date = sem
+            totals_map[sem_date.isoformat()] = float(item.get('total') or 0)
+
+        labels = []
+        totals = []
+        for i in range(weeks):
+            wk = start_week + timedelta(days=7 * i)
+            labels.append(wk.strftime('%d/%m'))
+            totals.append(totals_map.get(wk.isoformat(), 0.0))
+
+        chart_payload = {'labels': labels, 'totals': totals}
+        ctx['chart_data_empresa_json'] = json.dumps(chart_payload)
+    except Exception:
+        ctx['chart_data_empresa_json'] = json.dumps({'labels': [], 'totals': []})
+
+    return render(request, 'AmigoFiel/painel/empresa_detalhado.html', ctx)
 
 
 @login_required
@@ -808,6 +1280,31 @@ def painel_ong(request, handle: str):
         "qtd_pets": ong.qtd_pets,
         "total_doado": total_doado,
     }
+    # Série temporal: doações / vendas vinculadas à ONG (últimos 30 dias)
+    try:
+        from .models import ItemPedido
+        end_date = timezone.now().date()
+        start_date = end_date - timedelta(days=29)
+        qs_days = (
+            ItemPedido.objects
+            .filter(ong=ong, criado_em__date__gte=start_date)
+            .annotate(dia=TruncDate('criado_em'))
+            .values('dia')
+            .annotate(total_doado=Sum('valor_doacao'), pedidos=Count('id'))
+            .order_by('dia')
+        )
+        totals_map = {item['dia'].isoformat(): float(item['total_doado'] or 0) for item in qs_days}
+        labels = []
+        totals = []
+        for i in range(30):
+            d = start_date + timedelta(days=i)
+            labels.append(d.strftime('%d/%m'))
+            totals.append(totals_map.get(d.isoformat(), 0.0))
+        chart_payload = {'labels': labels, 'totals': totals}
+        ctx['chart_data_ong_json'] = json.dumps(chart_payload)
+    except Exception:
+        ctx['chart_data_ong_json'] = json.dumps({'labels': [], 'totals': []})
+
     return render(request, "AmigoFiel/painel/ong_dashboard.html", ctx)
 
 
