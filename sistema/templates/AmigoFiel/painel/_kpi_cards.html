@@ -1,0 +1,53 @@
+{% load static %}
+<style>
+  /* KPI grid: 1 column on small screens, 4 columns on >=768px */
+  .kpi-grid { display:grid; grid-template-columns: repeat(1, 1fr); gap:12px; margin-bottom:12px; }
+  @media (min-width: 768px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
+</style>
+<div class="kpi-grid">
+  {% comment %} Empresa KPIs {% endcomment %}
+  {% if met.total_vendas is not None or met.total_produtos is not None %}
+    <div class="mini-card">
+      <h4>Produtos ativos</h4>
+      <p><strong>{{ met.ativos|default:0 }}</strong> / {{ met.total_produtos|default:0 }}</p>
+    </div>
+    <div class="mini-card">
+      <h4>Itens vendidos</h4>
+      <p><strong>{{ met.itens_vendidos|default:0 }}</strong></p>
+    </div>
+    <div class="mini-card">
+      <h4>Receita (total)</h4>
+      <p><strong>R$ {{ met.total_vendas|default:0 }}</strong></p>
+    </div>
+    <div class="mini-card">
+      <h4>Doações</h4>
+      <p><strong>R$ {{ met.total_doacao|default:0 }}</strong></p>
+    </div>
+  {% else %}
+    {% comment %} ONG KPIs fallback {% endcomment %}
+    <div class="mini-card">
+      <h4>Pets cadastrados</h4>
+      <p><strong>{{ qtd_pets|default:0 }}</strong></p>
+    </div>
+    <div class="mini-card">
+      <h4>Doações (total)</h4>
+      <p><strong>R$ {{ total_doado|default:0 }}</strong></p>
+    </div>
+    <div class="mini-card">
+      <h4>Empresas parceiras</h4>
+      <p><strong>{{ total_empresas|default:0 }}</strong></p>
+    </div>
+    <div class="mini-card">
+      <h4>Produtos vinculados</h4>
+      <p><strong>{{ total_produtos_vinculados|default:0 }}</strong></p>
+    </div>
+  {% endif %}
+</div>
+
+<div class="card" style="padding:12px;">
+  <h3 style="margin:0 0 8px;">Lucro do Últimos dias</h3>
+  {# altura reduzida para gastar menos espaço vertical; ajuste se quiser maior/menor #}
+  <canvas id="{{ chart_id }}" height="80" style="max-height:220px; height:80px;"></canvas>
+</div>
+
+{# Chart.js é carregado e renderizado no bloco extra_js das páginas que incluem este partial #}

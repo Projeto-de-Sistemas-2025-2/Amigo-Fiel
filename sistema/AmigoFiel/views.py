@@ -9,7 +9,7 @@ from .forms import CadastroForm
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.core.exceptions import PermissionDenied
 
 from .forms import (
@@ -32,6 +32,10 @@ from .models import (
     ProdutoOngVinculo
 )
 from django.core.paginator import Paginator
+from django.db.models.functions import TruncDate, TruncWeek
+import json
+from django.utils import timezone
+from datetime import timedelta
 
 
 # class HomeView(TemplateView):
@@ -754,7 +758,230 @@ def painel_empresa(request, handle: str):
             "total_doacao": total_doacao,
         }
     }
+    # Série temporal: vendas por dia (últimos 30 dias)
+    try:
+        from .models import ItemPedido
+        end_date = timezone.now().date()
+        start_date = end_date - timedelta(days=29)
+        qs_days = (
+            ItemPedido.objects
+            .filter(empresa=empresa, criado_em__date__gte=start_date)
+            .annotate(dia=TruncDate('criado_em'))
+            .values('dia')
+            .annotate(total=Sum('total'), pedidos=Count('id'))
+            .order_by('dia')
+        )
+        totals_map = {item['dia'].isoformat(): float(item['total'] or 0) for item in qs_days}
+        labels = []
+        totals = []
+        for i in range(30):
+            d = start_date + timedelta(days=i)
+            labels.append(d.strftime('%d/%m'))
+            totals.append(totals_map.get(d.isoformat(), 0.0))
+        chart_payload = {'labels': labels, 'totals': totals}
+        ctx['chart_data_empresa_json'] = json.dumps(chart_payload)
+    except Exception:
+        ctx['chart_data_empresa_json'] = json.dumps({'labels': [], 'totals': []})
+
     return render(request, "AmigoFiel/painel/empresa_dashboard.html", ctx)
+
+
+@login_required
+def painel_empresa_detalhado(request, handle: str):
+    """Página detalhada com métricas por produto para a empresa."""
+    empresa = get_object_or_404(
+        UsuarioEmpresarial.objects.select_related("user"),
+        user__username=handle
+    )
+
+    if request.user != empresa.user and not request.user.is_superuser:
+        return HttpResponseForbidden("Você não tem permissão para ver este painel.")
+
+    # Produtos da empresa (aplica filtros via GET)
+    produtos_qs = ProdutoEmpresa.objects.filter(empresa=empresa)
+
+    # Filtros (GET)
+    q = (request.GET.get('q') or '').strip()
+    categoria = (request.GET.get('categoria') or '').strip()
+    ativo = request.GET.get('ativo')  # '1' ativos, '0' inativos, None/other = todos
+    sort = request.GET.get('sort')  # receita_desc, vendidos_desc, estoque_asc, nome_asc
+
+    if q:
+        produtos_qs = produtos_qs.filter(nome__icontains=q)
+    if categoria:
+        produtos_qs = produtos_qs.filter(categoria=categoria)
+    if ativo == '1':
+        produtos_qs = produtos_qs.filter(ativo=True)
+    elif ativo == '0':
+        produtos_qs = produtos_qs.filter(ativo=False)
+
+    # ordenação inicial neutra (será aplicada depois se for por receita/vendidos)
+    produtos_qs = produtos_qs.order_by('nome')
+
+    product_rows = []
+    total_revenue = 0.0
+    total_sold = 0
+    total_doacao = 0.0
+    try:
+        from .models import ItemPedido
+        # Agregar por produto: quantidade vendida, receita e doação (apenas para produtos no queryset)
+        product_ids = list(produtos_qs.values_list('id', flat=True))
+        vendas_prod = (
+            ItemPedido.objects
+            .filter(empresa=empresa, produto_id__in=product_ids)
+            .values('produto')
+            .annotate(qtd_vendida=Sum('quantidade'), receita=Sum('total'), doacao=Sum('valor_doacao'))
+        )
+        vendas_map = {v['produto']: v for v in vendas_prod}
+
+        for prod in produtos_qs:
+            vid = prod.id
+            agg = vendas_map.get(vid, {})
+            qtd = int(agg.get('qtd_vendida') or 0)
+            receita = float(agg.get('receita') or 0.0)
+            doacao = float(agg.get('doacao') or 0.0)
+            total_revenue += receita
+            total_sold += qtd
+            total_doacao += doacao
+            url_editar = None
+            url_detalhe = None
+            if prod.slug:
+                try:
+                    url_editar = reverse('amigofiel:produto-editar', kwargs={'empresa_handle': empresa.user.username, 'produto_slug': prod.slug})
+                    url_detalhe = reverse('amigofiel:produto-detalhe', kwargs={'empresa_handle': empresa.user.username, 'produto_slug': prod.slug})
+                except Exception:
+                    url_editar = None
+                    url_detalhe = None
+
+            product_rows.append({
+                'id': prod.id,
+                'nome': prod.nome,
+                'slug': prod.slug,
+                'preco': prod.preco,
+                'estoque': prod.estoque,
+                'qtd_vendida': qtd,
+                'receita': receita,
+                'doacao': doacao,
+                'url_editar': url_editar,
+                'url_detalhe': url_detalhe,
+                'imagem': getattr(prod, 'imagem', None),
+                'ativo': getattr(prod, 'ativo', True),
+            })
+    except Exception:
+        # Sem ItemPedido/migração - mostra lista básica de produtos
+        for prod in produtos_qs:
+            url_editar = None
+            url_detalhe = None
+            if prod.slug:
+                try:
+                    url_editar = reverse('amigofiel:produto-editar', kwargs={'empresa_handle': empresa.user.username, 'produto_slug': prod.slug})
+                    url_detalhe = reverse('amigofiel:produto-detalhe', kwargs={'empresa_handle': empresa.user.username, 'produto_slug': prod.slug})
+                except Exception:
+                    url_editar = None
+                    url_detalhe = None
+            product_rows.append({
+                'id': prod.id,
+                'nome': prod.nome,
+                'slug': prod.slug,
+                'preco': prod.preco,
+                'estoque': prod.estoque,
+                'qtd_vendida': 0,
+                'receita': 0.0,
+                'doacao': 0.0,
+                'url_editar': url_editar,
+                'url_detalhe': url_detalhe,
+                'imagem': getattr(prod, 'imagem', None),
+                'ativo': getattr(prod, 'ativo', True),
+            })
+
+    ctx = {
+        'perfil': empresa,
+        'product_rows': product_rows,
+        'total_revenue': total_revenue,
+        'total_sold': total_sold,
+    }
+    # Métricas resumidas (para o partial de KPIs)
+    try:
+        total_produtos = produtos_qs.count()
+        ativos = produtos_qs.filter(ativo=True).count()
+    except Exception:
+        total_produtos = 0
+        ativos = 0
+
+    ctx['met'] = {
+        'total_produtos': total_produtos,
+        'ativos': ativos,
+        'itens_vendidos': total_sold,
+        'total_vendas': total_revenue,
+        'total_doacao': total_doacao,
+    }
+    # Apply sorting requested by user (after product_rows have receita/qtd)
+    if sort:
+        if sort == 'receita_desc':
+            product_rows.sort(key=lambda r: r.get('receita', 0.0), reverse=True)
+        elif sort == 'vendidos_desc':
+            product_rows.sort(key=lambda r: r.get('qtd_vendida', 0), reverse=True)
+        elif sort == 'estoque_asc':
+            product_rows.sort(key=lambda r: r.get('estoque', 0))
+        elif sort == 'nome_asc':
+            product_rows.sort(key=lambda r: (r.get('nome') or '').lower())
+
+    # Provide filter choices to template
+    try:
+        from .consts import PRODUTO_CATEGORIAS_CHOICES
+        categorias_choices = PRODUTO_CATEGORIAS_CHOICES
+    except Exception:
+        categorias_choices = []
+
+    ctx['filter_state'] = {
+        'q': q,
+        'categoria': categoria,
+        'ativo': ativo,
+        'sort': sort,
+        'categorias': categorias_choices,
+    }
+    # Série temporal: receita por semana (últimas 12 semanas)
+    try:
+        from .models import ItemPedido
+        weeks = 12
+        end_date = timezone.now().date()
+        start_date = end_date - timedelta(days=7 * (weeks - 1))
+
+        # Align start_date to the beginning of the week (Monday) to match TruncWeek behaviour
+        start_week = start_date - timedelta(days=start_date.weekday())
+
+        qs_weeks = (
+            ItemPedido.objects
+            .filter(empresa=empresa, criado_em__date__gte=start_date)
+            .annotate(semana=TruncWeek('criado_em'))
+            .values('semana')
+            .annotate(total=Sum('total'))
+            .order_by('semana')
+        )
+
+        totals_map = {}
+        for item in qs_weeks:
+            sem = item.get('semana')
+            # sem can be a datetime; normalize to date
+            if hasattr(sem, 'date'):
+                sem_date = sem.date()
+            else:
+                sem_date = sem
+            totals_map[sem_date.isoformat()] = float(item.get('total') or 0)
+
+        labels = []
+        totals = []
+        for i in range(weeks):
+            wk = start_week + timedelta(days=7 * i)
+            labels.append(wk.strftime('%d/%m'))
+            totals.append(totals_map.get(wk.isoformat(), 0.0))
+
+        chart_payload = {'labels': labels, 'totals': totals}
+        ctx['chart_data_empresa_json'] = json.dumps(chart_payload)
+    except Exception:
+        ctx['chart_data_empresa_json'] = json.dumps({'labels': [], 'totals': []})
+
+    return render(request, 'AmigoFiel/painel/empresa_detalhado.html', ctx)
 
 
 @login_required
@@ -808,6 +1035,31 @@ def painel_ong(request, handle: str):
         "qtd_pets": ong.qtd_pets,
         "total_doado": total_doado,
     }
+    # Série temporal: doações / vendas vinculadas à ONG (últimos 30 dias)
+    try:
+        from .models import ItemPedido
+        end_date = timezone.now().date()
+        start_date = end_date - timedelta(days=29)
+        qs_days = (
+            ItemPedido.objects
+            .filter(ong=ong, criado_em__date__gte=start_date)
+            .annotate(dia=TruncDate('criado_em'))
+            .values('dia')
+            .annotate(total_doado=Sum('valor_doacao'), pedidos=Count('id'))
+            .order_by('dia')
+        )
+        totals_map = {item['dia'].isoformat(): float(item['total_doado'] or 0) for item in qs_days}
+        labels = []
+        totals = []
+        for i in range(30):
+            d = start_date + timedelta(days=i)
+            labels.append(d.strftime('%d/%m'))
+            totals.append(totals_map.get(d.isoformat(), 0.0))
+        chart_payload = {'labels': labels, 'totals': totals}
+        ctx['chart_data_ong_json'] = json.dumps(chart_payload)
+    except Exception:
+        ctx['chart_data_ong_json'] = json.dumps({'labels': [], 'totals': []})
+
     return render(request, "AmigoFiel/painel/ong_dashboard.html", ctx)
 
 

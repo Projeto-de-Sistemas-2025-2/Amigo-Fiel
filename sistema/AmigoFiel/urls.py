@@ -62,6 +62,7 @@ urlpatterns = [
     # Painéis
     path("ONG/<str:handle>/painel/", views.painel_ong, name="painel-ong"),
     path("Co./<str:handle>/painel/", views.painel_empresa, name="painel-empresa"),
+    path("Co./<str:handle>/painel/detalhado/", views.painel_empresa_detalhado, name="painel-empresa-detalhado"),
 
     path("tabelas/", views.tabelas_bruto, name="tabelas-bruto"),
     
