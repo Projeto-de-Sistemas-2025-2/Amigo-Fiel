@@ -237,6 +237,24 @@ details summary::-moz-list-bullet{ display: none; }
 @media (max-width:800px) { .grid-4{ grid-template-columns:repeat(2,1fr);} }
 @media (max-width:520px) { .grid-4{ grid-template-columns:1fr;} }
 
+/* Landing-specific grid: content + aside column
+   Uses fixed aside width on desktop and stacks on smaller screens */
+.landing-grid{
+  display:grid;
+  grid-template-columns: 1fr 320px;
+  gap:18px;
+}
+
+@media (max-width:900px){
+  .landing-grid{ grid-template-columns: 1fr; }
+  .landing-grid aside{ order: 2; }
+  .landing-grid > div:first-child{ order: 1; }
+  .actions{ display:flex; flex-direction:column; gap:10px; }
+  .actions .btn{ width:100%; }
+  .hero{ padding:12px; }
+  .thumb{ max-height:260px; width:100%; object-fit:cover; border-radius:12px; }
+}
+
 /* ---------- Badges & pills ---------- */
 .badge{
   display:inline-flex; align-items:center; gap:6px;
