@@ -141,6 +141,8 @@ button{ font-family:inherit; }
   border-radius: var(--radius);
   object-fit:cover; height:100%;
 }
+/* Image mirror utility for templates that need flipped visuals */
+.thumb.mirror{ transform: scaleX(-1); }
 @media (max-width: 900px){
   .hero{ grid-template-columns:1fr; }
 }

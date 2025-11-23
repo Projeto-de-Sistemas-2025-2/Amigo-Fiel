@@ -1,0 +1,56 @@
+{% extends "style/base_public.html" %}
+{% load static %}
+
+{% block title %}Amigo Fiel — Apresentação{% endblock %}
+
+{% block body %}
+
+  <section class="hero">
+    <div>
+      <h1 class="h1">Encontre um amigo. Cuide com carinho.</h1>
+      <p class="muted">Amigo Fiel conecta pessoas interessadas em adotar pets a ONGs e tutores responsáveis, e oferece um marketplace integrado para comprar itens e serviços voltados ao bem-estar animal.</p>
+
+      <div class="actions" style="margin-top:14px;">
+        <a class="btn btn-primary" href="/adotar/">Ver pets para adoção</a>
+        <a class="btn btn-secondary" href="/produtos/">Ver produtos</a>
+      </div>
+    </div>
+
+    <div>
+      <img src="{% static 'img/landing/dog.png' %}" alt="screenshot" class="thumb mirror">
+    </div>
+  </section>
+
+  <section style="margin-top:18px;">
+    <div class="grid" style="grid-template-columns:1fr 320px; gap:18px;">
+      <div>
+        <h2 class="h2">O que é o Amigo Fiel</h2>
+        <p>Amigo Fiel é uma plataforma pensada para facilitar a adoção responsável e apoiar a cadeia de cuidado animal. Reúne anúncios de pets disponíveis, perfis de ONGs e usuários, e um catálogo de produtos com opções de compra locais.</p>
+
+        <h3 class="h3">Missão</h3>
+        <p>Apoiar a adoção consciente, promover bem-estar animal e conectar recursos locais (ONGs, empresas e voluntários) para facilitar cuidados e aquisições de produtos e serviços.</p>
+
+        <h3 class="h3">Como funciona</h3>
+        <ul>
+          <li>ONGs e tutores publicam perfis e anúncios de pets para adoção.</li>
+          <li>Interessados podem favoritar, contatar via chat e agendar visitas com responsáveis.</li>
+          <li>Empresas cadastram produtos no marketplace; usuários adicionam ao carrinho e finalizam pedidos.</li>
+        </ul>
+      </div>
+
+      <aside>
+        <div class="card">
+          <h4 class="h3">Recursos principais</h4>
+          <ul>
+            <li>Perfis detalhados para ONGs, empresas e usuários</li>
+            <li>Listagem de pets com filtros por espécie, porte e localização</li>
+            <li>Chat integrado para comunicação entre interessados e responsáveis</li>
+            <li>Carrinho e fluxo de checkout (simulado para demonstração)</li>
+            <li>Sistema de favoritos e histórico de adoções</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+{% endblock %}

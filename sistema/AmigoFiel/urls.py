@@ -1,5 +1,6 @@
 # AmigoFiel/urls.py
 from django.urls import path
+from django.views.generic import TemplateView
 from .views import HomeView, ListarAnimais, cadastro, ListarOngs, SobreView, ContatoView, ListarLojas
 from . import views
 
@@ -9,6 +10,9 @@ app_name = "amigofiel"
 urlpatterns = [
 
     path("cadastro/", cadastro, name="cadastro"),
+
+    # Landing page estática (apresentação / marketing)
+    path("landing/", TemplateView.as_view(template_name='landing.html'), name="landing"),
 
     # Home
     path("", HomeView.as_view(), name="home"),
