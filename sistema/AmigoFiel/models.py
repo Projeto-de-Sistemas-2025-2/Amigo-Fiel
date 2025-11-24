@@ -32,6 +32,8 @@ class UsuarioComum(TimeStampedModel):
     )
     telefone = models.CharField(max_length=20, blank=True)
     cidade = models.CharField(max_length=80, blank=True, db_index=True)
+    estado = models.CharField(max_length=80, blank=True, null=True)
+    cep = models.CharField(max_length=12, blank=True, null=True)
     foto = models.ImageField(
         upload_to="usuarios/comum/%Y/%m/",
         blank=True,
@@ -40,7 +42,8 @@ class UsuarioComum(TimeStampedModel):
     )
 
     class Meta:
-        ordering = ("user__username",)
+        ordering = ("user__us"
+        "ername",)
 
     def __str__(self):
         return f"Comum: {self.user.username}"
@@ -54,6 +57,8 @@ class UsuarioEmpresarial(TimeStampedModel):
     cnpj = models.CharField(max_length=18, unique=True)  # 00.000.000/0000-00
     telefone = models.CharField(max_length=20, blank=True)
     cidade = models.CharField(max_length=80, blank=True, db_index=True)
+    cep = models.CharField(max_length=12, blank=True, null=True)
+    estado = models.CharField(max_length=80, blank=True, null=True)
     foto = models.ImageField(
         upload_to="usuarios/empresa/%Y/%m/",
         blank=True,
@@ -80,6 +85,8 @@ class UsuarioOng(TimeStampedModel):
     cnpj = models.CharField(max_length=18, unique=True)
     telefone = models.CharField(max_length=20, blank=True)
     cidade = models.CharField(max_length=80, blank=True, db_index=True)
+    cep = models.CharField(max_length=12, blank=True, null=True)
+    estado = models.CharField(max_length=80, blank=True, null=True)
     site = models.URLField(blank=True)
     foto = models.ImageField(
         upload_to="usuarios/ong/%Y/%m/",

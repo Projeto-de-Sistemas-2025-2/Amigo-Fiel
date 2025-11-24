@@ -125,22 +125,24 @@ def cadastro(request):
                 user_type = form.cleaned_data["user_type"]
                 telefone = form.cleaned_data.get("telefone") or ""
                 cidade = form.cleaned_data.get("cidade") or ""
+                estado = form.cleaned_data.get("estado") or ""
+                cep = form.cleaned_data.get("cep") or ""
 
                 if user_type == "comum":
-                    UsuarioComum.objects.create(user=user, telefone=telefone, cidade=cidade)
+                    UsuarioComum.objects.create(user=user, telefone=telefone, cidade=cidade, estado=estado, cep=cep)
                 elif user_type == "empresa":
                     UsuarioEmpresarial.objects.create(
                         user=user,
                         razao_social=form.cleaned_data["razao_social"],
                         cnpj=form.cleaned_data["cnpj_empresa"],
-                        telefone=telefone, cidade=cidade
+                        telefone=telefone, cidade=cidade, estado=estado, cep=cep
                     )
                 elif user_type == "ong":
                     UsuarioOng.objects.create(
                         user=user,
                         nome_fantasia=form.cleaned_data["nome_fantasia"],
                         cnpj=form.cleaned_data["cnpj_ong"],
-                        telefone=telefone, cidade=cidade,
+                        telefone=telefone, cidade=cidade, estado=estado, cep=cep,
                         site=form.cleaned_data.get("site", "")
                     )
                 login(request, user)

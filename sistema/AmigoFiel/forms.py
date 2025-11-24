@@ -18,6 +18,8 @@ class CadastroForm(UserCreationForm): ##formulário de cadastro de usuários
 
     telefone = forms.CharField(max_length=20, required=False, label="Telefone")
     cidade = forms.CharField(max_length=80, required=False, label="Cidade")
+    estado = forms.CharField(max_length=80, required=False, label="Estado")
+    cep = forms.CharField(max_length=12, required=False, label="CEP")
 
     razao_social = forms.CharField(max_length=120, required=False, label="Razão social")
     cnpj_empresa = forms.CharField(max_length=18, required=False, label="CNPJ (Empresa)")
@@ -30,7 +32,7 @@ class CadastroForm(UserCreationForm): ##formulário de cadastro de usuários
         model = User
         fields = (
             "username", "password1", "password2", "user_type",
-            "telefone", "cidade",
+                "telefone", "cidade", "estado", "cep",
             "razao_social", "cnpj_empresa",
             "nome_fantasia", "cnpj_ong", "site"
         )
@@ -212,14 +214,18 @@ class PerfilComumEditForm(forms.ModelForm):
     """Formulário para edição de perfil de usuário comum"""
     class Meta:
         model = UsuarioComum
-        fields = ["telefone", "cidade", "foto"]
+        fields = ["telefone", "cidade", "estado", "cep", "foto"]
         widgets = {
             "telefone": forms.TextInput(attrs={"placeholder": "Ex: (11) 98765-4321"}),
             "cidade": forms.TextInput(attrs={"placeholder": "Ex: São Paulo"}),
+            "estado": forms.TextInput(attrs={"placeholder": "Ex: SP"}),
+            "cep": forms.TextInput(attrs={"placeholder": "CEP: 00000-000"}),
         }
         labels = {
             "telefone": "Telefone",
             "cidade": "Cidade",
+            "estado": "Estado",
+            "cep": "CEP",
             "foto": "Foto de Perfil",
         }
         help_texts = {
@@ -237,19 +243,23 @@ class PerfilEmpresaEditForm(forms.ModelForm):
     """Formulário para edição de perfil de empresa"""
     class Meta:
         model = UsuarioEmpresarial
-        fields = ["razao_social", "cnpj", "telefone", "cidade", "foto", "banner", "slogan"]
+        fields = ["razao_social", "cnpj", "telefone", "cidade", "cep", "foto", "banner", "slogan"]
         widgets = {
             "razao_social": forms.TextInput(attrs={"placeholder": "Nome da empresa"}),
             "cnpj": forms.TextInput(attrs={"placeholder": "00.000.000/0000-00"}),
             "telefone": forms.TextInput(attrs={"placeholder": "(11) 98765-4321"}),
             "cidade": forms.TextInput(attrs={"placeholder": "São Paulo"}),
             "slogan": forms.TextInput(attrs={"placeholder": "Slogan da empresa (máx. 160 caracteres)"}),
+            "estado": forms.TextInput(attrs={"placeholder": "Ex: SP"}),
+            "cep": forms.TextInput(attrs={"placeholder": "CEP: 00000-000"}),
         }
         labels = {
             "razao_social": "Razão Social",
             "cnpj": "CNPJ",
             "telefone": "Telefone",
             "cidade": "Cidade",
+            "estado": "Estado",
+            "cep": "CEP",
             "foto": "Logo/Foto",
             "banner": "Banner",
             "slogan": "Slogan",
@@ -282,7 +292,7 @@ class PerfilOngEditForm(forms.ModelForm):
     """Formulário para edição de perfil de ONG"""
     class Meta:
         model = UsuarioOng
-        fields = ["nome_fantasia", "cnpj", "telefone", "cidade", "site", "foto", "banner", "slogan"]
+        fields = ["nome_fantasia", "cnpj", "telefone", "cidade", "estado", "cep", "site", "foto", "banner", "slogan"]
         widgets = {
             "nome_fantasia": forms.TextInput(attrs={"placeholder": "Nome da ONG"}),
             "cnpj": forms.TextInput(attrs={"placeholder": "00.000.000/0000-00"}),
@@ -290,12 +300,16 @@ class PerfilOngEditForm(forms.ModelForm):
             "cidade": forms.TextInput(attrs={"placeholder": "São Paulo"}),
             "site": forms.URLInput(attrs={"placeholder": "https://www.exemplo.com.br"}),
             "slogan": forms.TextInput(attrs={"placeholder": "Slogan da ONG (máx. 160 caracteres)"}),
+            "estado": forms.TextInput(attrs={"placeholder": "Ex: SP"}),
+            "cep": forms.TextInput(attrs={"placeholder": "CEP: 00000-000"}),
         }
         labels = {
             "nome_fantasia": "Nome Fantasia",
             "cnpj": "CNPJ",
             "telefone": "Telefone",
             "cidade": "Cidade",
+            "estado": "Estado",
+            "cep": "CEP",
             "site": "Website",
             "foto": "Logo/Foto",
             "banner": "Banner",
