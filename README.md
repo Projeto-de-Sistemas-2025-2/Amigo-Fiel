@@ -196,5 +196,7 @@ Equipe e contribuições:
  - [Henrique Wendler](https://github.com/Henrique-wendler) 
  - [Mahes vras](https://github.com/vrascode) 
  - [Guilherme da Silva](https://github.com/Guilherme1737) 
+ - [Marcus Vinicius](https://github.com/Galessss) 
+
 
 Coordenação e desenvolvimento: comunidade do **Amigo Fiel** 🐾
