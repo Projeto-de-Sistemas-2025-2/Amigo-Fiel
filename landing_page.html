@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Amigo Fiel - Adoção responsável e marketplace pet. Conectando pessoas, ONGs e animais com amor e responsabilidade.">
+    <meta name="keywords" content="adoção, pets, animais, marketplace, ONG, responsável">
+    <title>Amigo Fiel — Adoção responsável & Marketplace Pet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #fafafa;
+        }
+
+        /* Header & Navbar */
+        header {
+            background: linear-gradient(135deg, #FFC107 0%, #FF9800 100%);
+            color: white;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-decoration: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo img {
+            height: 40px;
+            width: auto;
+        }
+
+        .logo:hover {
+            opacity: 0.9;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        nav a:hover {
+            opacity: 0.8;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background-color: #FF9800;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background-color: #E68900;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: white;
+            border: 2px solid #fff;
+        }
+
+        .btn-secondary:hover {
+            background-color: white;
+            color: #FF9800;
+            border: 2px solid white;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #FFC107 0%, #FF9800 100%);
+            color: white;
+            padding: 6rem 2rem;
+            text-align: center;
+        }
+
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .hero-content h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .hero-content p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hero-image {
+            text-align: center;
+        }
+
+        .hero-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Sections */
+        section {
+            padding: 4rem 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+            text-align: center;
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s;
+            border-top: 4px solid #FFC107;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #FF9800;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* How it works */
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .step {
+            text-align: center;
+            position: relative;
+            padding: 2rem;
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #FFC107 0%, #FF9800 100%);
+            color: white;
+            border-radius: 50%;
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .step h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .step p {
+            color: #666;
+        }
+
+        /* Stats */
+        .stats {
+            background: linear-gradient(135deg, #FFC107 0%, #FF9800 100%);
+            color: white;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            text-align: center;
+        }
+
+        .stat {
+            padding: 2rem;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* Values Section */
+        .values {
+            background-color: #f5f5f5;
+        }
+
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .value-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .value-card h3 {
+            color: #FF9800;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .value-card p {
+            color: #666;
+            line-height: 1.7;
+        }
+
+        /* CTA Section */
+        .cta {
+            background: linear-gradient(135deg, #FFC107 0%, #FF9800 100%);
+            color: white;
+            text-align: center;
+            padding: 4rem 2rem !important;
+        }
+
+        .cta h2 {
+            font-size: 2.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #222;
+            color: #999;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .footer-section h4 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-section a {
+            color: #999;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-section a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #444;
+            padding-top: 2rem;
+            text-align: center;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: #333;
+            color: white;
+            border-radius: 50%;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .social-links a:hover {
+            background-color: #FF9800;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav ul {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .hero-container {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-content h1 {
+                font-size: 2rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .cta h2 {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* Utility */
+        .text-center {
+            text-align: center;
+        }
+
+        .mb-1 {
+            margin-bottom: 1rem;
+        }
+
+        .mb-2 {
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <a href="#" class="logo">
+                <img src="../midia/Logo.png" alt="Logo Amigo Fiel" />
+                Amigo Fiel
+            </a>
+            <ul>
+                <li><a href="#features">Funcionalidades</a></li>
+                <li><a href="#how-it-works">Como funciona</a></li>
+                <li><a href="#values">Missão</a></li>
+                <li><a href="#contact">Contato</a></li>
+            </ul>
+            <div class="nav-buttons">
+                <a href="/login/" class="btn btn-secondary">Login</a>
+                <a href="/adotar/" class="btn btn-primary">Começar</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1>Encontre um amigo. Cuide com carinho.</h1>
+                <p>Amigo Fiel conecta pessoas interessadas em adotar pets a ONGs e tutores responsáveis, promovendo adoção ética e oferecendo um marketplace integrado para produtos e serviços voltados ao bem-estar animal.</p>
+                <div class="hero-buttons">
+                    <a href="/adotar/" class="btn btn-primary">Ver pets para adoção</a>
+                    <a href="/produtos/" class="btn btn-secondary">Ver marketplace</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="../midia/Logo.png" alt="Amigo Fiel" style="max-width: 200px; opacity: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));" />
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features">
+        <div class="container">
+            <h2 class="section-title">Funcionalidades principais</h2>
+            <p class="section-subtitle">Tudo que você precisa para encontrar, cuidar e conectar-se com o mundo pet</p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🏢</div>
+                    <h3>Perfis de ONGs e Protetores</h3>
+                    <p>Conheça organizações verificadas, veja histórico de adoções e entre em contato direto com responsáveis.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔎</div>
+                    <h3>Busca inteligente de pets</h3>
+                    <p>Filtre animais por espécie, porte, idade, sexo e localização. Encontre seu match perfeito.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⭐</div>
+                    <h3>Sistema de favoritos</h3>
+                    <p>Salve pets e produtos que gostou para acompanhá-los e decidir sem pressa.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3>Chat integrado</h3>
+                    <p>Comunique-se diretamente com ONGs e tutores para dúvidas e agendamento de visitas.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🛍️</div>
+                    <h3>Marketplace pet</h3>
+                    <p>Acesse lojas parceiras e adquira rações, brinquedos, serviços e muito mais em um só lugar.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h3>Triagem responsável</h3>
+                    <p>Formulários de avaliação garantem que cada pet encontre um lar adequado e seguro.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" style="background-color: #f5f5f5;">
+        <div class="container">
+            <h2 class="section-title">Como funciona</h2>
+            <p class="section-subtitle">Em apenas alguns passos, você estará mais perto de encontrar seu novo melhor amigo</p>
+            
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">👤</div>
+                    <h3>Crie sua conta</h3>
+                    <p>Registre-se como adotante, ONG ou loja. Preencha seus dados e complete seu perfil com foto.</p>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">🔍</div>
+                    <h3>Explore e favorita</h3>
+                    <p>Navegue pelo catálogo de pets e produtos. Filtre por preferências e salve seus favoritos.</p>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">🤝</div>
+                    <h3>Conecte-se</h3>
+                    <p>Use o chat para falar com ONGs/tutores, esclareça dúvidas e agende visitas presenciais.</p>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">📝</div>
+                    <h3>Formalize adoção</h3>
+                    <p>Complete o formulário de triagem. ONGs avaliam e confirmam a melhor combinação para todos.</p>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">🐾</div>
+                    <h3>Acompanhamento</h3>
+                    <p>Pós-adoção responsável: dicas, suporte e monitoramento do bem-estar do animal.</p>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">📦</div>
+                    <h3>Compre no marketplace</h3>
+                    <p>Encontre tudo o que seu pet precisa: alimentos, brinquedos e serviços veterinários.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 0 !important;">
+        <div class="stats container">
+            <div class="stat">
+                <div class="stat-number">50+</div>
+                <div class="stat-label">Pets disponíveis</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">15+</div>
+                <div class="stat-label">ONGs parceiras</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">30+</div>
+                <div class="stat-label">Produtos marketplace</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">1000+</div>
+                <div class="stat-label">Usuários cadastrados</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Values Section -->
+    <section id="values" class="values">
+        <div class="container">
+            <h2 class="section-title">Nossa missão e valores</h2>
+            <p class="section-subtitle">Guiados por princípios de responsabilidade, ética e bem-estar animal</p>
+            
+            <div class="values-grid">
+                <div class="value-card">
+                    <h3>🎯 Missão</h3>
+                    <p>Apoiar a adoção consciente, promover bem-estar animal e conectar recursos locais (ONGs, empresas e voluntários) para facilitar cuidados e aquisições de produtos e serviços responsáveis.</p>
+                </div>
+
+                <div class="value-card">
+                    <h3>🤝 Responsabilidade</h3>
+                    <p>Garantir que cada adoção seja um processo responsável, com triagem adequada e acompanhamento pós-adoção para o bem-estar do animal.</p>
+                </div>
+
+                <div class="value-card">
+                    <h3>💚 Bem-estar animal</h3>
+                    <p>Priorizamos a saúde, segurança e felicidade de cada pet. Todas as práticas seguem padrões éticos e de proteção.</p>
+                </div>
+
+                <div class="value-card">
+                    <h3>🌍 Comunidade</h3>
+                    <p>Conectamos pessoas que compartilham a paixão por animais, criando uma rede de suporte, troca de conhecimento e solidariedade.</p>
+                </div>
+
+                <div class="value-card">
+                    <h3>🔒 Privacidade e segurança</h3>
+                    <p>Respeitamos a privacidade de nossos usuários e mantemos a segurança de dados em conformidade com LGPD e boas práticas.</p>
+                </div>
+
+                <div class="value-card">
+                    <h3>♻️ Sustentabilidade</h3>
+                    <p>O marketplace pet contribui para financiar iniciativas de proteção animal, criando um ciclo virtuoso de cuidado contínuo.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta" id="contact">
+        <div class="container">
+            <h2>Pronto para fazer a diferença?</h2>
+            <p>Comece hoje a explorar pets para adoção, conecte-se com a comunidade e adote com responsabilidade.</p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="/adotar/" class="btn btn-primary">Explorar pets</a>
+                <a href="/login/" class="btn btn-secondary">Criar conta</a>
+                <a href="/produtos/" class="btn btn-secondary">Ver marketplace</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h4>Amigo Fiel</h4>
+                    <p>Plataforma de adoção responsável e marketplace pet que conecta pessoas, ONGs e animais com amor e ética.</p>
+                    <div class="social-links">
+                        <a href="https://github.com/Projeto-de-Sistemas-2025-2/Amigo-Fiel" title="GitHub" target="_blank">📱</a>
+                        <a href="#" title="Instagram">📸</a>
+                        <a href="#" title="Facebook">👥</a>
+                    </div>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Navegação</h4>
+                    <ul>
+                        <li><a href="/adotar/">Pets para adoção</a></li>
+                        <li><a href="/produtos/">Marketplace</a></li>
+                        <li><a href="/ongs/">ONGs parceiras</a></li>
+                        <li><a href="/">Home</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="/legal/privacidade/">Política de Privacidade</a></li>
+                        <li><a href="/legal/termos/">Termos de Uso</a></li>
+                        <li><a href="/legal/cookies/">Política de Cookies</a></li>
+                        <li><a href="/legal/lgpd/">LGPD</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Suporte</h4>
+                    <ul>
+                        <li><a href="#">Fale conosco</a></li>
+                        <li><a href="#">Dúvidas frequentes</a></li>
+                        <li><a href="#">Reportar problema</a></li>
+                        <li><a href="#">Guia de adoção</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2025 Amigo Fiel. Todos os direitos reservados. | Projeto acadêmico - UFT (2025/2)</p>
+                <p style="margin-top: 1rem; font-size: 0.9rem;">
+                    Desenvolvido com 🐾 pelos estudantes de Sistemas de Informação
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scroll behavior é aplicado via CSS
+        
+        // Efeito de scroll na navbar
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('header');
+            if (window.scrollY > 50) {
+                header.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+            } else {
+                header.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+            }
+        });
+
+        // Animação de cards ao entrar na viewport
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature-card, .value-card, .step').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
