@@ -1,9 +1,14 @@
 ## Grupo 3 - <img align="right" width="350" height="30" alt="Grupo" src="https://github.com/user-attachments/assets/d20ed508-e74b-4077-81d7-0267a378d38c" />
 
-![logo](https://avatars.githubusercontent.com/t/14021207?s=116&v=4)
+### 👥 Equipe de Desenvolvimento
+
+![Foto da Equipe](midia/foto%20da%20equipe.jpeg)
+
+*Equipe Amigo Fiel - Projeto de Sistemas 2025/2*
 
 
 # Amigo Fiel — Adoção responsável & marketplace pet
+<img src="midia/Logo.png" alt="Logo Amigo Fiel" width="200">
 
 [![Build](https://img.shields.io/badge/build-Django%205.2.6-blue)]()
 [![Python](https://img.shields.io/badge/python-3.13%20(recomendado)-informational)]()
@@ -38,6 +43,41 @@ promover boas práticas (triagem, termos de responsabilidade, acompanhamento) e,
 - **Estrutura de apps** (exemplo): `AmigoFiel` (animais, adoções).
 - **Estático**: `static/` (CSS, imagens, ícones).
 
+
+---
+
+## 📁 Estrutura de Mídia
+
+O projeto organiza arquivos de mídia em duas pastas principais:
+
+### `midia/` (raiz do projeto)
+Contém recursos estáticos do projeto e materiais de apresentação:
+- **Logo.png**: logotipo oficial do Amigo Fiel
+- **foto da equipe.jpeg**: foto da equipe de desenvolvimento
+- **Video Comercial.mp4**: vídeo promocional do projeto
+
+### `sistema/media/` (uploads do sistema)
+Armazena uploads dinâmicos organizados por categoria:
+- **defaults/**: imagens padrão do sistema
+  - `avatar_comum.png`, `avatar_empresa.png`, `avatar_ong.png`: avatares padrão para cada tipo de usuário
+  - `pet.png`, `produto.png`, `loja_banner.png`: placeholders para entidades
+  - `Banner's/`: banners padrão
+  - `video/`: vídeos institucionais
+- **pets/**: fotos de animais cadastrados (organizadas por ano)
+- **produtos/**: imagens de produtos do marketplace
+- **usuarios/**: fotos de perfil (subdivididas em `empresa/` e `ong/`)
+
+> ⚠️ **Nota**: Em produção, recomenda-se migrar `sistema/media/` para armazenamento em nuvem (S3, Google Cloud Storage) para melhor escalabilidade.
+
+---
+
+## 📊 Apresentações do Projeto
+
+Documentação e apresentações oficiais:
+
+- **[Apresentação Final](Amigo%20Fiel%20-%20Apresentação%20Final.pdf)** - Apresentação completa do produto e funcionalidades
+- **[Apresentação Técnica](Apresentação%20Tecnica.pdf)** - Detalhes técnicos, arquitetura e decisões de desenvolvimento
+- **[Vídeo Comercial](midia/Video%20Comercial.mp4)** - Vídeo promocional do projeto
 
 ---
 
@@ -185,7 +225,7 @@ Confira `sistema/urls.py` e os `urls.py` dos apps para a versão atual.
 
 ---
 
-## 👩‍💻 Contato & créditos
+## ‍💻 Contato & créditos
 
 Projeto acadêmico colaborativo — UFT (2025/2).
 
